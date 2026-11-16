@@ -489,6 +489,14 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .nickinput:focus{outline:none;border-color:var(--green);background:#fff}
 .avatar{background:var(--green-l);color:var(--green-d);font-weight:850;font-size:16px}
 
+/* 13) 모바일 좌석 칸 높이·브랜드 부제 */
+.brand-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+@media (max-width:900px){
+  .seat{aspect-ratio:auto;min-height:13px;border-radius:4px}
+  .srow{gap:2px !important}
+  .rlab{font-size:9.5px;min-width:12px}
+}
+
 </style>
 </head>
 <body>
