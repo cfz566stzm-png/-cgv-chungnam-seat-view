@@ -2,7 +2,7 @@
 
 CGV 충남권 8개 지점의 **실제 예매 좌석표**를 그대로 옮겨, 좌석을 하나 고르면 그 자리에서 화면이 어떻게 보이는지(시야각·거리·고개 각도·가림·단차) 미리 보여주는 웹 앱입니다.
 
-- **바로 보기**: https://cfz566stzm-png.github.io/cgv-chungnam-seat-view/
+- **바로 보기**: https://cfz566stzm-png.github.io/-cgv-chungnam-seat-view/
 - 조사 원문: [충남권-cgv-조사결과.md](충남권-cgv-조사결과.md)
 - 스크린샷: [preview-seat-view.png](preview-seat-view.png) · [preview-seat-profile.png](preview-seat-profile.png)
 
