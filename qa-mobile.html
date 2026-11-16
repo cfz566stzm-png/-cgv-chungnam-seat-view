@@ -5,18 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>모바일 레이아웃 QA</title>
 <style>
-  body{margin:0;background:#DFE3E8;font-family:-apple-system,'Apple SD Gothic Neo',sans-serif;padding:16px}
-  h2{font-size:14px;margin:16px 0 8px;color:#333}
-  .phone{width:390px;height:844px;border:10px solid #111;border-radius:38px;overflow:hidden;background:#fff;display:block}
+  html,body{margin:0;padding:0;background:#C9CFD6}
+  body{height:700px;overflow:hidden}
+  .stage{width:330px;height:700px;margin:0;padding:4px;transform-origin:top left}
+  .phone{width:390px;height:844px;border:8px solid #111;border-radius:34px;overflow:hidden;background:#fff;
+         transform:scale(0.81);transform-origin:top left}
   iframe{width:390px;height:844px;border:0;display:block}
+  .tag{position:fixed;right:8px;top:8px;background:#111;color:#fff;font:600 11px -apple-system,sans-serif;padding:4px 8px;border-radius:6px;z-index:9}
 </style>
 </head>
 <body>
-  <h2>1) 홈</h2>
-  <div class="phone"><iframe src="./index.html#/" title="home"></iframe></div>
-  <h2>2) 천안펜타포트 IMAX관 (좌석판)</h2>
-  <div class="phone"><iframe src="./index.html#/t/cheonan-pentaport/h/cheonan-pentaport-10" title="hall"></iframe></div>
-  <h2>3) F11 좌석 상세 (실사 탭)</h2>
-  <div class="phone"><iframe src="./index.html#/t/cheonan-pentaport/h/cheonan-pentaport-10/s/F11" title="seat"></iframe></div>
+<div class="tag" id="tag"></div>
+<div class="stage"><div class="phone"><iframe id="f" title="view"></iframe></div></div>
+<script>
+  var v = new URLSearchParams(location.search).get('v') || 'hall';
+  var map = {
+    home: ['./index.html#/', '홈'],
+    hall: ['./index.html#/t/cheonan-pentaport/h/cheonan-pentaport-10', 'IMAX관 좌석판'],
+    seat: ['./index.html#/t/cheonan-pentaport/h/cheonan-pentaport-10/s/F11', 'F11 상세 · 실사 탭'],
+    my:   ['./index.html#/my', '내 기록']
+  };
+  var pick = map[v] || map.hall;
+  document.getElementById('f').src = pick[0];
+  document.getElementById('tag').textContent = '390×844 · ' + pick[1];
+</script>
 </body>
 </html>
