@@ -351,6 +351,144 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
 .foot{margin-top:34px;padding:20px 4px;font-size:11.5px;color:var(--mute);line-height:1.7;font-weight:600}
 .foot b{color:var(--sub)}
 
+/* ===== V2 오버라이드 (모바일·실사 사진) ===== */
+/* ================= V2: 모바일 오버플로·실사 사진·탭 ================= */
+/* 1) 가로 넘침 차단 */
+html,body{max-width:100%;overflow-x:hidden}
+*,*:before,*:after{box-sizing:border-box}
+.wrap{width:100%;max-width:1120px}
+.card,.panel,.layout>*,.hgrid>*,.tgrid>*{min-width:0;max-width:100%}
+img,canvas,svg,video{max-width:100%}
+.canvas-card canvas,.profile-card canvas{display:block;width:100%;height:auto}
+.seatmap-scroll{max-width:100%}
+.seatmap{width:100%;min-width:0;margin:0}
+.srow{min-width:0}
+.seat{min-width:0}
+
+/* 2) 칩 줄바꿈 */
+.chip-row.wrap{flex-wrap:wrap;overflow:visible}
+.maptools{flex-wrap:wrap;gap:8px;align-items:flex-start}
+.maptools .chip-row{flex-wrap:wrap;overflow:visible}
+.topseats{flex-wrap:wrap;overflow:visible}
+.aspect-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.aspect-label{font-size:12.5px;color:var(--mute);font-weight:800;white-space:nowrap;flex:0 0 auto}
+
+/* 3) 입력 요소 iOS 자동확대 방지 */
+input,select,textarea,.review,#reviewText{font-size:16px !important;line-height:1.45}
+.ugc,.ugc *{max-width:100%;box-sizing:border-box}
+.review{width:100%;min-height:84px}
+.ugc form,.ugc .formbox{width:100%;max-width:100%;overflow-x:hidden}
+select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:0 12px;color:var(--ink);font-weight:700}
+
+/* 4) 지점 이니셜 배지 */
+.tlogo{white-space:nowrap;font-size:13.5px;letter-spacing:-.03em;line-height:1}
+
+/* 5) 좌석 실사 배지 */
+.seat .cam{
+  position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-radius:50%;
+  background:var(--green);border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.2);
+}
+.seat.hascam{box-shadow:0 0 0 1.5px rgba(0,168,98,.55) inset}
+.seat.dim{opacity:.18}
+.seat.dim:hover{opacity:.4}
+.photochip{background:var(--green-l);border-color:var(--green-soft);color:var(--green-d)}
+.photochip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+
+/* 6) 실사 모아보기 */
+.gallery{margin-top:18px}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.gal-item{position:relative;border-radius:14px;overflow:hidden;background:#0B1210;border:1px solid var(--line);text-align:left}
+.gal-item img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.gal-cap{position:absolute;left:0;right:0;bottom:0;padding:14px 9px 7px;color:#fff;font-size:12px;font-weight:800;
+  background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.72));display:flex;justify-content:space-between;align-items:center;gap:6px}
+.gal-cap .t{font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.2)}
+
+/* 7) 좌석 패널 탭 */
+.ptabs{display:flex;gap:6px;margin-top:16px;background:var(--line-2);padding:4px;border-radius:14px}
+.ptabs button{flex:1;height:38px;border-radius:11px;font-size:13px;font-weight:800;color:var(--sub);white-space:nowrap}
+.ptabs button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(25,31,40,.12)}
+.ptabs button:disabled{opacity:.4}
+.tabbody{margin-top:14px}
+
+/* 8) 실사 사진 뷰어 */
+.pv{border-radius:18px;overflow:hidden;background:#0B1210;position:relative}
+.pv img{display:block;width:100%;height:auto}
+.pv-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;background:#0B1210;color:#fff}
+.pv-bar b{font-size:12px;font-weight:800}
+.pv-bar span{font-size:11px;font-weight:700;color:rgba(255,255,255,.6)}
+.pv-switch{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.pv-switch button{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12.5px;font-weight:800;color:var(--sub)}
+.pv-switch button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pcred{margin-top:12px;border:1px solid var(--line-2);background:#FAFBFC;border-radius:14px;padding:12px 13px}
+.pcred .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:7px}
+.pcred dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 8px;font-size:12px;color:var(--sub);font-weight:600}
+.pcred dt{color:var(--mute);font-weight:800;white-space:nowrap}
+.pcred a{color:var(--green-d);font-weight:800;text-decoration:none;word-break:break-all}
+.ticketmini{display:flex;gap:10px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.ticketmini img{width:56px;border-radius:8px}
+.emptyphoto{padding:26px 18px;text-align:center;border:1px dashed var(--line);border-radius:16px;background:#FAFBFC}
+.emptyphoto b{display:block;font-size:14px;font-weight:800;margin-bottom:6px}
+.emptyphoto p{font-size:12.5px;color:var(--mute);font-weight:600;line-height:1.6}
+
+/* 9) UGC */
+.moviepick{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.moviepick button{height:30px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:700;color:var(--sub)}
+.moviepick button[aria-pressed="true"]{background:var(--green-l);border-color:var(--green-soft);color:var(--green-d)}
+.filebtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 14px;border-radius:12px;background:#fff;border:1px dashed var(--line);font-size:12.5px;font-weight:800;color:var(--sub);cursor:pointer;width:100%}
+.filebtn input{display:none}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.thumbs figure{margin:0;position:relative}
+.thumbs img{width:64px;height:48px;object-fit:cover;border-radius:9px;border:1px solid var(--line)}
+.thumbs figcaption{font-size:10px;color:var(--mute);font-weight:800;text-align:center;margin-top:2px}
+.review .movie{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:7px;background:#EEF2FF;color:#3B4FCB;font-size:11px;font-weight:800;margin-bottom:6px}
+.review .ticketbadge{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:7px;background:var(--green-l);color:var(--green-d);font-size:11px;font-weight:800;margin-left:4px}
+.review .shots{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.review .shots img{width:70px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.reviewcard{cursor:pointer;transition:transform .15s var(--ease),box-shadow .18s var(--ease)}
+.reviewcard:hover{transform:translateY(-1px);box-shadow:var(--sh-2)}
+
+@media (max-width:900px){
+  .view{padding:16px 0 120px}
+  .wrap{padding:0 16px}
+  .mapcard{padding:14px 12px 12px}
+  .seatmap .srow{gap:2px}
+  .seat{font-size:0;border-radius:4px}
+  .topseats .topseat{flex:1 1 30%}
+  .gal-grid{grid-template-columns:repeat(2,1fr)}
+  .ptabs button{font-size:12.5px}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+}
+
+/* 10) 뒤로가기 버튼 터치 보강 */
+.back{position:relative;z-index:6;min-height:44px;display:inline-flex;align-items:center;gap:6px;
+  pointer-events:auto;touch-action:manipulation;cursor:pointer;padding:8px 14px 8px 10px;
+  margin:-2px 0 8px -4px;border-radius:14px;background:#fff;border:1px solid var(--line);font-weight:800;font-size:13.5px;color:var(--sub)}
+.back:active{background:#EDF0F2}
+.back svg{pointer-events:none;flex:0 0 auto}
+.back.mini{min-height:36px;font-size:12.5px;padding:6px 12px}
+
+/* 11) 원문 링크 카드 (외부 사진 재게시 대신) */
+.extphoto{border:1px solid var(--line);border-radius:18px;background:#FAFBFC;padding:16px}
+.extphoto-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.extphoto-top b{font-size:14px;font-weight:850}
+.extphoto-top span{font-size:11.5px;font-weight:800;color:var(--green-d);background:var(--green-l);padding:3px 8px;border-radius:7px}
+.extphoto p{font-size:12.5px;color:var(--sub);font-weight:600;line-height:1.6;margin:10px 0 12px}
+.extphoto-foot{font-size:11px;color:var(--mute);font-weight:600;margin-top:10px;line-height:1.5}
+.gal-noimg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:4/3;background:linear-gradient(140deg,#E8F6EF,#F7FBF9);color:var(--green-d);font-size:22px}
+.gal-noimg span{font-size:11px;font-weight:800}
+
+/* 12) 닉네임 모달 */
+.modal{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.modal-scrim{position:absolute;inset:0;background:rgba(25,31,40,.42)}
+.modal-card{position:relative;width:100%;max-width:480px;background:#fff;border-radius:26px 26px 0 0;padding:20px 20px 26px;box-shadow:0 -10px 40px rgba(25,31,40,.2);animation:sheetUp .26s var(--ease)}
+@keyframes sheetUp{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.modal-grab{width:40px;height:4px;border-radius:99px;background:#E1E5E9;margin:0 auto 14px}
+.modal-card h3{font-size:18px;font-weight:850;letter-spacing:-.03em}
+.modal-card .sub{font-size:12.5px;color:var(--mute);font-weight:600;line-height:1.6;margin-top:6px}
+.nickinput{width:100%;height:50px;margin-top:16px;border-radius:14px;border:1px solid var(--line);background:#F7F9FA;padding:0 14px;font-size:16px;font-weight:700;color:var(--ink)}
+.nickinput:focus{outline:none;border-color:var(--green);background:#fff}
+.avatar{background:var(--green-l);color:var(--green-d);font-weight:850;font-size:16px}
+
 </style>
 </head>
 <body>
@@ -385,36 +523,78 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
 <div class="toast" id="toast"></div>
 <noscript><div style="padding:40px 20px;text-align:center">JavaScript가 필요합니다.</div></noscript>
 
-<script>window.__DATA__ = {"meta": {"surveyedAt": "2026-11-17", "surveyedAtLabel": "2026년 11월 17일 (화) 00:30~04:25", "source": "CGV 홈페이지(cgv.co.kr) 극장별 예매 → 좌석 선택 화면의 실제 좌석표 좌표(38px 격자)와 좌석 유형·범례", "theaterCount": 8, "hallCount": 56, "mappedCount": 29, "totalSeats": 6846, "mappedSeats": 4144, "builtAt": "2026-11-17"}, "theaters": [{"id": "cheonan-terminal", "siteNo": "0293", "name": "천안터미널", "short": "천안터미널", "region": "충청남도 천안시", "address": "충청남도 천안시 동남구 만남로 43 (신세계백화점 천안아산점 B관 4F)", "special": ["IMAX", "4DX", "씨네앤포레", "PRIVATE BOX", "Laser"], "note": "IMAX관·4DX관·씨네앤포레(빈백·카바나)·PRIVATE BOX 보유. 당일 9개 관 편성, 2·4·6·7관은 회차 미편성.", "halls": [{"id": "cheonan-terminal-1", "name": "1관", "total": 196, "tags": ["Laser"], "status": "ok", "params": {"screenW": 11.8, "screenH": 4.9, "aspect": 2.39, "firstRow": 7.3, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 20, "minx": 1, "maxx": 20, "rows": 11, "conf": "C", "recliner": false}, "seatTypes": {"n": 78, "p": 2, "s": 18, "r": 98}, "legend": "일반석78,SWEETBOX18,릴렉스시트98,장애인석2", "title": "천안터미널 1관 (Laser) 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", ".", ".", "7p", "8p", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "K", "c": [".", "1s", "2s", "3s", "4s", ".", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", ".", "15s", "16s", "17s", "18s", "."]}]}, {"id": "cheonan-terminal-2", "name": "3관", "total": 64, "tags": ["리클라이너", "Laser"], "status": "ok", "params": {"screenW": 5.1, "screenH": 2.1, "aspect": 2.39, "firstRow": 3.6, "rowGap": 1.3, "riser": 0.24, "pitch": 0.62, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 8, "minx": 1, "maxx": 8, "rows": 8, "conf": "C", "recliner": true}, "seatTypes": {"n": 64}, "legend": "리클라이너64", "title": "천안터미널 3관 (리클라이너,Laser) 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}]}, {"id": "cheonan-terminal-3", "name": "5관", "total": 174, "tags": ["Laser"], "status": "ok", "params": {"screenW": 10.6, "screenH": 4.4, "aspect": 2.39, "firstRow": 6.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 18, "minx": 1, "maxx": 18, "rows": 11, "conf": "C", "recliner": false}, "seatTypes": {"n": 60, "p": 2, "s": 16, "r": 96}, "legend": "일반석60,SWEETBOX16,릴렉스시트96,장애인석2", "title": "천안터미널 5관 (Laser) 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11p", "12p", ".", ".", ".", "15n", "16n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "E", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "F", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "G", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "H", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "I", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "J", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "K", "c": [".", "1s", "2s", ".", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", ".", "15s", "16s", "."]}]}, {"id": "cheonan-terminal-4", "name": "8관", "total": 179, "tags": ["Laser"], "status": "ok", "params": {"screenW": 14.2, "screenH": 5.9, "aspect": 2.39, "firstRow": 8.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 24, "minx": 1, "maxx": 24, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 161, "p": 2, "s": 16}, "legend": "일반석161,SWEETBOX16,장애인석2", "title": "천안터미널 8관 (Laser) 2D", "rows": [{"l": "A", "c": [".", ".", ".", "3p", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20p", ".", ".", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", ".", ".", ".", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", ".", ".", ".", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", ".", ".", ".", "."]}, {"l": "I", "c": [".", "1s", "2s", "3s", "4s", "5s", "6s", ".", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", "15s", "16s", ".", "17n", "18n", "19n", ".", ".", ".", "."]}]}, {"id": "cheonan-terminal-5", "name": "9관", "total": 223, "tags": ["Laser"], "status": "ok", "params": {"screenW": 14.2, "screenH": 5.9, "aspect": 2.39, "firstRow": 8.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 24, "minx": 1, "maxx": 24, "rows": 11, "conf": "C", "recliner": false}, "seatTypes": {"n": 197, "p": 4, "s": 22}, "legend": "일반석197,SWEETBOX22,장애인석4", "title": "천안터미널 9관 (Laser) 2D", "rows": [{"l": "A", "c": [".", ".", ".", "3p", "4p", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19p", "20p", ".", ".", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "F", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "G", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "H", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "I", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "J", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "K", "c": [".", "1s", "2s", "3s", "4s", "5s", "6s", ".", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", "15s", "16s", ".", "17s", "18s", "19s", "20s", "21s", "22s", "."]}]}, {"id": "cheonan-terminal-6", "name": "10관", "total": 284, "tags": ["PRIVATE BOX"], "status": "ok", "params": {"screenW": 15.4, "screenH": 6.4, "aspect": 2.39, "firstRow": 9.5, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 26, "minx": 1, "maxx": 26, "rows": 13, "conf": "C", "recliner": false}, "seatTypes": {"n": 268, "p": 4, "s": 12}, "legend": "일반석268,SWEETBOX12,장애인석4", "title": "천안터미널 10관 with PRIVATE BOX 2D", "rows": [{"l": "A", "c": [".", ".", ".", "3p", "4p", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21p", "22p", ".", ".", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "G", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "H", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "I", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "J", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "K", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "L", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "M", "c": [".", ".", ".", ".", ".", ".", ".", ".", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", "15s", "16s", "17s", "18s", ".", ".", ".", ".", ".", ".", ".", "."]}]}, {"id": "cheonan-terminal-7", "name": "IMAX관", "total": 210, "tags": ["IMAX"], "status": "ok", "params": {"screenW": 16.9, "screenH": 8.9, "aspect": 1.9, "firstRow": 8.8, "rowGap": 1.25, "riser": 0.32, "pitch": 0.56, "curve": 0.93, "screenBottom": 0.85, "eye": 1.05, "headDelta": 0.28, "cols": 26, "minx": 1, "maxx": 26, "rows": 10, "conf": "C", "recliner": false}, "seatTypes": {"n": 206, "p": 4}, "legend": "일반석206,장애인석4", "title": "천안터미널 IMAX관 IMAX LASER 2D", "rows": [{"l": "A", "c": [".", ".", ".", ".", ".", "5p", "6p", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19p", "20p", ".", ".", ".", ".", "."]}, {"l": "B", "c": [".", ".", ".", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", ".", ".", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}]}, {"id": "cheonan-terminal-8", "name": "씨네앤포레", "total": 57, "tags": ["빈백", "카바나"], "status": "ok", "params": {"screenW": 6.8, "screenH": 3.7, "aspect": 1.85, "firstRow": 4.2, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 8, "minx": 1, "maxx": 8, "rows": 8, "conf": "C", "recliner": false}, "seatTypes": {"c": 8, "b": 49}, "legend": "카바나석8,빈백석49", "title": "천안터미널 씨네앤포레 (Laser) 2D", "rows": [{"l": "A", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "B", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "C", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "D", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "E", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "F", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "G", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "H", "c": [".", "1c", "2c", "3c", "4c", "5c", "6c", "7c", "8c", "."]}]}, {"id": "cheonan-terminal-9", "name": "4DX관", "total": 72, "tags": ["4DX"], "status": "ok", "params": {"screenW": 5.0, "screenH": 2.7, "aspect": 1.85, "firstRow": 3.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 9, "minx": 1, "maxx": 9, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 72}, "legend": "4DX72", "title": "천안터미널 4DX관 ULTRA 4DX 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}]}]}, {"id": "cheonan-pentaport", "siteNo": "0110", "name": "천안펜타포트", "short": "천안펜타포트", "region": "충청남도 천안시", "address": "충청남도 천안시 서북구 공원로 196", "special": ["IMAX", "SCREENX", "4DX", "CGV아트하우스", "Laser"], "note": "8관 SCREENX는 2026년 9월 7일부터 리클라이너 전환 리뉴얼 공사로 회차가 없어 좌석표 확인 불가. 6관은 당일 편성 없음.", "halls": [{"id": "cheonan-pentaport-1", "name": "1관", "total": 91, "tags": ["CGV아트하우스"], "status": "ok", "params": {"screenW": 9.0, "screenH": 3.8, "aspect": 2.39, "firstRow": 5.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 16, "minx": 2, "maxx": 17, "rows": 7, "conf": "C", "recliner": false}, "seatTypes": {"n": 89, "p": 1, "x": 1}, "legend": "일반석90,장애인석1", "title": "천안펜타포트 1관[CGV아트하우스] 2D", "rows": [{"l": "A", "c": [".", ".", "1n", "2n", ".", ".", "4p", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "B", "c": [".", ".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "C", "c": [".", ".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "D", "c": [".", ".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "E", "c": [".", ".", ".", ".", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "F", "c": [".", ".", ".", ".", ".", "3n", "4n", "5n", "6n", "7n", "8x", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "G", "c": [".", ".", ".", ".", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}]}, {"id": "cheonan-pentaport-2", "name": "2관", "total": 94, "tags": [], "status": "ok", "params": {"screenW": 9.5, "screenH": 4.0, "aspect": 2.39, "firstRow": 5.9, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 17, "minx": 1, "maxx": 17, "rows": 7, "conf": "C", "recliner": false}, "seatTypes": {"n": 79, "p": 1, "s": 12, "x": 2}, "legend": "일반석81,SWEEETBOX12,장애인석1", "title": "천안펜타포트 2관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12p", ".", ".", "14n", "15n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", ".", ".", ".", "."]}, {"l": "E", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "F", "c": [".", "1n", "2n", ".", "3x", "4x", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1s", "2s", ".", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", ".", ".", ".", ".", "."]}]}, {"id": "cheonan-pentaport-3", "name": "3관", "total": 93, "tags": [], "status": "ok", "params": {"screenW": 8.9, "screenH": 3.7, "aspect": 2.39, "firstRow": 5.5, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 15, "minx": 1, "maxx": 15, "rows": 8, "conf": "C", "recliner": false}, "seatTypes": {"n": 80, "p": 1, "s": 10, "x": 2}, "legend": "일반석82,SWEETBOX10,장애인석1", "title": "천안펜타포트 3관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", ".", "4p", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "E", "c": [".", ".", ".", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", "12n", "13n", "."]}, {"l": "F", "c": [".", ".", ".", ".", "3n", "4n", "5x", "6x", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "G", "c": [".", ".", ".", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "H", "c": [".", ".", ".", ".", "3s", "4s", "5s", "6s", ".", "7s", "8s", "9s", "10s", ".", "11s", "12s", "."]}]}, {"id": "cheonan-pentaport-4", "name": "4DX관", "total": 132, "tags": ["4DX"], "status": "ok", "params": {"screenW": 7.9, "screenH": 4.3, "aspect": 1.85, "firstRow": 4.9, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 14, "minx": 1, "maxx": 14, "rows": 11, "conf": "C", "recliner": false}, "seatTypes": {"n": 130, "p": 2}, "legend": "일반석130,장애인석2", "title": "천안펜타포트 4DX관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5p", "6p", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "K", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}]}, {"id": "cheonan-pentaport-5", "name": "5관", "total": 226, "tags": [], "status": "ok", "params": {"screenW": 14.2, "screenH": 5.9, "aspect": 2.39, "firstRow": 8.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 24, "minx": 1, "maxx": 24, "rows": 11, "conf": "C", "recliner": false}, "seatTypes": {"n": 185, "p": 3, "s": 38}, "legend": "일반석185,SWEETBOX38,장애인석3", "title": "천안펜타포트 5관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "7p", ".", "8p", ".", "9p", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "F", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "G", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "H", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "I", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "J", "c": [".", ".", ".", "3s", "4s", ".", ".", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", "15s", "16s", ".", ".", "19s", "20s", "21s", "22s", "."]}, {"l": "K", "c": [".", "1s", "2s", "3s", "4s", ".", ".", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", "15s", "16s", ".", ".", "19s", "20s", "21s", "22s", "."]}]}, {"id": "cheonan-pentaport-6", "name": "7관", "total": 112, "tags": [], "status": "ok", "params": {"screenW": 10.1, "screenH": 4.2, "aspect": 2.39, "firstRow": 6.3, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 17, "minx": 1, "maxx": 17, "rows": 8, "conf": "C", "recliner": false}, "seatTypes": {"n": 93, "p": 2, "s": 12, "x": 5}, "legend": "일반석98,SWEETBOX12,장애인석2", "title": "천안펜타포트 7관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", ".", "4p", "5p", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8x", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "E", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "F", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7x", "8x", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1x", "2x", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "H", "c": [".", "1s", "2s", ".", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", ".", ".", ".", ".", "."]}]}, {"id": "cheonan-pentaport-7", "name": "8관", "total": null, "tags": ["SCREENX"], "status": "work", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "cheonan-pentaport-8", "name": "9관", "total": 125, "tags": [], "status": "ok", "params": {"screenW": 10.1, "screenH": 4.2, "aspect": 2.39, "firstRow": 6.3, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 17, "minx": 1, "maxx": 17, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 110, "p": 2, "s": 10, "x": 3}, "legend": "일반석113,SWEETBOX10,장애인석2", "title": "천안펜타포트 9관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", ".", "4p", "5p", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "E", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13x", ".", "14n", "15n", "."]}, {"l": "F", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12x", "13x", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "H", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "I", "c": [".", "1n", "2n", ".", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", ".", ".", ".", ".", "."]}]}, {"id": "cheonan-pentaport-9", "name": "10관", "total": 99, "tags": [], "status": "ok", "params": {"screenW": 8.3, "screenH": 3.5, "aspect": 2.39, "firstRow": 5.1, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 14, "minx": 1, "maxx": 14, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 85, "p": 1, "s": 10, "x": 3}, "legend": "일반석88,SWEETBOX10,장애인석1", "title": "천안펜타포트 10관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", ".", "4p", "5n", "6n", "7n", "8n", "9n", "10n", ".", "11n", "12n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", "11n", "12n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", "11n", "12n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", "11n", "12n", "."]}, {"l": "E", "c": [".", "1n", "2n", ".", "3n", "4n", "5x", "6n", "7n", "8n", "9n", "10n", ".", "11n", "12n", "."]}, {"l": "F", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6x", "7x", "8n", "9n", "10n", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", ".", "."]}, {"l": "H", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", ".", "."]}, {"l": "I", "c": [".", "1s", "2s", ".", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", ".", ".", ".", ".", "."]}]}, {"id": "cheonan-pentaport-10", "name": "IMAX관", "total": 167, "tags": ["IMAX"], "status": "ok", "params": {"screenW": 13.5, "screenH": 7.1, "aspect": 1.9, "firstRow": 7.0, "rowGap": 1.25, "riser": 0.32, "pitch": 0.56, "curve": 0.74, "screenBottom": 0.85, "eye": 1.05, "headDelta": 0.28, "cols": 22, "minx": 1, "maxx": 22, "rows": 9, "conf": "B", "recliner": false}, "seatTypes": {"n": 165, "p": 2}, "legend": "일반석165,장애인석2", "title": "천안펜타포트 IMAX관 IMAX LASER 2D", "rows": [{"l": "A", "c": [".", ".", "2n", "3n", "4n", ".", ".", ".", "7p", "8p", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", ".", ".", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "E", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "F", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "G", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "H", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}]}]}, {"id": "cheonan", "name": "천안", "short": "천안", "region": "충청남도 천안시", "address": "충청남도 천안시 동남구 명동길 47 5층", "special": [], "note": "당일 1·2·3·4·5·7·8관 편성 확인. 6관은 편성 없음. 4·5·7·8관은 좌석표 추가 확인 필요.", "halls": [{"id": "cheonan-1", "name": "1관", "total": 102, "tags": [], "status": "ok", "params": {"screenW": 9.5, "screenH": 4.0, "aspect": 2.39, "firstRow": 5.9, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 16, "minx": 1, "maxx": 16, "rows": 8, "conf": "C", "recliner": false}, "seatTypes": {"n": 90, "p": 2, "s": 8, "x": 2}, "legend": "일반석92,SWEETBOX8,장애인석2", "title": "천안 1관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", ".", ".", "9p", "10p", ".", ".", "12n", "13n", "14n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7x", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7x", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", ".", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", ".", "12n", "13n", ".", "."]}]}, {"id": "cheonan-2", "name": "2관", "total": 109, "tags": [], "status": "ok", "params": {"screenW": 6.2, "screenH": 2.6, "aspect": 2.39, "firstRow": 3.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 11, "minx": 1, "maxx": 11, "rows": 10, "conf": "C", "recliner": false}, "seatTypes": {"n": 107, "p": 2}, "legend": "일반석107,장애인석2", "title": "천안 2관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", ".", "10p", "11p", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}]}, {"id": "cheonan-3", "name": "3관", "total": 183, "tags": [], "status": "ok", "params": {"screenW": 10.6, "screenH": 4.4, "aspect": 2.39, "firstRow": 6.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 18, "minx": 1, "maxx": 18, "rows": 13, "conf": "C", "recliner": false}, "seatTypes": {"n": 170, "p": 2, "s": 10, "x": 1}, "legend": "일반석171,SWEETBOX10,장애인석2", "title": "천안 3관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", ".", "10p", "11p", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8x", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "K", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "L", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "M", "c": [".", "1n", "2n", "3n", ".", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", ".", "14n", "15n", "16n", "."]}]}, {"id": "cheonan-4", "name": "4관", "total": 194, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "cheonan-5", "name": "5관", "total": 102, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "cheonan-6", "name": "7관", "total": 87, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "cheonan-7", "name": "8관", "total": 142, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}]}, {"id": "asan", "name": "아산", "short": "아산", "region": "충청남도 아산시", "address": "충청남도 아산시 온천동 79-4", "special": ["리클라이너", "Laser"], "note": "2·3·4·5관 모두 리클라이너·Laser. 1관은 당일 오전 편성 없음.", "halls": [{"id": "asan-1", "name": "2관", "total": 69, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "asan-2", "name": "3관", "total": 67, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "asan-3", "name": "4관", "total": 77, "tags": ["리클라이너", "Laser"], "status": "ok", "params": {"screenW": 8.2, "screenH": 3.4, "aspect": 2.39, "firstRow": 5.1, "rowGap": 1.3, "riser": 0.24, "pitch": 0.62, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 13, "minx": 1, "maxx": 13, "rows": 7, "conf": "C", "recliner": true}, "seatTypes": {"n": 69, "p": 1, "x": 7}, "legend": "리클라이너76,장애인석1", "title": "아산 4관 (리클라이너, Laser) 2D", "rows": [{"l": "A", "c": [".", "1x", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12x", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6x", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5x", "6x", ".", "7x", "8x", "9n", "10n", "11n", "12n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "6p", ".", ".", ".", ".", ".", ".", ".", "."]}]}, {"id": "asan-4", "name": "5관", "total": 75, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}]}, {"id": "seosan", "name": "서산", "short": "서산", "region": "충청남도 서산시", "address": "충청남도 서산시 안견로 242", "special": [], "note": "1~8관 8개 스크린. 좌석표는 추후 확인 필요.", "halls": [{"id": "seosan-1", "name": "1관", "total": 181, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-2", "name": "2관", "total": 54, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-3", "name": "3관", "total": 85, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-4", "name": "4관", "total": 93, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-5", "name": "5관", "total": 146, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-6", "name": "6관", "total": 78, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-7", "name": "7관", "total": 86, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-8", "name": "8관", "total": 97, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}]}, {"id": "dangjin", "siteNo": "0207", "name": "당진", "short": "당진", "region": "충청남도 당진시", "address": "충청남도 당진시 우두1로 88 (읍내동)", "special": [], "note": "1~7관. 1·4관, 2·5관, 3·6관이 동일 좌석 배치(실제 좌석표로 확인).", "halls": [{"id": "dangjin-1", "name": "1관", "total": 215, "tags": [], "status": "ok", "params": {"screenW": 11.8, "screenH": 4.9, "aspect": 2.39, "firstRow": 7.3, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 20, "minx": 1, "maxx": 20, "rows": 12, "conf": "C", "recliner": false}, "seatTypes": {"n": 202, "p": 3, "s": 10}, "legend": "일반석202,SWEETBOX10,장애인석3", "title": "당진 1관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "K", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "L", "c": [".", "1s", "2s", "3s", "4s", ".", "5s", "6s", "7s", "8s", "9s", "10s", ".", "12p", "13p", "14p", ".", "15n", "16n", "17n", "18n", "."]}]}, {"id": "dangjin-2", "name": "2관", "total": 159, "tags": [], "status": "ok", "params": {"screenW": 10.6, "screenH": 4.4, "aspect": 2.39, "firstRow": 6.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 18, "minx": 1, "maxx": 18, "rows": 10, "conf": "C", "recliner": false}, "seatTypes": {"n": 148, "p": 3, "s": 8}, "legend": "일반석148,SWEETBOX8,장애인석3", "title": "당진 2관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", ".", "5p", "6p", "7p", ".", "9s", "10s", "11s", "12s", ".", "13s", "14s", "15s", "16s", "."]}]}, {"id": "dangjin-3", "name": "3관", "total": 116, "tags": [], "status": "ok", "params": {"screenW": 7.7, "screenH": 3.2, "aspect": 2.39, "firstRow": 4.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 13, "minx": 2, "maxx": 14, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 104, "p": 2, "s": 10}, "legend": "일반석104,SWEETBOX10,장애인석2", "title": "당진 3관 2D", "rows": [{"l": "A", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "B", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "C", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "D", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "E", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "F", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "G", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "H", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "I", "c": [".", ".", "1p", "2p", ".", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "."]}]}, {"id": "dangjin-4", "name": "4관", "total": 215, "tags": [], "status": "ok", "params": {"screenW": 11.8, "screenH": 4.9, "aspect": 2.39, "firstRow": 7.3, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 20, "minx": 1, "maxx": 20, "rows": 12, "conf": "C", "recliner": false}, "seatTypes": {"n": 202, "p": 3, "s": 10}, "legend": "일반석202,SWEETBOX10,장애인석3", "title": "당진 4관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "K", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "L", "c": [".", "1s", "2s", "3s", "4s", ".", "5s", "6s", "7s", "8s", "9s", "10s", ".", "12p", "13p", "14p", ".", "15n", "16n", "17n", "18n", "."]}]}, {"id": "dangjin-5", "name": "5관", "total": 159, "tags": [], "status": "ok", "params": {"screenW": 10.6, "screenH": 4.4, "aspect": 2.39, "firstRow": 6.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 18, "minx": 1, "maxx": 18, "rows": 10, "conf": "C", "recliner": false}, "seatTypes": {"n": 148, "p": 3, "s": 8}, "legend": "일반석148,SWEETBOX8,장애인석3", "title": "당진 5관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", ".", "5p", "6p", "7p", ".", "9s", "10s", "11s", "12s", ".", "13s", "14s", "15s", "16s", "."]}]}, {"id": "dangjin-6", "name": "6관", "total": 116, "tags": [], "status": "ok", "params": {"screenW": 7.7, "screenH": 3.2, "aspect": 2.39, "firstRow": 4.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 13, "minx": 2, "maxx": 14, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 104, "p": 2, "s": 10}, "legend": "일반석104,SWEETBOX10,장애인석2", "title": "당진 6관 2D", "rows": [{"l": "A", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "B", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "C", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "D", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "E", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "F", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "G", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "H", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "I", "c": [".", ".", "1p", "2p", ".", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "."]}]}, {"id": "dangjin-7", "name": "7관", "total": 95, "tags": [], "status": "ok", "params": {"screenW": 7.3, "screenH": 3.1, "aspect": 2.39, "firstRow": 4.5, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 13, "minx": 1, "maxx": 13, "rows": 8, "conf": "C", "recliner": false}, "seatTypes": {"n": 95}, "legend": "일반석95", "title": "당진 7관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", ".", "."]}]}]}, {"id": "nonsan", "siteNo": "0370", "name": "논산", "short": "논산", "region": "충청남도 논산시", "address": "충청남도 논산시 시민로 181 시네마타워 3층", "special": ["리클라이너", "Laser"], "note": "리클라이너 좌석 오픈 매장. 3·4·5관 리클라이너. 좌석표는 추후 확인 필요.", "halls": [{"id": "nonsan-1", "name": "1관", "total": 138, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "nonsan-2", "name": "2관", "total": 128, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "nonsan-3", "name": "3관", "total": 86, "tags": ["리클라이너"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "nonsan-4", "name": "4관", "total": 74, "tags": ["리클라이너"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "nonsan-5", "name": "5관", "total": 74, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}]}, {"id": "hongseong", "name": "홍성", "short": "홍성", "region": "충청남도 홍성군", "address": "충청남도 홍성군 홍성읍 조양로247번길 9 7층", "special": ["리클라이너", "Laser"], "note": "1·2·6관 리클라이너+Laser, 3·4·5관 Laser. 좌석표는 추후 확인 필요.", "halls": [{"id": "hongseong-1", "name": "1관", "total": 72, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "hongseong-2", "name": "2관", "total": 72, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "hongseong-3", "name": "3관", "total": 144, "tags": ["Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "hongseong-4", "name": "4관", "total": 134, "tags": ["Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "hongseong-5", "name": "5관", "total": 130, "tags": ["Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "hongseong-6", "name": "6관", "total": 94, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}]}]};</script>
+<script>window.__DATA__ = {"meta": {"surveyedAt": "2026-11-17", "surveyedAtLabel": "2026년 11월 17일 (화) 00:30~04:25", "source": "CGV 홈페이지(cgv.co.kr) 극장별 예매 → 좌석 선택 화면의 실제 좌석표 좌표(38px 격자)와 좌석 유형·범례", "theaterCount": 8, "hallCount": 56, "mappedCount": 29, "totalSeats": 6846, "mappedSeats": 4144, "builtAt": "2026-11-17", "photoSeats": 4, "photoShots": 5}, "theaters": [{"id": "cheonan-terminal", "siteNo": "0293", "name": "천안터미널", "short": "천안터미널", "region": "충청남도 천안시", "address": "충청남도 천안시 동남구 만남로 43 (신세계백화점 천안아산점 B관 4F)", "special": ["IMAX", "4DX", "씨네앤포레", "PRIVATE BOX", "Laser"], "note": "IMAX관·4DX관·씨네앤포레(빈백·카바나)·PRIVATE BOX 보유. 당일 9개 관 편성, 2·4·6·7관은 회차 미편성.", "halls": [{"id": "cheonan-terminal-1", "name": "1관", "total": 196, "tags": ["Laser"], "status": "ok", "params": {"screenW": 11.8, "screenH": 4.9, "aspect": 2.39, "firstRow": 7.3, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 20, "minx": 1, "maxx": 20, "rows": 11, "conf": "C", "recliner": false}, "seatTypes": {"n": 78, "p": 2, "s": 18, "r": 98}, "legend": "일반석78,SWEETBOX18,릴렉스시트98,장애인석2", "title": "천안터미널 1관 (Laser) 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", ".", ".", "7p", "8p", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3r", "4r", ".", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15r", "16r", "17n", "18n", "."]}, {"l": "K", "c": [".", "1s", "2s", "3s", "4s", ".", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", ".", "15s", "16s", "17s", "18s", "."]}]}, {"id": "cheonan-terminal-2", "name": "3관", "total": 64, "tags": ["리클라이너", "Laser"], "status": "ok", "params": {"screenW": 5.1, "screenH": 2.1, "aspect": 2.39, "firstRow": 3.6, "rowGap": 1.3, "riser": 0.24, "pitch": 0.62, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 8, "minx": 1, "maxx": 8, "rows": 8, "conf": "C", "recliner": true}, "seatTypes": {"n": 64}, "legend": "리클라이너64", "title": "천안터미널 3관 (리클라이너,Laser) 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "."]}]}, {"id": "cheonan-terminal-3", "name": "5관", "total": 174, "tags": ["Laser"], "status": "ok", "params": {"screenW": 10.6, "screenH": 4.4, "aspect": 2.39, "firstRow": 6.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 18, "minx": 1, "maxx": 18, "rows": 11, "conf": "C", "recliner": false}, "seatTypes": {"n": 60, "p": 2, "s": 16, "r": 96}, "legend": "일반석60,SWEETBOX16,릴렉스시트96,장애인석2", "title": "천안터미널 5관 (Laser) 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11p", "12p", ".", ".", ".", "15n", "16n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "E", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "F", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "G", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "H", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "I", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "J", "c": [".", "1n", "2n", ".", "3r", "4r", "5r", "6r", "7r", "8r", "9r", "10r", "11r", "12r", "13r", "14r", ".", "15n", "16n", "."]}, {"l": "K", "c": [".", "1s", "2s", ".", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", ".", "15s", "16s", "."]}]}, {"id": "cheonan-terminal-4", "name": "8관", "total": 179, "tags": ["Laser"], "status": "ok", "params": {"screenW": 14.2, "screenH": 5.9, "aspect": 2.39, "firstRow": 8.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 24, "minx": 1, "maxx": 24, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 161, "p": 2, "s": 16}, "legend": "일반석161,SWEETBOX16,장애인석2", "title": "천안터미널 8관 (Laser) 2D", "rows": [{"l": "A", "c": [".", ".", ".", "3p", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20p", ".", ".", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", ".", ".", ".", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", ".", ".", ".", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", ".", ".", ".", "."]}, {"l": "I", "c": [".", "1s", "2s", "3s", "4s", "5s", "6s", ".", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", "15s", "16s", ".", "17n", "18n", "19n", ".", ".", ".", "."]}]}, {"id": "cheonan-terminal-5", "name": "9관", "total": 223, "tags": ["Laser"], "status": "ok", "params": {"screenW": 14.2, "screenH": 5.9, "aspect": 2.39, "firstRow": 8.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 24, "minx": 1, "maxx": 24, "rows": 11, "conf": "C", "recliner": false}, "seatTypes": {"n": 197, "p": 4, "s": 22}, "legend": "일반석197,SWEETBOX22,장애인석4", "title": "천안터미널 9관 (Laser) 2D", "rows": [{"l": "A", "c": [".", ".", ".", "3p", "4p", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19p", "20p", ".", ".", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "F", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "G", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "H", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "I", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "J", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "21n", "22n", "."]}, {"l": "K", "c": [".", "1s", "2s", "3s", "4s", "5s", "6s", ".", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", "15s", "16s", ".", "17s", "18s", "19s", "20s", "21s", "22s", "."]}]}, {"id": "cheonan-terminal-6", "name": "10관", "total": 284, "tags": ["PRIVATE BOX"], "status": "ok", "params": {"screenW": 15.4, "screenH": 6.4, "aspect": 2.39, "firstRow": 9.5, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 26, "minx": 1, "maxx": 26, "rows": 13, "conf": "C", "recliner": false}, "seatTypes": {"n": 268, "p": 4, "s": 12}, "legend": "일반석268,SWEETBOX12,장애인석4", "title": "천안터미널 10관 with PRIVATE BOX 2D", "rows": [{"l": "A", "c": [".", ".", ".", "3p", "4p", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21p", "22p", ".", ".", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "G", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "H", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "I", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "J", "c": [".", ".", ".", ".", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "K", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "L", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "M", "c": [".", ".", ".", ".", ".", ".", ".", ".", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", "15s", "16s", "17s", "18s", ".", ".", ".", ".", ".", ".", ".", "."]}]}, {"id": "cheonan-terminal-7", "name": "IMAX관", "total": 210, "tags": ["IMAX"], "status": "ok", "params": {"screenW": 16.9, "screenH": 8.9, "aspect": 1.9, "firstRow": 8.8, "rowGap": 1.25, "riser": 0.32, "pitch": 0.56, "curve": 0.93, "screenBottom": 0.85, "eye": 1.05, "headDelta": 0.28, "cols": 26, "minx": 1, "maxx": 26, "rows": 10, "conf": "C", "recliner": false}, "seatTypes": {"n": 206, "p": 4}, "legend": "일반석206,장애인석4", "title": "천안터미널 IMAX관 IMAX LASER 2D", "rows": [{"l": "A", "c": [".", ".", ".", ".", ".", "5p", "6p", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19p", "20p", ".", ".", ".", ".", "."]}, {"l": "B", "c": [".", ".", ".", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", ".", ".", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "23n", "24n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", ".", ".", ".", "."]}]}, {"id": "cheonan-terminal-8", "name": "씨네앤포레", "total": 57, "tags": ["빈백", "카바나"], "status": "ok", "params": {"screenW": 6.8, "screenH": 3.7, "aspect": 1.85, "firstRow": 4.2, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 8, "minx": 1, "maxx": 8, "rows": 8, "conf": "C", "recliner": false}, "seatTypes": {"c": 8, "b": 49}, "legend": "카바나석8,빈백석49", "title": "천안터미널 씨네앤포레 (Laser) 2D", "rows": [{"l": "A", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "B", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "C", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "D", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "E", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "F", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "G", "c": [".", "1b", "2b", ".", "3b", "4b", "5b", "6b", "7b", "."]}, {"l": "H", "c": [".", "1c", "2c", "3c", "4c", "5c", "6c", "7c", "8c", "."]}]}, {"id": "cheonan-terminal-9", "name": "4DX관", "total": 72, "tags": ["4DX"], "status": "ok", "params": {"screenW": 5.0, "screenH": 2.7, "aspect": 1.85, "firstRow": 3.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 9, "minx": 1, "maxx": 9, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 72}, "legend": "4DX72", "title": "천안터미널 4DX관 ULTRA 4DX 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "."]}]}]}, {"id": "cheonan-pentaport", "siteNo": "0110", "name": "천안펜타포트", "short": "천안펜타포트", "region": "충청남도 천안시", "address": "충청남도 천안시 서북구 공원로 196", "special": ["IMAX", "SCREENX", "4DX", "CGV아트하우스", "Laser"], "note": "8관 SCREENX는 2026년 9월 7일부터 리클라이너 전환 리뉴얼 공사로 회차가 없어 좌석표 확인 불가. 6관은 당일 편성 없음.", "halls": [{"id": "cheonan-pentaport-1", "name": "1관", "total": 91, "tags": ["CGV아트하우스"], "status": "ok", "params": {"screenW": 9.0, "screenH": 3.8, "aspect": 2.39, "firstRow": 5.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 16, "minx": 2, "maxx": 17, "rows": 7, "conf": "C", "recliner": false}, "seatTypes": {"n": 89, "p": 1, "x": 1}, "legend": "일반석90,장애인석1", "title": "천안펜타포트 1관[CGV아트하우스] 2D", "rows": [{"l": "A", "c": [".", ".", "1n", "2n", ".", ".", "4p", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "B", "c": [".", ".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "C", "c": [".", ".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "D", "c": [".", ".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "E", "c": [".", ".", ".", ".", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "F", "c": [".", ".", ".", ".", ".", "3n", "4n", "5n", "6n", "7n", "8x", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}, {"l": "G", "c": [".", ".", ".", ".", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "."]}]}, {"id": "cheonan-pentaport-2", "name": "2관", "total": 94, "tags": [], "status": "ok", "params": {"screenW": 9.5, "screenH": 4.0, "aspect": 2.39, "firstRow": 5.9, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 17, "minx": 1, "maxx": 17, "rows": 7, "conf": "C", "recliner": false}, "seatTypes": {"n": 79, "p": 1, "s": 12, "x": 2}, "legend": "일반석81,SWEEETBOX12,장애인석1", "title": "천안펜타포트 2관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12p", ".", ".", "14n", "15n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", ".", ".", ".", "."]}, {"l": "E", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "F", "c": [".", "1n", "2n", ".", "3x", "4x", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1s", "2s", ".", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", ".", ".", ".", ".", "."]}]}, {"id": "cheonan-pentaport-3", "name": "3관", "total": 93, "tags": [], "status": "ok", "params": {"screenW": 8.9, "screenH": 3.7, "aspect": 2.39, "firstRow": 5.5, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 15, "minx": 1, "maxx": 15, "rows": 8, "conf": "C", "recliner": false}, "seatTypes": {"n": 80, "p": 1, "s": 10, "x": 2}, "legend": "일반석82,SWEETBOX10,장애인석1", "title": "천안펜타포트 3관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", ".", "4p", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "E", "c": [".", ".", ".", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", "12n", "13n", "."]}, {"l": "F", "c": [".", ".", ".", ".", "3n", "4n", "5x", "6x", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "G", "c": [".", ".", ".", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", "12n", "13n", "."]}, {"l": "H", "c": [".", ".", ".", ".", "3s", "4s", "5s", "6s", ".", "7s", "8s", "9s", "10s", ".", "11s", "12s", "."]}]}, {"id": "cheonan-pentaport-4", "name": "4DX관", "total": 132, "tags": ["4DX"], "status": "ok", "params": {"screenW": 7.9, "screenH": 4.3, "aspect": 1.85, "firstRow": 4.9, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 14, "minx": 1, "maxx": 14, "rows": 11, "conf": "C", "recliner": false}, "seatTypes": {"n": 130, "p": 2}, "legend": "일반석130,장애인석2", "title": "천안펜타포트 4DX관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5p", "6p", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}, {"l": "K", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", ".", "9n", "10n", "11n", "12n", "."]}]}, {"id": "cheonan-pentaport-5", "name": "5관", "total": 226, "tags": [], "status": "ok", "params": {"screenW": 14.2, "screenH": 5.9, "aspect": 2.39, "firstRow": 8.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 24, "minx": 1, "maxx": 24, "rows": 11, "conf": "C", "recliner": false}, "seatTypes": {"n": 185, "p": 3, "s": 38}, "legend": "일반석185,SWEETBOX38,장애인석3", "title": "천안펜타포트 5관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "7p", ".", "8p", ".", "9p", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "F", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "G", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "H", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "I", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", "17n", "18n", ".", "19n", "20n", "21n", "22n", "."]}, {"l": "J", "c": [".", ".", ".", "3s", "4s", ".", ".", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", "15s", "16s", ".", ".", "19s", "20s", "21s", "22s", "."]}, {"l": "K", "c": [".", "1s", "2s", "3s", "4s", ".", ".", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "14s", "15s", "16s", ".", ".", "19s", "20s", "21s", "22s", "."]}]}, {"id": "cheonan-pentaport-6", "name": "7관", "total": 112, "tags": [], "status": "ok", "params": {"screenW": 10.1, "screenH": 4.2, "aspect": 2.39, "firstRow": 6.3, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 17, "minx": 1, "maxx": 17, "rows": 8, "conf": "C", "recliner": false}, "seatTypes": {"n": 93, "p": 2, "s": 12, "x": 5}, "legend": "일반석98,SWEETBOX12,장애인석2", "title": "천안펜타포트 7관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", ".", "4p", "5p", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8x", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "E", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "F", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7x", "8x", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1x", "2x", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "H", "c": [".", "1s", "2s", ".", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", ".", ".", ".", ".", "."]}]}, {"id": "cheonan-pentaport-7", "name": "8관", "total": null, "tags": ["SCREENX"], "status": "work", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "cheonan-pentaport-8", "name": "9관", "total": 125, "tags": [], "status": "ok", "params": {"screenW": 10.1, "screenH": 4.2, "aspect": 2.39, "firstRow": 6.3, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 17, "minx": 1, "maxx": 17, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 110, "p": 2, "s": 10, "x": 3}, "legend": "일반석113,SWEETBOX10,장애인석2", "title": "천안펜타포트 9관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", ".", "4p", "5p", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", "14n", "15n", "."]}, {"l": "E", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13x", ".", "14n", "15n", "."]}, {"l": "F", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12x", "13x", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "H", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", ".", ".", ".", "."]}, {"l": "I", "c": [".", "1n", "2n", ".", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", ".", ".", ".", ".", "."]}]}, {"id": "cheonan-pentaport-9", "name": "10관", "total": 99, "tags": [], "status": "ok", "params": {"screenW": 8.3, "screenH": 3.5, "aspect": 2.39, "firstRow": 5.1, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 14, "minx": 1, "maxx": 14, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 85, "p": 1, "s": 10, "x": 3}, "legend": "일반석88,SWEETBOX10,장애인석1", "title": "천안펜타포트 10관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", ".", ".", "4p", "5n", "6n", "7n", "8n", "9n", "10n", ".", "11n", "12n", "."]}, {"l": "B", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", "11n", "12n", "."]}, {"l": "C", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", "11n", "12n", "."]}, {"l": "D", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", "11n", "12n", "."]}, {"l": "E", "c": [".", "1n", "2n", ".", "3n", "4n", "5x", "6n", "7n", "8n", "9n", "10n", ".", "11n", "12n", "."]}, {"l": "F", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6x", "7x", "8n", "9n", "10n", ".", ".", ".", "."]}, {"l": "G", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", ".", "."]}, {"l": "H", "c": [".", "1n", "2n", ".", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", ".", "."]}, {"l": "I", "c": [".", "1s", "2s", ".", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", ".", ".", ".", ".", "."]}]}, {"id": "cheonan-pentaport-10", "name": "IMAX관", "total": 167, "tags": ["IMAX"], "status": "ok", "params": {"screenW": 13.5, "screenH": 7.1, "aspect": 1.9, "firstRow": 7.0, "rowGap": 1.25, "riser": 0.55, "pitch": 0.56, "curve": 0.74, "screenBottom": 0.85, "eye": 1.05, "headDelta": 0.28, "cols": 22, "minx": 1, "maxx": 22, "rows": 9, "conf": "B", "recliner": false, "calib": {"seat": "F11", "date": "2026-10-25", "grade": "B+", "evidence": "실사 1배율 사진(IMG_7036) 계측: 스크린 가로 ≈54°, 세로 ≈29.4°, F열 앞좌석 등받이가 스크린 하단선과 일치"}}, "seatTypes": {"n": 165, "p": 2}, "legend": "일반석165,장애인석2", "title": "천안펜타포트 IMAX관 IMAX LASER 2D", "rows": [{"l": "A", "c": [".", ".", "2n", "3n", "4n", ".", ".", ".", "7p", "8p", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", ".", ".", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "E", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "F", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "G", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "H", "c": [".", ".", ".", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", "15n", "16n", ".", "17n", "18n", "19n", "20n", "."]}]}]}, {"id": "cheonan", "name": "천안", "short": "천안", "region": "충청남도 천안시", "address": "충청남도 천안시 동남구 명동길 47 5층", "special": [], "note": "당일 1·2·3·4·5·7·8관 편성 확인. 6관은 편성 없음. 4·5·7·8관은 좌석표 추가 확인 필요.", "halls": [{"id": "cheonan-1", "name": "1관", "total": 102, "tags": [], "status": "ok", "params": {"screenW": 9.5, "screenH": 4.0, "aspect": 2.39, "firstRow": 5.9, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 16, "minx": 1, "maxx": 16, "rows": 8, "conf": "C", "recliner": false}, "seatTypes": {"n": 90, "p": 2, "s": 8, "x": 2}, "legend": "일반석92,SWEETBOX8,장애인석2", "title": "천안 1관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", ".", ".", "9p", "10p", ".", ".", "12n", "13n", "14n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7x", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7x", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", ".", ".", "12n", "13n", "14n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", ".", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", ".", "12n", "13n", ".", "."]}]}, {"id": "cheonan-2", "name": "2관", "total": 109, "tags": [], "status": "ok", "params": {"screenW": 6.2, "screenH": 2.6, "aspect": 2.39, "firstRow": 3.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 11, "minx": 1, "maxx": 11, "rows": 10, "conf": "C", "recliner": false}, "seatTypes": {"n": 107, "p": 2}, "legend": "일반석107,장애인석2", "title": "천안 2관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", ".", "10p", "11p", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "."]}]}, {"id": "cheonan-3", "name": "3관", "total": 183, "tags": [], "status": "ok", "params": {"screenW": 10.6, "screenH": 4.4, "aspect": 2.39, "firstRow": 6.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 18, "minx": 1, "maxx": 18, "rows": 13, "conf": "C", "recliner": false}, "seatTypes": {"n": 170, "p": 2, "s": 10, "x": 1}, "legend": "일반석171,SWEETBOX10,장애인석2", "title": "천안 3관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", ".", "10p", "11p", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8x", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "K", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "L", "c": [".", "1n", "2n", "3n", ".", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", ".", ".", ".", "14n", "15n", "16n", "."]}, {"l": "M", "c": [".", "1n", "2n", "3n", ".", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", ".", "14n", "15n", "16n", "."]}]}, {"id": "cheonan-4", "name": "4관", "total": 194, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "cheonan-5", "name": "5관", "total": 102, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "cheonan-6", "name": "7관", "total": 87, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "cheonan-7", "name": "8관", "total": 142, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}]}, {"id": "asan", "name": "아산", "short": "아산", "region": "충청남도 아산시", "address": "충청남도 아산시 온천동 79-4", "special": ["리클라이너", "Laser"], "note": "2·3·4·5관 모두 리클라이너·Laser. 1관은 당일 오전 편성 없음.", "halls": [{"id": "asan-1", "name": "2관", "total": 69, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "asan-2", "name": "3관", "total": 67, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "asan-3", "name": "4관", "total": 77, "tags": ["리클라이너", "Laser"], "status": "ok", "params": {"screenW": 8.2, "screenH": 3.4, "aspect": 2.39, "firstRow": 5.1, "rowGap": 1.3, "riser": 0.24, "pitch": 0.62, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 13, "minx": 1, "maxx": 13, "rows": 7, "conf": "C", "recliner": true}, "seatTypes": {"n": 69, "p": 1, "x": 7}, "legend": "리클라이너76,장애인석1", "title": "아산 4관 (리클라이너, Laser) 2D", "rows": [{"l": "A", "c": [".", "1x", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12x", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6x", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5x", "6x", ".", "7x", "8x", "9n", "10n", "11n", "12n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "6p", ".", ".", ".", ".", ".", ".", ".", "."]}]}, {"id": "asan-4", "name": "5관", "total": 75, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}]}, {"id": "seosan", "name": "서산", "short": "서산", "region": "충청남도 서산시", "address": "충청남도 서산시 안견로 242", "special": [], "note": "1~8관 8개 스크린. 좌석표는 추후 확인 필요.", "halls": [{"id": "seosan-1", "name": "1관", "total": 181, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-2", "name": "2관", "total": 54, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-3", "name": "3관", "total": 85, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-4", "name": "4관", "total": 93, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-5", "name": "5관", "total": 146, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-6", "name": "6관", "total": 78, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-7", "name": "7관", "total": 86, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "seosan-8", "name": "8관", "total": 97, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}]}, {"id": "dangjin", "siteNo": "0207", "name": "당진", "short": "당진", "region": "충청남도 당진시", "address": "충청남도 당진시 우두1로 88 (읍내동)", "special": [], "note": "1~7관. 1·4관, 2·5관, 3·6관이 동일 좌석 배치(실제 좌석표로 확인).", "halls": [{"id": "dangjin-1", "name": "1관", "total": 215, "tags": [], "status": "ok", "params": {"screenW": 11.8, "screenH": 4.9, "aspect": 2.39, "firstRow": 7.3, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 20, "minx": 1, "maxx": 20, "rows": 12, "conf": "C", "recliner": false}, "seatTypes": {"n": 202, "p": 3, "s": 10}, "legend": "일반석202,SWEETBOX10,장애인석3", "title": "당진 1관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "K", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "L", "c": [".", "1s", "2s", "3s", "4s", ".", "5s", "6s", "7s", "8s", "9s", "10s", ".", "12p", "13p", "14p", ".", "15n", "16n", "17n", "18n", "."]}]}, {"id": "dangjin-2", "name": "2관", "total": 159, "tags": [], "status": "ok", "params": {"screenW": 10.6, "screenH": 4.4, "aspect": 2.39, "firstRow": 6.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 18, "minx": 1, "maxx": 18, "rows": 10, "conf": "C", "recliner": false}, "seatTypes": {"n": 148, "p": 3, "s": 8}, "legend": "일반석148,SWEETBOX8,장애인석3", "title": "당진 2관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", ".", "5p", "6p", "7p", ".", "9s", "10s", "11s", "12s", ".", "13s", "14s", "15s", "16s", "."]}]}, {"id": "dangjin-3", "name": "3관", "total": 116, "tags": [], "status": "ok", "params": {"screenW": 7.7, "screenH": 3.2, "aspect": 2.39, "firstRow": 4.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 13, "minx": 2, "maxx": 14, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 104, "p": 2, "s": 10}, "legend": "일반석104,SWEETBOX10,장애인석2", "title": "당진 3관 2D", "rows": [{"l": "A", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "B", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "C", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "D", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "E", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "F", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "G", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "H", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "I", "c": [".", ".", "1p", "2p", ".", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "."]}]}, {"id": "dangjin-4", "name": "4관", "total": 215, "tags": [], "status": "ok", "params": {"screenW": 11.8, "screenH": 4.9, "aspect": 2.39, "firstRow": 7.3, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 20, "minx": 1, "maxx": 20, "rows": 12, "conf": "C", "recliner": false}, "seatTypes": {"n": 202, "p": 3, "s": 10}, "legend": "일반석202,SWEETBOX10,장애인석3", "title": "당진 4관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "K", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "14n", ".", "15n", "16n", "17n", "18n", "."]}, {"l": "L", "c": [".", "1s", "2s", "3s", "4s", ".", "5s", "6s", "7s", "8s", "9s", "10s", ".", "12p", "13p", "14p", ".", "15n", "16n", "17n", "18n", "."]}]}, {"id": "dangjin-5", "name": "5관", "total": 159, "tags": [], "status": "ok", "params": {"screenW": 10.6, "screenH": 4.4, "aspect": 2.39, "firstRow": 6.6, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 18, "minx": 1, "maxx": 18, "rows": 10, "conf": "C", "recliner": false}, "seatTypes": {"n": 148, "p": 3, "s": 8}, "legend": "일반석148,SWEETBOX8,장애인석3", "title": "당진 5관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "I", "c": [".", "1n", "2n", "3n", "4n", ".", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", ".", "13n", "14n", "15n", "16n", "."]}, {"l": "J", "c": [".", "1n", "2n", "3n", "4n", ".", "5p", "6p", "7p", ".", "9s", "10s", "11s", "12s", ".", "13s", "14s", "15s", "16s", "."]}]}, {"id": "dangjin-6", "name": "6관", "total": 116, "tags": [], "status": "ok", "params": {"screenW": 7.7, "screenH": 3.2, "aspect": 2.39, "firstRow": 4.8, "rowGap": 1.15, "riser": 0.3, "pitch": 0.58, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 13, "minx": 2, "maxx": 14, "rows": 9, "conf": "C", "recliner": false}, "seatTypes": {"n": 104, "p": 2, "s": 10}, "legend": "일반석104,SWEETBOX10,장애인석2", "title": "당진 6관 2D", "rows": [{"l": "A", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "B", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "C", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "D", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "E", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "F", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "G", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "H", "c": [".", ".", "1n", "2n", "3n", "4n", "5n", "6n", "7n", "8n", "9n", "10n", "11n", "12n", "13n", "."]}, {"l": "I", "c": [".", ".", "1p", "2p", ".", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "11s", "12s", "13s", "."]}]}, {"id": "dangjin-7", "name": "7관", "total": 95, "tags": [], "status": "ok", "params": {"screenW": 7.3, "screenH": 3.1, "aspect": 2.39, "firstRow": 4.5, "rowGap": 1.15, "riser": 0.3, "pitch": 0.55, "curve": 0.0, "screenBottom": 1.15, "eye": 1.05, "headDelta": 0.28, "cols": 13, "minx": 1, "maxx": 13, "rows": 8, "conf": "C", "recliner": false}, "seatTypes": {"n": 95}, "legend": "일반석95", "title": "당진 7관 2D", "rows": [{"l": "A", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "B", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "C", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "D", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "E", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "F", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "G", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", "12n", "."]}, {"l": "H", "c": [".", "1n", "2n", "3n", "4n", "5n", "6n", ".", "7n", "8n", "9n", "10n", "11n", ".", "."]}]}]}, {"id": "nonsan", "siteNo": "0370", "name": "논산", "short": "논산", "region": "충청남도 논산시", "address": "충청남도 논산시 시민로 181 시네마타워 3층", "special": ["리클라이너", "Laser"], "note": "리클라이너 좌석 오픈 매장. 3·4·5관 리클라이너. 좌석표는 추후 확인 필요.", "halls": [{"id": "nonsan-1", "name": "1관", "total": 138, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "nonsan-2", "name": "2관", "total": 128, "tags": [], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "nonsan-3", "name": "3관", "total": 86, "tags": ["리클라이너"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "nonsan-4", "name": "4관", "total": 74, "tags": ["리클라이너"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "nonsan-5", "name": "5관", "total": 74, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}]}, {"id": "hongseong", "name": "홍성", "short": "홍성", "region": "충청남도 홍성군", "address": "충청남도 홍성군 홍성읍 조양로247번길 9 7층", "special": ["리클라이너", "Laser"], "note": "1·2·6관 리클라이너+Laser, 3·4·5관 Laser. 좌석표는 추후 확인 필요.", "halls": [{"id": "hongseong-1", "name": "1관", "total": 72, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "hongseong-2", "name": "2관", "total": 72, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "hongseong-3", "name": "3관", "total": 144, "tags": ["Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "hongseong-4", "name": "4관", "total": 134, "tags": ["Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "hongseong-5", "name": "5관", "total": 130, "tags": ["Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}, {"id": "hongseong-6", "name": "6관", "total": 94, "tags": ["리클라이너", "Laser"], "status": "soon", "params": null, "seatTypes": null, "legend": null, "title": null, "rows": null}]}]};</script>
+<script>window.__PHOTOS__ = {"cheonan-pentaport-10":{"seats":{"F11":[{"own":true,"src":"./photos/cheonan-pentaport-imax-f11-1x.jpg","tier":"1x","fov":"1배율 · 26mm","credit":"직접 촬영 · 김민규 (@kimmingyu517)","source":null,"date":"2026-10-25 (일) 12:30 회차","note":"스크린 4꼭짓점 완비 · 화면이 프레임 가로 77% · 앞좌석 등받이가 스크린 하단 바로 아래","ticket":"./photos/cheonan-pentaport-imax-f11-ticket.jpg","ticketNote":"천안펜타포트 IMAX관 F열 11번 · 실낙원 · 2026-10-25 12:30"},{"own":true,"src":"./photos/cheonan-pentaport-imax-f11-wide.jpg","tier":"wide","fov":"광각 · 13mm","credit":"직접 촬영 · 김민규 (@kimmingyu517)","source":null,"date":"2026-10-25 (일) 12:30 회차","note":"같은 자리 광각 · 스크린 좌우 벽과 객석 전체가 보임"}],"A10":[{"own":false,"tier":"1x","fov":"1배율","credit":"실버 · SILVER AREA (tistory)","source":"https://creativesilver.tistory.com/1405","date":"2024-03-24","note":"맨 앞 A열에서 본 화면 · 4꼭짓점 완비 · 화면이 프레임을 거의 가득 채움"}],"E12":[{"own":false,"tier":"wide","fov":"광각","credit":"실버 · SILVER AREA (tistory)","source":"https://creativesilver.tistory.com/1405","date":"2024-03-24","note":"E열 중앙 · 정면 대칭 · 4꼭짓점 완비 · 좌우 벽까지 보이는 광각"}]}},"cheonan-terminal-7":{"seats":{"E12":[{"own":false,"tier":"wide","fov":"광각","credit":"실버 · SILVER AREA (tistory)","source":"https://creativesilver.tistory.com/413705","date":"2026-05-11","note":"E열 중앙 · 정면 대칭 · 4꼭짓점 완비 · 출입문·소화기까지 보이는 광각"}]}}};
+window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설","헝거게임 50번째 추첨의 날","폴2-데드포인트","극장판 치이카와-인어 섬의 비밀","듄","아름다운 초저녁달","호루몽","명탐정 코난-30호 살인 사건","오디세이","스윙걸즈","프레셔","극장판 체인소 맨-레제편","라라랜드","스파이더맨-브랜드 뉴 데이","원피스 필름 골드","실낙원","심야근무","극장판 카드캡터 체리-봉인된 카드","눈 내리는 여름, 너에게","원스","타짜-벨제붑의 노래","진격의 거인-홍련의 화살","BTS WORLD TOUR ‘ARIRANG’ IN KAOHSIUNG- LIVE VIEWING"];</script>
 <script>
-/* ===== 충남 시네마 시야 — app ===== */
+/* ===== 충남 시네마 시야 — app (v2) ===== */
 (function () {
   'use strict';
   const DATA = window.__DATA__;
+  const PHOTOS = window.__PHOTOS__ || {};
   const D2R = Math.PI / 180;
   const TYPES = { n: '일반석', p: '장애인석', r: '릴렉스시트', s: 'SWEETBOX', c: '카바나석', b: '빈백석', x: '판매중지' };
-  const TYPE_COLOR = { n: '#DCEDE4', p: '#BFE3FA', r: '#DCD8FB', s: '#FBD5E8', c: '#FDE7C3', b: '#E7E4DD', x: '#EDEFF1' };
+
+  const MOVIES = (window.__MOVIES__ || []);
 
   const state = {
     view: 'home', filter: 'all', theaterId: null, hallId: null, seatKey: null,
-    aspect: null, taste: 'balance', mode: 'center', heat: false
+    aspect: null, mode: 'center', tab: 'photo', photoIdx: 0, photoOnly: false
   };
 
   /* ---------- 저장소 ---------- */
   const LS_KEY = 'cgv-chungnam-ugc-v1';
   let store = {};
   try { store = JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch (e) { store = {}; }
-  const save = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(store)); } catch (e) {} };
+  const save = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(store)); } catch (e) { toast('저장 공간이 부족해요'); } };
+
+  /* ---------- 닉네임 ---------- */
+  const NK_KEY = 'cgv-chn-nickname';
+  let nickname = '';
+  try { nickname = localStorage.getItem(NK_KEY) || ''; } catch (e) { nickname = ''; }
+  function setNickname(v) {
+    nickname = (v || '').trim().slice(0, 12);
+    try { localStorage.setItem(NK_KEY, nickname); } catch (e) {}
+    const av = document.getElementById('myAvatar');
+    if (av) av.textContent = nickname ? nickname.slice(0, 1) : '🙂';
+    const nm = document.getElementById('myNick');
+    if (nm) nm.textContent = nickname || '닉네임 없음';
+  }
+  function nicknameModal(force) {
+    if (document.getElementById('nickModal')) return;
+    const wrap = document.createElement('div');
+    wrap.id = 'nickModal';
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="modal-card">
+        <div class="modal-grab"></div>
+        <h3>어떻게 불러드릴까요?</h3>
+        <p class="sub">좌석 후기에 함께 표시되는 닉네임이에요.<br>나중에 언제든 바꿀 수 있어요.</p>
+        <input id="nickInput" class="nickinput" type="text" maxlength="12" placeholder="닉네임 (최대 12자)" value="${esc(nickname)}">
+        <button class="btn" id="nickSave" style="width:100%;margin-top:12px">${nickname ? '저장' : '시작하기'}</button>
+        ${force ? '' : `<button class="btn ghost" id="nickSkip" style="width:100%;margin-top:8px;background:#F2F4F6;color:#6B7684">건너뛰기</button>`}
+      </div>`;
+    document.body.appendChild(wrap);
+    const inp = wrap.querySelector('#nickInput');
+    setTimeout(() => inp && inp.focus(), 120);
+    wrap.querySelector('#nickSave').onclick = () => { setNickname(inp.value); closeNick(); toast(nickname ? '닉네임을 저장했어요' : '닉네임 없이 둘러볼게요'); render(); };
+    inp.onkeydown = (e) => { if (e.key === 'Enter') wrap.querySelector('#nickSave').click(); };
+    const sk = wrap.querySelector('#nickSkip');
+    if (sk) sk.onclick = () => { closeNick(); };
+    wrap.querySelector('.modal-scrim').onclick = () => { closeNick(); };
+  }
+  function closeNick() { const m = document.getElementById('nickModal'); if (m) m.remove(); }
 
   /* ---------- 유틸 ---------- */
   const $ = (s, r = document) => r.querySelector(s);
-  const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const fmt = (v, d = 1) => (Math.round(v * 10 ** d) / 10 ** d).toFixed(d);
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   function toast(msg) {
     const t = $('#toast');
+    if (!t) return;
     t.textContent = msg; t.classList.add('show');
     clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200);
   }
@@ -424,9 +604,14 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
   const findTheater = (id) => theaters.find((t) => t.id === id) || null;
   const findHall = (tid, hid) => { const t = findTheater(tid); return t ? t.halls.find((h) => h.id === hid) || null : null; };
 
+  const TINIT = {
+    'cheonan-terminal': '천터', 'cheonan-pentaport': '천펜', 'cheonan': '천안',
+    'asan': '아산', 'seosan': '서산', 'dangjin': '당진', 'nonsan': '논산', 'hongseong': '홍성'
+  };
+
   function hallSeats(h) {
     if (!h._seats) {
-      const p = h.params, list = [];
+      const list = [];
       h.rows.forEach((row, y) => {
         row.c.forEach((cell, x) => {
           if (cell === '.') return;
@@ -437,9 +622,26 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
       h._seats = list;
       h._byKey = {}; list.forEach((s) => { h._byKey[s.key] = s; });
       h._cols = Math.max(...h.rows.map((r) => r.c.length));
+      const set = {};
+      list.forEach((s) => { set[s.t] = (set[s.t] || 0) + 1; });
+      h._types = set;
     }
     return h._seats;
   }
+
+  /* ---------- 실사 사진 ---------- */
+  function photosFor(hallId, seatKey) {
+    const b = PHOTOS[hallId];
+    if (!b || !b.seats) return [];
+    return b.seats[seatKey] || [];
+  }
+  function hallPhotoCount(hallId) {
+    const b = PHOTOS[hallId];
+    if (!b || !b.seats) return { seats: 0, shots: 0 };
+    const keys = Object.keys(b.seats);
+    return { seats: keys.length, shots: keys.reduce((a, k) => a + b.seats[k].length, 0) };
+  }
+  const tierLabel = (t) => (t === '1x' ? '1배율' : t === 'wide' ? '광각' : '실사');
 
   /* ---------- 물리 계산 ---------- */
   function metrics(p, seat) {
@@ -468,32 +670,37 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     return { hFov, vFov, neck, yaw, dist, occ, dC, aL, aR, vTop, vBot, eyeY, sx, steps: seat.y * p.riser };
   }
 
-  const PRESETS = {
-    balance: { label: '균형', neckLimit: 18, w: { fov: 1.15, neck: 2.2, yaw: 1.2, occ: 0.38 } },
-    immerse: { label: '몰입', neckLimit: 26, w: { fov: 0.95, neck: 1.1, yaw: 1.0, occ: 0.30 } },
-    subtitle: { label: '자막', neckLimit: 16, w: { fov: 1.20, neck: 1.9, yaw: 1.6, occ: 0.62 } },
-    comfort: { label: '목편함', neckLimit: 10, w: { fov: 1.35, neck: 3.2, yaw: 1.4, occ: 0.40 } }
-  };
-
-  function score(p, m, hall, taste) {
-    const pre = PRESETS[taste] || PRESETS.balance;
-    const isImax = hall.tags.includes('IMAX'), is4dx = hall.tags.includes('4DX');
-    const ideal = isImax ? 63 : is4dx ? 55 : (hall.tags.includes('리클라이너') ? 44 : 46);
-    let s = 100;
-    s -= Math.abs(m.hFov - ideal) * pre.w.fov;
-    s -= Math.max(0, m.neck - pre.neckLimit) * pre.w.neck;
-    s -= Math.max(0, Math.abs(m.yaw) - 8) * pre.w.yaw;
-    s -= Math.min(45, m.occ) * pre.w.occ;
-    const rows = p.rows - 1;
-    const ratio = rows > 0 ? (m.dC - p.firstRow) / (rows * p.rowGap) : 0.5;
-    s -= Math.abs(ratio - 0.55) * 30;
-    return clamp(Math.round(s), 0, 100);
+  /* ---------- URL 해시 라우팅 ---------- */
+  function hashOf(st) {
+    if (st.view === 'my') return '#/my';
+    if (st.view === 'theater' && st.theaterId) return '#/t/' + st.theaterId;
+    if (st.view === 'hall' && st.hallId) return '#/t/' + st.theaterId + '/h/' + st.hallId + (st.seatKey ? '/s/' + st.seatKey : '');
+    return '#/';
+  }
+  function syncHash(push) {
+    const h = hashOf(state);
+    if (location.hash === h) return;
+    try { (push ? history.pushState : history.replaceState).call(history, { h }, '', h); } catch (e) { location.hash = h; }
+  }
+  function applyHash() {
+    const seg = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+    if (!seg.length) { state.view = 'home'; state.theaterId = null; state.hallId = null; state.seatKey = null; return; }
+    if (seg[0] === 'my') { state.view = 'my'; return; }
+    if (seg[0] === 't' && seg[1]) {
+      state.theaterId = seg[1];
+      if (seg[2] === 'h' && seg[3]) {
+        state.hallId = seg[3]; state.view = 'hall';
+        state.seatKey = (seg[4] === 's' && seg[5]) ? decodeURIComponent(seg[5]) : null;
+        const hh = findHall(state.theaterId, state.hallId);
+        state.aspect = hh ? String(hh.params.aspect) : null;
+        state.photoIdx = 0; state.tab = 'photo';
+      } else { state.view = 'theater'; state.hallId = null; state.seatKey = null; }
+      return;
+    }
+    state.view = 'home';
   }
 
-  const gradeOf = (s) => s >= 88 ? { g: 1, t: '명당' } : s >= 80 ? { g: 2, t: '준명당' } : s >= 68 ? { g: 3, t: '무난' } : s >= 55 ? { g: 4, t: '아쉬움' } : { g: 5, t: '비추천' };
-  const heatColor = (s) => s >= 88 ? '#047857' : s >= 80 ? '#22B573' : s >= 68 ? '#A7E8C8' : s >= 55 ? '#F6C445' : '#F08C8C';
-
-  /* ---------- 렌더: 공통 ---------- */
+  /* ---------- 렌더 ---------- */
   function badgeHtml(tag) {
     const map = { 'IMAX': 'imax', '4DX': 'fourdx', 'SCREENX': 'screenx', '리클라이너': 'recliner', 'Laser': 'laser', 'PRIVATE BOX': 'box', 'CGV아트하우스': 'art', '빈백': 'bean', '카바나': 'bean' };
     return `<span class="badge ${map[tag] || 'plain'}">${esc(tag)}</span>`;
@@ -505,21 +712,14 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     else if (state.view === 'theater') v.innerHTML = viewTheater();
     else if (state.view === 'hall') v.innerHTML = viewHall();
     else if (state.view === 'my') v.innerHTML = viewMy();
-    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'auto' : 'auto' });
-    if (state.view === 'hall') {
-      paintSeatMap();
-      paintSeatPanel();
-    }
-    if (state.view === 'my') paintMy();
+    window.scrollTo({ top: 0 });
+    if (state.view === 'hall') { paintSeatMap(); paintSeatPanel(); }
   }
 
   /* ---------- 홈 ---------- */
   function viewHome() {
     const m = DATA.meta;
-    const list = theaters.filter((t) => {
-      if (state.filter === 'all') return true;
-      return t.halls.some((h) => h.tags.includes(state.filter)) || (state.filter === '리클라이너' && t.halls.some((h) => h.tags.includes('리클라이너')));
-    });
+    const list = theaters.filter((t) => state.filter === 'all' || t.halls.some((h) => h.tags.includes(state.filter)));
     return `
     <section class="hero">
       <h1>충남 CGV ${m.theaterCount}개 지점,<br>좌석마다 시야를 미리 봅니다</h1>
@@ -532,7 +732,7 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     </section>
 
     <div class="section-title"><h2>지점 둘러보기</h2><span class="cap">${esc(m.surveyedAt.replace(/-/g, '.'))} 조회</span></div>
-    <div class="chip-row" id="filterRow">
+    <div class="chip-row wrap" id="filterRow">
       ${['all', 'IMAX', '4DX', 'SCREENX', '리클라이너'].map((f) => `<button class="chip sm" data-filter="${f}" aria-pressed="${state.filter === f}">${f === 'all' ? '전체' : f}</button>`).join('')}
     </div>
 
@@ -540,9 +740,10 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
       ${list.map((t) => {
         const ok = t.halls.filter((h) => h.status === 'ok').length;
         const seats = t.halls.reduce((a, h) => a + (h.total || 0), 0);
+        const ph = t.halls.reduce((a, h) => a + hallPhotoCount(h.id).seats, 0);
         return `<button class="tcard" data-go="theater" data-id="${t.id}">
           <div class="tcard-top">
-            <div class="tlogo">${esc(t.name.replace('천안', '천'))}</div>
+            <div class="tlogo">${esc(TINIT[t.id] || t.name.slice(0, 2))}</div>
             <div style="min-width:0">
               <div class="tname">CGV ${esc(t.name)}</div>
               <div class="tregion">${esc(t.region)}</div>
@@ -554,29 +755,15 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
             <div><b class="num">${seats.toLocaleString()}</b>좌석</div>
             <div><b class="num">${ok}</b>좌석표</div>
           </div>
-          <div class="progress"><i style="width:${Math.round((ok / t.halls.length) * 100)}%"></i></div>
+          ${ph ? `<div class="progress" style="background:var(--green-l)"><i style="width:100%;background:var(--green)"></i></div><div class="tregion" style="margin-top:6px;color:var(--green-d);font-weight:800">📷 실사 좌석 ${ph}석</div>` : ''}
         </button>`;
       }).join('')}
     </div>
 
-    <div class="card card-pad" style="margin-top:22px">
-      <div style="display:flex;gap:12px;align-items:flex-start">
-        <div class="empty-ic" style="width:44px;height:44px;border-radius:14px;margin:0;flex:0 0 auto">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 4v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V7l7-4z" stroke="#047857" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="#047857" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div>
-          <h3 style="font-size:15px;font-weight:800;letter-spacing:-.02em">데이터는 이렇게 모았어요</h3>
-          <p class="sub" style="font-size:13px;line-height:1.65;margin-top:6px">
-            CGV 홈페이지의 <b>극장별 예매 → 좌석 선택</b> 화면에 실제로 그려지는 좌석표를 기준으로 행·열, 통로, 특수석(스윗박스·릴렉스·카바나·빈백·장애인석)을 그대로 옮겼습니다.
-            스크린 크기·열 간격 등 물리 제원은 공개 자료와 객석 규모로 추정한 값이며, 좌석 카드에 신뢰도(실측/추정)를 표시합니다.
-          </p>
-        </div>
-      </div>
-    </div>
-
     <div class="foot">
       <b>충남 시네마 시야</b>는 CGV·CJ 4DPLEX와 제휴하지 않은 비공식 정보 서비스입니다. 좌석표·상영관 정보는 조회 시점 기준이며, 리뉴얼·좌석 교체로 달라질 수 있습니다.<br>
-      조회 기준 ${esc(DATA.meta.surveyedAtLabel)} · 상영관 좌석수 출처 CGV 예매 화면 · 상표는 설명 목적으로만 사용합니다.
+      조회 기준 ${esc(DATA.meta.surveyedAtLabel)} · 상영관 좌석수 출처 CGV 예매 화면 · 상표는 설명 목적으로만 사용합니다.<br>
+      좌석 시야 사진은 <b>직접 제보 사진</b>과 <b>원문 출처 링크</b>로만 연결하며, 타인 사진을 무단 재게시하지 않습니다.
     </div>`;
   }
 
@@ -598,19 +785,37 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
       </div>
     </div>
     ${t.note ? `<div class="notice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;margin-top:1px"><circle cx="12" cy="12" r="9" stroke="#8B95A1" stroke-width="1.6"/><path d="M12 8h.01M11 12h1v4h1" stroke="#8B95A1" stroke-width="1.8" stroke-linecap="round"/></svg><div>${esc(t.note)}</div></div>` : ''}
-    <div class="section-title"><h2>상영관 ${t.halls.length}</h2><span class="cap">좌석을 누르면 시야를 계산해요</span></div>
+    <div class="section-title"><h2>상영관 ${t.halls.length}</h2><span class="cap">좌석을 누르면 시야를 볼 수 있어요</span></div>
     <div class="hgrid">
       ${t.halls.map((h) => {
         const st = h.status;
         const badge = st === 'ok' ? '<span class="badge ok">좌석표 확인</span>' : st === 'work' ? '<span class="badge work">리뉴얼 공사</span>' : '<span class="badge soon">좌석표 준비 중</span>';
+        const pc = hallPhotoCount(h.id);
         return `<button class="hcard ${st === 'ok' ? '' : 'disabled'}" ${st === 'ok' ? `data-go="hall" data-tid="${t.id}" data-hid="${h.id}"` : `data-soon="${esc(h.name)}"`}>
           <div class="hcard-top"><div class="hname">${esc(h.name)}</div>${badge}</div>
           <div class="tbadges">${h.tags.map(badgeHtml).join('')}</div>
-          <div class="hseats">${h.total ? `<b class="num">${h.total}</b>석` : '좌석수 미확인'}</div>
+          <div class="hseats">${h.total ? `<b class="num">${h.total}</b>석` : '좌석수 미확인'}${pc.seats ? `<span style="float:right;color:var(--green-d);font-size:11.5px;font-weight:800">📷 ${pc.seats}</span>` : ''}</div>
         </button>`;
       }).join('')}
     </div>
-    <div class="foot">상영관 목록은 CGV 예매 화면의 당일 편성 기준입니다. 회차가 없는 관은 목록에 나오지 않아 아래 안내에 따로 적었습니다.</div>`;
+    <div class="foot">상영관 목록은 CGV 예매 화면 편성 기준입니다. 회차가 없는 관은 좌석표를 확인하지 못했을 수 있어요.</div>`;
+  }
+
+  /* ---------- 화면비 옵션 (관 포맷별) ---------- */
+  function aspectOptions(h) {
+    const isImax = h.tags.includes('IMAX');
+    const own = Number(h.params.aspect);
+    if (isImax) {
+      return {
+        label: '화면비 · IMAX LASER',
+        opts: [
+          [`${own.toFixed(2)}`, `IMAX ${own.toFixed(2)} : 1`],
+          ['2.39', '2.39 : 1 · 일반 영화']
+        ]
+      };
+    }
+    const name = own > 2.2 ? '시네마스코프' : own > 1.7 ? '플랫' : `화면비 ${own.toFixed(2)}`;
+    return { label: '화면비', opts: [[`${own.toFixed(2)}`, `${own.toFixed(2)} : 1 · ${name}`]] };
   }
 
   /* ---------- 상영관 ---------- */
@@ -618,9 +823,10 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     const t = findTheater(state.theaterId), h = findHall(state.theaterId, state.hallId);
     if (!t || !h) return '';
     const p = h.params;
-    if (state.aspect === null) state.aspect = p.aspect;
+    if (state.aspect === null) state.aspect = String(p.aspect);
     const conf = p.conf === 'B' ? '<span class="cbadge a">스크린 제원 B · 공개자료</span>' : '<span class="cbadge c">스크린 제원 C · 유형 추정</span>';
-    const counts = h.seatTypes || {};
+    const as = aspectOptions(h);
+    const pc = hallPhotoCount(h.id);
     return `
     <button class="back" data-go="theater" data-id="${t.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#6B7684" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>${esc(t.name)}</button>
     <div class="hall-head">
@@ -631,37 +837,36 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
       </div>
     </div>
 
-    <div class="chip-row" style="margin-bottom:14px">
-      <span style="font-size:12.5px;color:var(--mute);font-weight:800;align-self:center;margin-right:2px">화면비</span>
-      ${[['1.43', 'IMAX 확장'], ['1.90', 'IMAX 기본'], ['2.39', '일반 와이드']].map(([v, l]) => `<button class="chip green" data-aspect="${v}" aria-pressed="${String(state.aspect) === v}">${v} <span style="font-weight:700;opacity:.75;font-size:11.5px">${l}</span></button>`).join('')}
+    <div class="aspect-row">
+      <span class="aspect-label">${esc(as.label)}</span>
+      ${as.opts.map(([v, l]) => as.opts.length > 1
+        ? `<button class="chip green" data-aspect="${v}" aria-pressed="${String(state.aspect) === v}">${l}</button>`
+        : `<span class="chip green" aria-pressed="true" style="pointer-events:none">${l}</span>`).join('')}
     </div>
 
     <div class="layout">
-      <div class="card mapcard">
+      <div class="card mapcard" style="min-width:0">
         <div class="screenbar"><span>SCREEN ${fmt(p.screenW, 1)} × ${fmt(p.screenH, 1)} m</span></div>
         <div class="maptools">
-          <div class="chip-row" style="gap:6px">
-            ${Object.entries(PRESETS).map(([k, v]) => `<button class="chip sm" data-taste="${k}" aria-pressed="${state.taste === k}">${v.label}</button>`).join('')}
+          <div class="chip-row">
+            <button class="chip sm photochip" data-photoonly="1" aria-pressed="${state.photoOnly}">📷 실사 있는 좌석만</button>
+            ${pc.seats ? `<button class="chip sm" data-photogal="1">실사 모아보기 ${pc.shots}컷</button>` : ''}
           </div>
-          <button class="chip sm" data-heat="1" aria-pressed="${state.heat}">${state.heat ? '점수 숨기기' : '시야 점수 보기'}</button>
+          <div class="chip-row">
+            <button class="chip sm" data-mode="center" aria-pressed="${state.mode === 'center'}">화면 응시</button>
+            <button class="chip sm" data-mode="level" aria-pressed="${state.mode === 'level'}">정면 고정</button>
+          </div>
         </div>
-        <div class="seatmap-scroll"><div class="seatmap ${state.heat ? 'heat' : ''}" id="seatmap"></div></div>
-        <div class="legend">
-          <span><i style="background:#DCEDE4"></i>일반석</span>
-          ${counts.r ? '<span><i style="background:#DCD8FB"></i>릴렉스</span>' : ''}
-          ${counts.s ? '<span><i style="background:#FBD5E8"></i>SWEETBOX</span>' : ''}
-          ${counts.c ? '<span><i style="background:#FDE7C3"></i>카바나</span>' : ''}
-          ${counts.b ? '<span><i style="background:#E7E4DD"></i>빈백</span>' : ''}
-          ${counts.p ? '<span><i style="background:#BFE3FA"></i>장애인석</span>' : ''}
-          <span><i style="background:transparent;border:1px dashed #C9CFD6"></i>통로·빈칸</span>
-        </div>
-        <div class="topseats" id="topseats"></div>
+        <div class="seatmap-scroll"><div class="seatmap" id="seatmap"></div></div>
+        <div class="legend" id="legend"></div>
       </div>
 
       <div class="panel">
         <div class="card" id="seatPanel"></div>
       </div>
     </div>
+
+    ${galleryHtml(h)}
 
     <div class="sheet mobile-only" id="sheet">
       <div class="sheet-grab"></div>
@@ -673,88 +878,100 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     <div class="scrim mobile-only" id="scrim"></div>`;
   }
 
+  function legendHtml(h) {
+    const c = h._types || {};
+    const items = [];
+    if (c.n) items.push(['일반석', 'background:#DCEDE4']);
+    if (c.r) items.push(['릴렉스', 'background:#DCD8FB']);
+    if (c.s) items.push(['SWEETBOX', 'background:#FBD5E8']);
+    if (c.c) items.push(['카바나', 'background:#FDE7C3']);
+    if (c.b) items.push(['빈백', 'background:#E7E4DD']);
+    if (c.p) items.push(['장애인석', 'background:#BFE3FA']);
+    items.push(['통로·빈칸', 'background:transparent;border:1px dashed #C9CFD6']);
+    return items.map(([l, st]) => `<span><i style="${st}"></i>${l}</span>`).join('');
+  }
+
+  function galleryHtml(h) {
+    const b = PHOTOS[h.id];
+    if (!b || !b.seats) return '';
+    const items = [];
+    hSeatsRows(h).forEach((s) => {
+      const arr = b.seats[s.key];
+      if (!arr || !arr.length) return;
+      const first = arr[0];
+      const thumb = first.src
+        ? `<img src="${esc(first.src)}" alt="${esc(h.name)} ${esc(s.key)} 좌석 시야" loading="lazy">`
+        : `<div class="gal-noimg">🔗<span>원문 링크</span></div>`;
+      items.push(`<button class="gal-item" data-seat="${esc(s.key)}" data-tabto="photo">
+        ${thumb}
+        <div class="gal-cap"><span>${esc(s.key)}</span><span class="t">${esc(tierLabel(first.tier))}${arr.length > 1 ? ' ' + arr.length + '컷' : ''}</span></div>
+      </button>`);
+    });
+    if (!items.length) return '';
+    return `<section class="gallery card card-pad" id="photoGallery">
+      <div class="section-title" style="margin:0 0 12px"><h2>이 상영관 실사 좌석</h2><span class="cap">${items.length}석 · 누르면 그 좌석으로 이동</span></div>
+      <div class="gal-grid">${items.join('')}</div>
+    </section>`;
+  }
+
+  function hSeatsRows(h) {
+    hallSeats(h);
+    return h._seats;
+  }
+
   /* ---------- 좌석판 ---------- */
   function paintSeatMap() {
     const h = findHall(state.theaterId, state.hallId);
     const box = $('#seatmap'); if (!h || !box) return;
-    const p = h.params, seats = hallSeats(h);
+    const p = h.params;
+    const seats = hallSeats(h);
     const cols = h._cols;
-    const scores = {};
-    if (state.heat || state.seatKey === null) {
-      seats.forEach((s) => { scores[s.key] = score(p, metrics(p, s), h, state.taste); });
-    }
-    const top = [...seats].sort((a, b) => (scores[b.key] || 0) - (scores[a.key] || 0)).slice(0, 3).map((s) => s.key);
-    box.innerHTML = h.rows.map((row, y) => {
+    box.innerHTML = h.rows.map((row) => {
       const lab = `<div class="rlab">${esc(row.l)}</div>`;
-      const cells = row.c.map((cell, x) => {
+      const cells = row.c.map((cell) => {
         if (cell === '.') return '<div class="seat empty"></div>';
         const m = /^(\d+)([npsrcbx])$/.exec(cell); if (!m) return '<div class="seat empty"></div>';
         const key = row.l + m[1];
         const isSel = state.seatKey === key;
-        const isBest = top.includes(key);
-        const bg = state.heat ? `background:${heatColor(scores[key] == null ? 0 : scores[key])}` : '';
-        return `<button class="seat ${isSel ? 'sel' : ''} ${isBest ? 'best' : ''}" data-seat="${key}" data-t="${m[2]}" style="${bg}" title="${esc(key)} ${TYPES[m[2]] || ''}">${m[1]}</button>`;
+        const has = photosFor(h.id, key).length > 0;
+        const dim = state.photoOnly && !has;
+        return `<button class="seat ${isSel ? 'sel' : ''} ${has ? 'hascam' : ''} ${dim ? 'dim' : ''}" data-seat="${key}" data-t="${m[2]}" title="${esc(key)} ${TYPES[m[2]] || ''}${has ? ' · 실사 사진 있음' : ''}">
+          <span class="sn">${m[1]}</span>${has ? '<i class="cam"></i>' : ''}</button>`;
       }).join('');
-      return lab.replace('class="rlab"', 'class="rlab"') + cells;
-    }).map((s) => `<div class="srow" style="display:grid;grid-template-columns:18px repeat(${cols}, minmax(12px,1fr));gap:3px">${s}</div>`).join('');
-
-    const top5 = [...seats].map((s) => ({ s, v: scores[s.key] == null ? score(p, metrics(p, s), h, state.taste) : scores[s.key] }))
-      .sort((a, b) => b.v - a.v).slice(0, 5);
-    const strip = $('#topseats');
-    if (strip) {
-      strip.innerHTML = `<div style="font-size:12px;font-weight:800;color:var(--mute);align-self:center;white-space:nowrap">${PRESETS[state.taste].label} 추천</div>` +
-        top5.map((o, i) => `<button class="topseat" data-seat="${esc(o.s.key)}">
-          <b>${i + 1}</b><span>${esc(o.s.key)}</span><i>${o.v}</i></button>`).join('');
-    }
+      return `<div class="srow" style="display:grid;grid-template-columns:14px repeat(${cols}, minmax(0,1fr));gap:3px">${lab}${cells}</div>`;
+    }).join('');
+    const lg = $('#legend');
+    if (lg) lg.innerHTML = legendHtml(h);
+    const g = $('#photoGallery');
+    if (g && state.photoOnly) g.scrollIntoView({ block: 'nearest' });
   }
 
   /* ---------- 좌석 상세 ---------- */
   function seatPanelHtml(seat) {
     const t = findTheater(state.theaterId), h = findHall(state.theaterId, state.hallId);
     if (!seat) {
-      const seats = hallSeats(h);
-      const p = h.params;
-      const ranked = [...seats].map((s) => ({ s, v: score(p, metrics(p, s), h, state.taste) })).sort((a, b) => b.v - a.v).slice(0, 3);
+      const withPhotos = hallSeats(h).filter((s) => photosFor(h.id, s.key).length);
       return `<div class="empty-state">
         <div class="empty-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 17V9a2 2 0 012-2h2a2 2 0 012 2v1h4V9a2 2 0 012-2h2a2 2 0 012 2v8" stroke="#047857" stroke-width="1.7" stroke-linecap="round"/><path d="M2 19h20" stroke="#047857" stroke-width="1.7" stroke-linecap="round"/></svg></div>
         <h3>좌석을 하나 골라보세요</h3>
-        <p>자리마다 화면이 얼마나 크게 보이고,<br>고개를 얼마나 들어야 하는지 계산해 드려요.</p>
-        <div class="reco">${ranked.map((r) => `<button data-seat="${esc(r.s.key)}">${esc(r.s.key)} · ${r.v}점</button>`).join('')}</div>
+        <p>실제 사진과 시야 시뮬레이션,<br>단면도를 한 화면에서 볼 수 있어요.</p>
+        ${withPhotos.length ? `<div class="reco">${withPhotos.slice(0, 6).map((s) => `<button data-seat="${esc(s.key)}">📷 ${esc(s.key)}</button>`).join('')}</div>` : ''}
       </div>`;
     }
-    const p = h.params, m = metrics(p, seat), s = score(p, m, h, state.taste), g = gradeOf(s);
-    const color = heatColor(s);
-    const circ = 2 * Math.PI * 38;
-    const dash = (s / 100) * circ;
-    const ugc = store[ugcKey()] || {};
-    const mySeat = (ugc.seats || {})[seat.key] || null;
-    const reviews = (ugc.list || []).filter((r) => r.seat === seat.key);
-    const tags = ['명당', '몰입', '목 편함', '자막 잘 보임', '앞사람 가림', '좌우로 치우침', '사운드 좋음'];
+    const p = h.params, m = metrics(p, seat);
+    const arr = photosFor(h.id, seat.key);
+    const idx = clamp(state.photoIdx || 0, 0, Math.max(0, arr.length - 1));
+    const tab = state.tab === 'photo' && !arr.length ? 'sim' : state.tab;
+
     return `
+      <button class="back mini" data-go="hallback" style="margin:0 0 12px">‹ 좌석 선택으로</button>
       <div class="seat-head">
         <div>
           <div class="seat-title">${esc(seat.key)}</div>
           <div class="seat-sub">${TYPES[seat.t] || '일반석'} · ${esc(h.name)}</div>
         </div>
         <div style="text-align:right">
-          <span class="grade g${g.g}">${g.t}</span>
-        </div>
-      </div>
-
-      <div class="score-wrap">
-        <div class="ring">
-          <svg width="92" height="92" viewBox="0 0 92 92">
-            <circle cx="46" cy="46" r="38" fill="none" stroke="#F1F3F5" stroke-width="8"/>
-            <circle cx="46" cy="46" r="38" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round"
-              stroke-dasharray="${dash} ${circ}" />
-          </svg>
-          <div class="val">${s}</div>
-        </div>
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:800;color:var(--sub)">${PRESETS[state.taste].label} 취향 기준</div>
-          <div style="font-size:12.5px;color:var(--mute);font-weight:600;margin-top:4px;line-height:1.5">
-            ${g.g <= 2 ? '화면 중앙과 가깝고 목 부담이 적은 자리예요.' : g.g === 3 ? '무난하게 볼 수 있는 자리예요.' : '화면이 한쪽으로 치우치거나 고개가 많이 꺾여요.'}
-          </div>
+          ${arr.length ? `<span class="badge ok">📷 실사 ${arr.length}컷</span>` : `<span class="badge plain">실사 없음</span>`}
         </div>
       </div>
 
@@ -767,35 +984,59 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
         <div class="metric"><span>누적 단차</span><b>${fmt(m.steps, 1)}<i>m</i></b></div>
       </div>
 
-      <div class="canvas-card">
-        <div class="canvas-head"><b id="viewTitle">화면 응시</b><span>시야 ${Math.round(118)}° 기준</span></div>
-        <canvas class="view-canvas" width="720" height="300"></canvas>
-      </div>
-      <div class="chip-row" style="margin-top:10px">
-        <button class="chip sm" data-mode="center" aria-pressed="${state.mode === 'center'}">화면 응시</button>
-        <button class="chip sm" data-mode="level" aria-pressed="${state.mode === 'level'}">정면 고정</button>
-        <button class="chip sm" id="copySeat">좌석 카드 복사</button>
+      <div class="ptabs" role="tablist">
+        <button data-ptab="photo" aria-pressed="${tab === 'photo'}" ${arr.length ? '' : 'disabled'}>실사 사진</button>
+        <button data-ptab="sim" aria-pressed="${tab === 'sim'}">시야 시뮬</button>
+        <button data-ptab="profile" aria-pressed="${tab === 'profile'}">단면도</button>
       </div>
 
-      <div class="profile-card"><canvas class="profile-canvas" width="720" height="200"></canvas></div>
+      <div class="tabbody">
+        ${tab === 'photo' ? photoTabHtml(seat, arr, idx) : ''}
+        ${tab === 'sim' ? `
+          <div class="canvas-card">
+            <div class="canvas-head"><b>화면 응시</b><span>시야 118° 기준</span></div>
+            <canvas class="view-canvas" width="720" height="300"></canvas>
+          </div>
+          <p class="sub" style="font-size:12px;margin-top:8px;line-height:1.55">같은 자리에서 찍은 실사 사진이 있으면 <b>실사 사진</b> 탭에서 나란히 비교해 보세요.</p>` : ''}
+        ${tab === 'profile' ? `<div class="profile-card"><canvas class="profile-canvas" width="720" height="200"></canvas></div>
+          <p class="sub" style="font-size:12px;margin-top:8px;line-height:1.55">스크린 하단·눈높이·단차를 옆에서 본 그림입니다.</p>` : ''}
+      </div>
 
-      <div class="ugc">
-        <div class="ugc-title">
-          <h3>이 자리, 직접 앉아본 사람의 한마디</h3>
-          <span class="badge plain" id="ugcCount">${reviews.length}개</span>
+      ${ugcHtml(h, seat)}
+    `;
+  }
+
+  function photoTabHtml(seat, arr, idx) {
+    if (!arr.length) {
+      return `<div class="emptyphoto"><b>아직 실사 사진이 없어요</b>
+        <p>${esc(seat.key)} 자리에서 찍은 실제 사진을 기다리고 있어요.<br>사진을 올려주시면 이 좌석에 바로 붙습니다.</p></div>`;
+    }
+    const cur = arr[idx];
+    const media = cur.src
+      ? `<div class="pv">
+           <img src="${esc(cur.src)}" alt="${esc(seat.key)} 좌석에서 본 스크린" loading="lazy">
+           <div class="pv-bar"><b>${esc(seat.key)} · 실제 시야</b><span>${esc(cur.fov || tierLabel(cur.tier))}</span></div>
+         </div>`
+      : `<div class="extphoto">
+           <div class="extphoto-top"><b>${esc(seat.key)} · 원문에서 보기</b><span>${esc(cur.fov || tierLabel(cur.tier))}</span></div>
+           <p>${esc(cur.note || '')}</p>
+           ${cur.source ? `<a class="btn sm" style="width:100%;text-decoration:none" href="${esc(cur.source)}" target="_blank" rel="noopener noreferrer">원문 블로그에서 실사 보기 ↗</a>` : ''}
+           <div class="extphoto-foot">사진은 저작권 보호를 위해 이 사이트에 복제하지 않고 원문으로 연결합니다.</div>
+         </div>`;
+    return `
+      ${media}
+      ${arr.length > 1 ? `<div class="pv-switch">${arr.map((a, i) => `<button data-photo="${i}" aria-pressed="${i === idx}">${esc(a.fov || tierLabel(a.tier))}</button>`).join('')}</div>` : ''}
+      <div class="pcred">
+        <div class="row">
+          <span class="badge ok">4꼭짓점 검수</span>
+          <span class="badge plain">${esc(tierLabel(cur.tier))}</span>
+          ${cur.stereo ? `<span class="badge plain">${esc(cur.stereo)}</span>` : ''}
         </div>
-        <div class="stars" id="stars">${[1, 2, 3, 4, 5].map((i) => `<button data-star="${i}" class="${mySeat && mySeat.rating >= i ? 'on' : ''}" aria-label="${i}점">★</button>`).join('')}</div>
-        <div class="tagpick" id="tags">${tags.map((tg) => `<button data-tag="${tg}" aria-pressed="${mySeat && mySeat.tags.includes(tg)}">${tg}</button>`).join('')}</div>
-        <textarea class="review" id="reviewText" placeholder="예: 중블 가장자리인데 화면이 정면으로 꽉 차요. 자막도 잘 보여요.">${mySeat ? esc(mySeat.text || '') : ''}</textarea>
-        <button class="btn sm" id="saveReview" style="width:100%;margin-top:10px">${mySeat ? '내 후기 수정' : '내 후기 남기기'}</button>
-        <div class="review-list" id="reviewList">
-          ${reviews.map((r) => `<div class="review">
-            <div class="review-top"><span>${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span><span>${esc(r.date)}</span></div>
-            ${r.text ? `<p>${esc(r.text)}</p>` : ''}
-            ${r.tags.length ? `<div class="rts">${r.tags.map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
-            <div style="margin-top:8px"><button class="helpful" data-helpful="${r.id}">👍 도움돼요 ${r.help || 0}</button></div>
-          </div>`).join('')}
-        </div>
+        <dl>
+          <dt>출처</dt><dd>${cur.source ? `<a href="${esc(cur.source)}" target="_blank" rel="noopener noreferrer">${esc(cur.credit || '원문 보기')} ↗</a>` : esc(cur.credit || '-')}</dd>
+          <dt>촬영</dt><dd>${esc(cur.date || '-')}${cur.note ? ' · ' + esc(cur.note) : ''}</dd>
+        </dl>
+        ${cur.ticket ? `<div class="ticketmini"><img src="${esc(cur.ticket)}" alt="티켓 사진"><div style="font-size:12px;font-weight:700;color:var(--sub)">티켓으로 좌석 확인<br><span style="color:var(--mute);font-weight:600">${esc(cur.ticketNote || '발권 내역 캡처')}</span></div></div>` : ''}
       </div>`;
   }
 
@@ -836,12 +1077,85 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     store[k] = store[k] || { seats: {}, list: [] };
     return store[k];
   }
-  let draft = { rating: 0, tags: [] };
+
+  function ugcHtml(h, seat) {
+    const bucket = store[ugcKey()] || { seats: {}, list: [] };
+    const mine = (bucket.seats || {})[seat.key] || null;
+    const reviews = (bucket.list || []).filter((r) => r.seat === seat.key);
+    const tags = ['명당', '몰입', '목 편함', '자막 잘 보임', '앞사람 가림', '좌우로 치우침', '사운드 좋음'];
+    return `<div class="ugc">
+      <div class="ugc-title">
+        <h3>이 자리, 직접 앉아본 사람의 한마디</h3>
+        <span class="badge plain">${reviews.length}개</span>
+      </div>
+      <div class="stars" id="stars">${[1, 2, 3, 4, 5].map((i) => `<button data-star="${i}" class="${mine && mine.rating >= i ? 'on' : ''}" aria-label="${i}점">★</button>`).join('')}</div>
+
+      <div class="formbox">
+        <div style="font-size:12.5px;font-weight:800;color:var(--sub);margin-top:12px">본 영화</div>
+        <select class="moviesel" id="movieSel">
+          <option value="">영화 선택 (선택)</option>
+          ${MOVIES.map((mv) => `<option value="${esc(mv)}" ${mine && mine.movie === mv ? 'selected' : ''}>${esc(mv)}</option>`).join('')}
+          <option value="__custom" ${mine && mine.movie && MOVIES.indexOf(mine.movie) < 0 ? 'selected' : ''}>직접 입력</option>
+        </select>
+        <input id="movieCustom" class="moviesel" style="margin-top:8px;display:none" placeholder="영화 제목 직접 입력" value="${mine && mine.movie && MOVIES.indexOf(mine.movie) < 0 ? esc(mine.movie) : ''}">
+
+        <div class="tagpick" id="tags" style="margin-top:12px">${tags.map((tg) => `<button data-tag="${tg}" aria-pressed="${mine && (mine.tags || []).includes(tg)}">${tg}</button>`).join('')}</div>
+        <textarea class="review" id="reviewText" placeholder="예: 중블 가장자리인데 화면이 정면으로 꽉 차요. 자막도 잘 보여요.">${mine ? esc(mine.text || '') : ''}</textarea>
+
+        <label class="filebtn" style="margin-top:10px">🎬 영화 티켓 사진 첨부
+          <input type="file" id="ticketFile" accept="image/*">
+        </label>
+        <label class="filebtn" style="margin-top:8px">📷 좌석 시야 사진 첨부
+          <input type="file" id="shotFile" accept="image/*">
+        </label>
+        <div class="thumbs" id="thumbs">
+          ${mine && mine.ticket ? `<figure><img src="${mine.ticket}" alt="티켓"><figcaption>티켓</figcaption></figure>` : ''}
+          ${(mine && mine.shots || []).map((s) => `<figure><img src="${s}" alt="시야"><figcaption>시야</figcaption></figure>`).join('')}
+        </div>
+
+        <button class="btn sm" id="saveReview" style="width:100%;margin-top:10px">${mine ? '내 후기 수정' : '내 후기 남기기'}</button>
+      </div>
+
+      <div class="review-list" id="reviewList">
+        ${reviews.map((r) => `<div class="review">
+          <div class="review-top"><span>${esc(r.author || '익명')} · ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span><span>${esc(r.date)}</span></div>
+          ${r.movie ? `<span class="movie">🎬 ${esc(r.movie)}</span>` : ''}${r.ticket ? `<span class="ticketbadge">티켓 인증</span>` : ''}
+          ${r.text ? `<p>${esc(r.text)}</p>` : ''}
+          ${r.tags && r.tags.length ? `<div class="rts">${r.tags.map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
+          ${(r.shots && r.shots.length) || r.ticket ? `<div class="shots">${r.ticket ? `<img src="${r.ticket}" alt="티켓">` : ''}${(r.shots || []).map((s) => `<img src="${s}" alt="시야">`).join('')}</div>` : ''}
+          <div style="margin-top:8px"><button class="helpful" data-helpful="${r.id}">👍 도움돼요 ${r.help || 0}</button></div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  let draft = { rating: 0, tags: [], ticket: null, shots: [] };
+
+  function compressImage(file, maxW, q) {
+    return new Promise((resolve) => {
+      const fr = new FileReader();
+      fr.onload = () => {
+        const im = new Image();
+        im.onload = () => {
+          const sc = Math.min(1, maxW / im.width);
+          const c = document.createElement('canvas');
+          c.width = Math.round(im.width * sc); c.height = Math.round(im.height * sc);
+          c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+          try { resolve(c.toDataURL('image/jpeg', q)); } catch (e) { resolve(null); }
+        };
+        im.onerror = () => resolve(null);
+        im.src = fr.result;
+      };
+      fr.onerror = () => resolve(null);
+      fr.readAsDataURL(file);
+    });
+  }
+
   function bindUgc(h, seat) {
     const bucket = ugcBucket();
     const mine = bucket.seats[seat.key] || null;
-    draft = { rating: mine ? mine.rating : 0, tags: mine ? [...mine.tags] : [] };
-    const root = document.getElementById('sheetBody') && window.innerWidth <= 900 ? document.getElementById('sheetBody') : document.getElementById('seatPanel');
+    draft = { rating: mine ? mine.rating : 0, tags: mine ? [...(mine.tags || [])] : [], ticket: mine ? mine.ticket || null : null, shots: mine ? [...(mine.shots || [])] : [] };
+    const root = (document.getElementById('sheetBody') && window.innerWidth <= 900) ? document.getElementById('sheetBody') : document.getElementById('seatPanel');
     if (!root) return;
     root.querySelectorAll('#stars button').forEach((b) => {
       b.onclick = () => { draft.rating = +b.dataset.star; root.querySelectorAll('#stars button').forEach((x) => x.classList.toggle('on', +x.dataset.star <= draft.rating)); };
@@ -853,16 +1167,36 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
         b.setAttribute('aria-pressed', i < 0);
       };
     });
+    const sel = root.querySelector('#movieSel');
+    const cust = root.querySelector('#movieCustom');
+    if (sel && cust) sel.onchange = () => { cust.style.display = sel.value === '__custom' ? 'block' : 'none'; if (sel.value === '__custom') cust.focus(); };
+
+    const tf = root.querySelector('#ticketFile');
+    if (tf) tf.onchange = async () => {
+      const f = tf.files && tf.files[0]; if (!f) return;
+      const d = await compressImage(f, 420, 0.62);
+      if (d) { draft.ticket = d; toast('티켓 사진을 첨부했어요'); const th = root.querySelector('#thumbs'); if (th) th.insertAdjacentHTML('afterbegin', `<figure><img src="${d}" alt="티켓"><figcaption>티켓</figcaption></figure>`); }
+    };
+    const sf = root.querySelector('#shotFile');
+    if (sf) sf.onchange = async () => {
+      const f = sf.files && sf.files[0]; if (!f) return;
+      const d = await compressImage(f, 560, 0.62);
+      if (d) { draft.shots.push(d); toast('시야 사진을 첨부했어요'); const th = root.querySelector('#thumbs'); if (th) th.insertAdjacentHTML('beforeend', `<figure><img src="${d}" alt="시야"><figcaption>시야</figcaption></figure>`); }
+    };
+
     const saveBtn = root.querySelector('#saveReview');
     if (saveBtn) saveBtn.onclick = () => {
       if (!draft.rating) { toast('별점을 먼저 남겨주세요'); return; }
+      let movie = sel ? sel.value : '';
+      if (movie === '__custom') movie = cust ? cust.value.trim().slice(0, 40) : '';
       const text = root.querySelector('#reviewText').value.trim().slice(0, 300);
       const bucket2 = ugcBucket();
       const prev = bucket2.seats[seat.key];
       const id = prev && prev.id ? prev.id : 'r' + Date.now();
-      bucket2.seats[seat.key] = { id, rating: draft.rating, tags: [...draft.tags], text, date: new Date().toISOString().slice(0, 10), hall: h.name, seat: seat.key };
-      bucket2.list = bucket2.list.filter((r) => r.seat !== seat.key || r.id !== id);
-      bucket2.list.unshift({ id, seat: seat.key, hall: h.name, rating: draft.rating, tags: [...draft.tags], text, date: new Date().toISOString().slice(0, 10), help: prev ? prev.help || 0 : 0 });
+      const rec = { id, seat: seat.key, hall: h.name, author: nickname || '익명', rating: draft.rating, tags: [...draft.tags], text, movie, ticket: draft.ticket || null, shots: [...draft.shots], date: new Date().toISOString().slice(0, 10) };
+      bucket2.seats[seat.key] = rec;
+      bucket2.list = bucket2.list.filter((r) => !(r.seat === seat.key && r.id === id));
+      bucket2.list.unshift({ ...rec, help: prev ? prev.help || 0 : 0 });
       bucket2.list = bucket2.list.slice(0, 60);
       save(); paintSeatPanel(); toast('후기를 저장했어요');
     };
@@ -876,9 +1210,13 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
   }
 
   function contribution() {
-    let seats = 0, reviews = 0;
-    Object.values(store).forEach((b) => { reviews += (b.list || []).length; seats += Object.keys(b.seats || {}).length; });
-    return { seats, reviews };
+    let seats = 0, reviews = 0, photos = 0;
+    Object.values(store).forEach((b) => {
+      reviews += (b.list || []).length;
+      seats += Object.keys(b.seats || {}).length;
+      Object.values(b.seats || {}).forEach((s) => { photos += (s.shots || []).length + (s.ticket ? 1 : 0); });
+    });
+    return { seats, reviews, photos };
   }
 
   /* ---------- 캔버스: 1인칭 시야 ---------- */
@@ -898,19 +1236,16 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     bg.addColorStop(0, '#0A0F0D'); bg.addColorStop(0.5, '#0E1613'); bg.addColorStop(1, '#090D0B');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
-    // 벽/바닥
     ctx.fillStyle = 'rgba(255,255,255,.035)';
     ctx.fillRect(0, Y(m.vBot), W, H - Y(m.vBot));
     ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.beginPath();
     ctx.moveTo(0, Y(m.vBot)); ctx.lineTo(W, Y(m.vBot)); ctx.stroke();
 
-    // 스크린 프레임
     const sx0 = X(m.aL), sx1 = X(m.aR), sy0 = Y(m.vTop), sy1 = Y(m.vBot);
     ctx.fillStyle = '#141B18'; ctx.fillRect(sx0, sy0, sx1 - sx0, sy1 - sy0);
     ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 1.5;
     ctx.strokeRect(sx0, sy0, sx1 - sx0, sy1 - sy0);
 
-    // 마스킹: 영화 화면비
     const scrAspect = p.screenW / p.screenH;
     let iw = p.screenW, ih = p.screenW / aspect;
     if (ih > p.screenH) { ih = p.screenH; iw = p.screenH * aspect; }
@@ -922,7 +1257,6 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     const iBot = Math.atan2(centerY - ih / 2 - m.eyeY, m.dC) / D2R;
     const ix0 = X(angH(uL)), ix1 = X(angH(uR)), iy0 = Y(iTop), iy1 = Y(iBot);
 
-    // 합성 시험 화면 (저작권 없는 자체 그래픽)
     ctx.save();
     ctx.beginPath(); ctx.rect(ix0, iy0, ix1 - ix0, iy1 - iy0); ctx.clip();
     const iw2 = ix1 - ix0, ih2 = iy1 - iy0;
@@ -930,50 +1264,37 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     sky.addColorStop(0, '#10243A'); sky.addColorStop(.34, '#5B4B6B'); sky.addColorStop(.56, '#D9764C');
     sky.addColorStop(.74, '#F2B45E'); sky.addColorStop(.88, '#8C5A3C'); sky.addColorStop(1, '#241A1D');
     ctx.fillStyle = sky; ctx.fillRect(ix0, iy0, iw2, ih2);
-    // 태양
     const sunR = Math.max(6, ih2 * .05);
     ctx.fillStyle = 'rgba(255,236,190,.92)';
     ctx.beginPath(); ctx.arc(ix0 + iw2 * .63, iy0 + ih2 * .56, sunR, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(255,210,150,.18)';
     ctx.beginPath(); ctx.arc(ix0 + iw2 * .63, iy0 + ih2 * .56, sunR * 2.6, 0, Math.PI * 2); ctx.fill();
-    // 능선
     ctx.fillStyle = 'rgba(22,17,22,.86)';
     ctx.beginPath();
-    ctx.moveTo(ix0, iy1);
-    ctx.lineTo(ix0 + iw2 * .16, iy0 + ih2 * .70);
-    ctx.lineTo(ix0 + iw2 * .30, iy1);
+    ctx.moveTo(ix0, iy1); ctx.lineTo(ix0 + iw2 * .16, iy0 + ih2 * .70); ctx.lineTo(ix0 + iw2 * .30, iy1);
     ctx.closePath(); ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(ix0 + iw2 * .52, iy1);
-    ctx.lineTo(ix0 + iw2 * .78, iy0 + ih2 * .64);
-    ctx.lineTo(ix1, iy1);
+    ctx.moveTo(ix0 + iw2 * .52, iy1); ctx.lineTo(ix0 + iw2 * .78, iy0 + ih2 * .64); ctx.lineTo(ix1, iy1);
     ctx.closePath(); ctx.fill();
-    // 자막
     ctx.fillStyle = 'rgba(255,255,255,.94)';
     ctx.font = `600 ${Math.max(9, ih2 * .052)}px Pretendard, sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('지금, 이 자리에서 보이는 화면', ix0 + iw2 / 2, iy1 - ih2 * .085);
     ctx.restore();
 
-    // 앞줄 머리 (앞 5열까지) — 화면 하단을 가리는 실루엣
-    const headRow = [];
     for (let r = seat.y - 1; r >= Math.max(0, seat.y - 5); r--) {
       const headTop = p.eye + r * p.riser + p.headDelta;
       const angTop = Math.atan2(headTop - m.eyeY, (seat.y - r) * p.rowGap) / D2R;
-      headRow.push({ r, ang: angTop });
-    }
-    headRow.forEach(({ r, ang }) => {
-      const yy = Y(Math.min(ang, m.vTop + 4));
-      if (yy < 0 || yy > H) return;
+      const yy = Y(Math.min(angTop, m.vTop + 4));
+      if (yy < 0 || yy > H) continue;
       const alpha = Math.max(.28, .68 - (seat.y - r - 1) * .1);
       const rx = W * (0.055 + (seat.y - r) * 0.005), ry = H * 0.05;
       const hx = X(0) + ((r * 37) % 100 - 50) / 50 * W * 0.11;
       ctx.fillStyle = `rgba(4,6,5,${alpha})`;
       ctx.beginPath(); ctx.ellipse(hx, yy + ry, rx, ry, 0, Math.PI, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.ellipse(hx, yy + ry * 2.2, rx * 1.7, ry, 0, Math.PI, Math.PI * 2); ctx.fill();
-    });
+    }
 
-    // 내 좌석 앞 좌석등받이 실루엣 (하단)
     const seatBackY = H - H * 0.035;
     ctx.fillStyle = 'rgba(3,5,4,.92)';
     for (let i = -3; i <= 3; i++) {
@@ -983,14 +1304,12 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
       ctx.fill();
     }
 
-    // 스크린 외부(마스킹) 어둡게
     ctx.fillStyle = 'rgba(4,6,5,.72)';
     if (iy0 > sy0) ctx.fillRect(sx0, sy0, sx1 - sx0, iy0 - sy0);
     if (iy1 < sy1) ctx.fillRect(sx0, iy1, sx1 - sx0, sy1 - iy1);
     if (ix0 > sx0) ctx.fillRect(sx0, sy0, ix0 - sx0, sy1 - sy0);
     if (ix1 < sx1) ctx.fillRect(ix1, sy0, sx1 - ix1, sy1 - sy0);
 
-    // 각도 라벨
     ctx.fillStyle = 'rgba(255,255,255,.42)'; ctx.font = '11px Pretendard, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText(HSPAN + '° 보기  ·  화면 가로 ' + fmt(m.hFov, 1) + '°', 12, H - 12);
     ctx.textAlign = 'right';
@@ -1010,7 +1329,6 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     const X = (mtr) => padL + (mtr / maxD) * (W - padL - padR);
     const Y = (h) => H - padB - (h / maxY) * (H - padT - padB);
 
-    // 바닥 계단
     ctx.strokeStyle = '#DDE2E6'; ctx.lineWidth = 1;
     for (let i = 0; i < p.rows; i++) {
       const d0 = p.firstRow + i * p.rowGap - p.rowGap * 0.35;
@@ -1020,32 +1338,26 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
       ctx.beginPath(); ctx.moveTo(X(d1), y); ctx.lineTo(X(d1), Y((i + 1) * p.riser)); ctx.stroke();
     }
 
-    // 스크린
     ctx.fillStyle = '#047857';
     ctx.fillRect(X(0) - 4, Y(p.screenBottom + p.screenH), 4, Y(p.screenBottom) - Y(p.screenBottom + p.screenH));
     ctx.fillStyle = '#8B95A1'; ctx.font = '10px Pretendard, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText('SCREEN', X(0) + 2, Y(p.screenBottom + p.screenH) - 6);
 
-    // 좌석 점
     const centerX = (p.minx + p.maxx) / 2;
-    const sxm = (seat.x - centerX) * p.pitch;
     ctx.fillStyle = '#C7CDD3';
     for (let i = 0; i < p.rows; i++) {
       ctx.beginPath(); ctx.arc(X(p.firstRow + i * p.rowGap), Y(p.eye + i * p.riser), 2.4, 0, Math.PI * 2); ctx.fill();
     }
-    // 선택 좌석
     ctx.fillStyle = '#00A862';
     ctx.beginPath(); ctx.arc(X(p.firstRow + seat.y * p.rowGap), Y(m.eyeY), 4.4, 0, Math.PI * 2); ctx.fill();
 
-    // 시선
     ctx.strokeStyle = 'rgba(0,168,98,.75)'; ctx.lineWidth = 1.4; ctx.setLineDash([4, 3]);
     const seatD = X(p.firstRow + seat.y * p.rowGap), seatY = Y(m.eyeY);
-    [[p.screenBottom + p.screenH, m.vTop], [p.screenBottom, m.vBot], [p.screenBottom + p.screenH / 2, m.neck]].forEach(([yy, ang], i) => {
+    [[p.screenBottom + p.screenH], [p.screenBottom], [p.screenBottom + p.screenH / 2]].forEach(([yy]) => {
       ctx.beginPath(); ctx.moveTo(seatD, seatY); ctx.lineTo(X(0), Y(yy)); ctx.stroke();
     });
     ctx.setLineDash([]);
 
-    // 라벨
     ctx.fillStyle = '#6B7684'; ctx.font = '11px Pretendard, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText(`고개 +${fmt(m.neck, 1)}°  ·  단차 ${fmt(m.steps, 1)}m  ·  거리 ${fmt(m.dist, 1)}m`, padL, 14);
   }
@@ -1053,46 +1365,47 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
   /* ---------- MY ---------- */
   function viewMy() {
     const c = contribution();
-    const tier = c.seats >= 6 ? 3 : c.seats >= 3 ? 2 : c.seats >= 1 ? 1 : 0;
-    const tiers = [['새내기 관객', 0], ['좌석 탐험가', 1], ['시네마 고수', 2], ['명당 마스터', 3]];
-    const keys = Object.keys(store);
+    const keys = Object.keys(store).filter((k) => Object.keys((store[k] || {}).seats || {}).length);
     return `
     <div class="card card-pad">
       <div class="myhead">
-        <div class="avatar">민</div>
+        <div class="avatar" id="myAvatar">${nickname ? esc(nickname.slice(0, 1)) : '🙂'}</div>
         <div style="flex:1">
           <div style="font-size:19px;font-weight:850;letter-spacing:-.03em">내 좌석 기록</div>
-          <div class="seat-sub">이 기기에만 저장돼요 · 서버 전송 없음</div>
+          <div class="seat-sub"><span id="myNick">${esc(nickname || '닉네임 없음')}</span> · 이 기기에만 저장돼요</div>
         </div>
       </div>
       <div class="metrics" style="margin-top:18px">
         <div class="metric"><span>남긴 좌석 후기</span><b class="num">${c.seats}</b></div>
         <div class="metric"><span>작성한 글</span><b class="num">${c.reviews}</b></div>
+        <div class="metric"><span>올린 사진</span><b class="num">${c.photos}</b></div>
+        <div class="metric"><span>티켓 인증</span><b class="num">${Object.values(store).reduce((a, b) => a + Object.values(b.seats || {}).filter((s) => s.ticket).length, 0)}</b></div>
       </div>
-      <div class="badgerow">
-        ${tiers.map(([n, lv]) => `<span class="badgepill ${tier >= lv ? '' : 'off'}">${tier >= lv ? '🏅' : '·'} ${n}</span>`).join('')}
-      </div>
-      <div class="sub" style="font-size:12.5px;margin-top:14px;line-height:1.6;font-weight:600">
-        후기는 3좌석 · 6좌석을 채우면 배지가 올라가요. 포인트·현금 같은 유상 보상은 운영하지 않습니다.
+      <button class="chip sm" id="editNick" style="margin-top:14px">닉네임 ${nickname ? '변경' : '설정'}</button>
+      <div class="sub" style="font-size:12.5px;margin-top:10px;line-height:1.6;font-weight:600">
+        후기·사진은 이 기기 브라우저에만 저장됩니다. 포인트·현금 같은 유상 보상은 운영하지 않아요.
       </div>
     </div>
     <div class="section-title"><h2>내가 남긴 후기</h2><span class="cap">${c.seats}석</span></div>
     ${keys.length === 0 ? `<div class="card empty-state"><div class="empty-ic">💬</div><h3>아직 남긴 후기가 없어요</h3><p>좌석 카드에서 별점과 태그를 남기면<br>여기에 차곡차곡 쌓여요.</p><button class="btn sm" style="margin-top:14px" data-go="home">지점 둘러보기</button></div>` :
         keys.map((k) => {
           const b = store[k]; const t = findTheater(k.split('/')[0]);
-          return Object.values(b.seats || {}).map((r) => `<div class="card card-pad" style="margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><b style="font-size:15px">${esc(t ? t.name : '')} ${esc(r.hall)} ${esc(r.seat)}</b>
+          const hid = k.split('/')[1];
+          const hh = findHall(k.split('/')[0], hid);
+          return Object.values(b.seats || {}).map((r) => `<div class="card card-pad reviewcard" style="margin-bottom:10px" data-go="hall" data-tid="${esc(k.split('/')[0])}" data-hid="${esc(hid)}" data-seat="${esc(r.seat)}" role="button" tabindex="0">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <div style="min-width:0"><b style="font-size:15px">${esc(t ? t.name : '')} ${esc(hh ? hh.name : r.hall)} ${esc(r.seat)}</b>
               <div class="seat-sub">${esc(r.date)} · ${'★'.repeat(r.rating)}</div></div>
-              <span class="grade g${r.rating >= 4 ? 1 : r.rating >= 3 ? 3 : 4}">${r.rating}.0</span>
+              <span class="badge ok" style="flex:0 0 auto">보기</span>
             </div>
+            ${r.movie ? `<div style="margin-top:8px"><span class="movie">🎬 ${esc(r.movie)}</span>${r.ticket ? '<span class="ticketbadge">티켓 인증</span>' : ''}</div>` : (r.ticket ? `<div style="margin-top:8px"><span class="ticketbadge">티켓 인증</span></div>` : '')}
             ${r.text ? `<p class="sub" style="font-size:13px;margin-top:8px;line-height:1.55">${esc(r.text)}</p>` : ''}
-            ${r.tags.length ? `<div class="rts" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">${r.tags.map((x) => `<span class="badge ok">${esc(x)}</span>`).join('')}</div>` : ''}
+            ${(r.shots && r.shots.length) || r.ticket ? `<div class="shots">${r.ticket ? `<img src="${r.ticket}" alt="티켓">` : ''}${(r.shots || []).map((s) => `<img src="${s}" alt="시야">`).join('')}</div>` : ''}
+            ${r.tags && r.tags.length ? `<div class="rts" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">${r.tags.map((x) => `<span class="badge ok">${esc(x)}</span>`).join('')}</div>` : ''}
           </div>`).join('');
         }).join('')}
     <div class="foot">기록은 브라우저 저장소(localStorage)에만 보관되며 외부로 전송되지 않습니다. 브라우저 데이터를 지우면 함께 사라져요.</div>`;
   }
-  function paintMy() {}
 
   /* ---------- 이벤트 ---------- */
   document.addEventListener('click', (e) => {
@@ -1100,43 +1413,41 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
     if (go) {
       const v = go.dataset.go;
       if (v === 'home') { state.view = 'home'; state.theaterId = null; state.hallId = null; state.seatKey = null; }
-      if (v === 'theater') {
-        state.view = 'theater';
-        state.theaterId = go.dataset.id || state.theaterId;
-        state.hallId = null; state.seatKey = null;
-      }
+      if (v === 'theater') { state.view = 'theater'; state.theaterId = go.dataset.id || state.theaterId; state.hallId = null; state.seatKey = null; }
       if (v === 'hall') {
         state.view = 'hall'; state.theaterId = go.dataset.tid; state.hallId = go.dataset.hid;
-        state.seatKey = null; state.aspect = null;
+        state.seatKey = go.dataset.seat || null; state.aspect = null; state.photoIdx = 0; state.tab = 'photo';
         const hh = findHall(state.theaterId, state.hallId); if (hh) state.aspect = String(hh.params.aspect);
       }
       if (v === 'my') state.view = 'my';
+      if (v === 'hallback') { state.seatKey = null; syncHash(true); render(); return; }
+      syncHash(true);
       render(); return;
     }
     const f = e.target.closest('[data-filter]');
     if (f) { state.filter = f.dataset.filter; render(); return; }
     const s = e.target.closest('[data-seat]');
     if (s) {
-      state.seatKey = s.dataset.seat;
+      state.seatKey = s.dataset.seat; state.photoIdx = 0;
+      if (s.dataset.tabto) state.tab = s.dataset.tabto;
+      syncHash(true);
       paintSeatMap(); paintSeatPanel(); return;
     }
+    const tabb = e.target.closest('[data-ptab]');
+    if (tabb) { state.tab = tabb.dataset.ptab; paintSeatPanel(); return; }
+    const ph = e.target.closest('[data-photo]');
+    if (ph) { state.photoIdx = +ph.dataset.photo; paintSeatPanel(); return; }
+    const po = e.target.closest('[data-photoonly]');
+    if (po) { state.photoOnly = !state.photoOnly; render(); return; }
+    const pg = e.target.closest('[data-photogal]');
+    if (pg) { const g = $('#photoGallery'); if (g) g.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
     const a = e.target.closest('[data-aspect]');
     if (a) { state.aspect = a.dataset.aspect; render(); return; }
-    const t = e.target.closest('[data-taste]');
-    if (t) { state.taste = t.dataset.taste; render(); return; }
-    const ht = e.target.closest('[data-heat]');
-    if (ht) { state.heat = !state.heat; render(); return; }
     const md = e.target.closest('[data-mode]');
     if (md) { state.mode = md.dataset.mode; paintSeatPanel(); return; }
     const soon = e.target.closest('[data-soon]');
     if (soon) { toast('이 상영관은 좌석표를 아직 확인하지 못했어요'); return; }
-    if (e.target.closest('#copySeat')) {
-      const h = findHall(state.theaterId, state.hallId); const seat = h._byKey[state.seatKey];
-      const m = metrics(h.params, seat), sc = score(h.params, m, h, state.taste), g = gradeOf(sc);
-      const txt = `[충남 시네마 시야] CGV ${findTheater(state.theaterId).name} ${h.name} ${seat.key} — ${g.t} ${sc}점 · 거리 ${fmt(m.dist, 1)}m · 화면 ${fmt(m.hFov, 1)}° · 고개 ${fmt(m.neck, 1)}°`;
-      (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('좌석 카드를 복사했어요')).catch(() => toast(txt));
-      return;
-    }
+    if (e.target.closest('#editNick')) { nicknameModal(true); return; }
     if (e.target.closest('#sheetClose') || e.target.id === 'scrim') { openSheet(false); return; }
     const nav = e.target.closest('[data-tab]');
     if (nav) { state.view = nav.dataset.tab; render(); return; }
@@ -1145,8 +1456,20 @@ textarea.review:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openSheet(false); });
 
   /* 시작 */
+  hallSeats_init();
+  function hallSeats_init() {
+    DATA.theaters.forEach((t) => t.halls.forEach((h) => { if (h.status === 'ok' && h.rows) hallSeats(h); }));
+  }
+  applyHash();
   render();
-  window.__APP__ = { state, metrics, score, PRESETS, render };
+  window.addEventListener('popstate', () => { applyHash(); render(); });
+  window.__APP__ = { state, metrics, render, setNickname };
+  try {
+    if (!localStorage.getItem('cgv-chn-nick-asked')) {
+      localStorage.setItem('cgv-chn-nick-asked', '1');
+      if (!nickname) setTimeout(() => nicknameModal(false), 500);
+    }
+  } catch (e) {}
 })();
 
 </script>
