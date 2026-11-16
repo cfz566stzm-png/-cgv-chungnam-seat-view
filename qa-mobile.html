@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모바일 레이아웃 QA</title>
+<style>
+  body{margin:0;background:#DFE3E8;font-family:-apple-system,'Apple SD Gothic Neo',sans-serif;padding:16px}
+  h2{font-size:14px;margin:16px 0 8px;color:#333}
+  .phone{width:390px;height:844px;border:10px solid #111;border-radius:38px;overflow:hidden;background:#fff;display:block}
+  iframe{width:390px;height:844px;border:0;display:block}
+</style>
+</head>
+<body>
+  <h2>1) 홈</h2>
+  <div class="phone"><iframe src="./index.html#/" title="home"></iframe></div>
+  <h2>2) 천안펜타포트 IMAX관 (좌석판)</h2>
+  <div class="phone"><iframe src="./index.html#/t/cheonan-pentaport/h/cheonan-pentaport-10" title="hall"></iframe></div>
+  <h2>3) F11 좌석 상세 (실사 탭)</h2>
+  <div class="phone"><iframe src="./index.html#/t/cheonan-pentaport/h/cheonan-pentaport-10/s/F11" title="seat"></iframe></div>
+</body>
+</html>
