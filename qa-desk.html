@@ -27,6 +27,9 @@
     my: ['#/my', '내 기록']
   };
   var pick = map[v] || map.home;
+  if (q.get('h')) {
+    pick = ['#/t/' + (q.get('t') || '0013') + '/h/' + q.get('h') + (q.get('s') ? '/s/' + q.get('s') : ''), (q.get('h') + ' ' + (q.get('s') || ''))];
+  }
   var f = document.getElementById('f');
   f.src = './index.html?cb=' + Date.now() + pick[0];
   document.getElementById('tag').textContent = '1280×800 · ' + pick[1];
