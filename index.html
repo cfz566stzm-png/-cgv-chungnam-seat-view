@@ -1078,38 +1078,46 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.stroke(); }
     }
 
-    /* 이미지 셀 매핑 (평면 텍스처) */
+    /* 이미지 셀 매핑 — 사각형을 삼각형 2개로 나눠 각각 정확한 아핀 변환으로 그린다.
+       (사각형 하나를 아핀으로 그리면 네 번째 꼭짓점이 어긋나 이웃 셀 사이에 틈이 생겼음) */
     var img = movieFrame(o.aspect);
-    function texCell(uv, img, alpha) {
-      if (uv.draw) return;
-      var pts = uv.pts;
-      for (var i = 0; i < 4; i++) if (pts[i][2] < NEAR) return;
-      var sx0 = uv.sx0, sy0 = uv.sy0, sw = uv.sw, sh = uv.sh;
-      var dTL = [sx(pts[0]), sy(pts[0])], dTR = [sx(pts[1]), sy(pts[1])];
-      var dBR = [sx(pts[2]), sy(pts[2])], dBL = [sx(pts[3]), sy(pts[3])];
-      /* 이웃 셀과 살짝 겹쳐 이음새(원근 때문에 생기는 틈) 제거 */
-      var ex = (dTR[0] - dTL[0]), ey = (dTR[1] - dTL[1]);
-      var el = Math.hypot(ex, ey) || 1;
-      ex = ex / el * 1.4; ey = ey / el * 1.4;
-      var vx = (dBL[0] - dTL[0]), vy = (dBL[1] - dTL[1]);
-      var vl = Math.hypot(vx, vy) || 1;
-      vx = vx / vl * 1.4; vy = vy / vl * 1.4;
-      dTL = [dTL[0] - ex - vx, dTL[1] - ey - vy]; dBL = [dBL[0] - ex + vx, dBL[1] - ey + vy];
-      dTR = [dTR[0] + ex - vx, dTR[1] + ey - vy]; dBR = [dBR[0] + ex + vx, dBR[1] + ey + vy];
-      var a = (dTR[0] - dTL[0]) / sw, b = (dTR[1] - dTL[1]) / sw;
-      var c = (dBL[0] - dTL[0]) / sh, d = (dBL[1] - dTL[1]) / sh;
-      var e = dTL[0] - a * sx0 - c * sy0, ff = dTL[1] - b * sx0 - d * sy0;
+    function affTri(P0, P1, P2, S0, S1, S2) {
+      var dux = S1[0] - S0[0], duy = S1[1] - S0[1];
+      var dvx = S2[0] - S0[0], dvy = S2[1] - S0[1];
+      var det = dux * dvy - duy * dvx;
+      if (!det || Math.abs(det) < 1e-9) return null;
+      var e1x = P1[0] - P0[0], e1y = P1[1] - P0[1];
+      var e2x = P2[0] - P0[0], e2y = P2[1] - P0[1];
+      var a = (e1x * dvy - e2x * duy) / det;
+      var b = (e1y * dvy - e2y * duy) / det;
+      var c = (-e1x * dvx + e2x * dux) / det;
+      var d = (-e1y * dvx + e2y * dux) / det;
+      return [a, b, c, d, P0[0] - a * S0[0] - c * S0[1], P0[1] - b * S0[0] - d * S0[1]];
+    }
+    function triTex(P0, P1, P2, S0, S1, S2, img, alpha, rect) {
+      var M = affTri(P0, P1, P2, S0, S1, S2);
+      if (!M) return;
       ctx.save();
       ctx.beginPath();
-      ctx.moveTo(dTL[0], dTL[1]); ctx.lineTo(dTR[0], dTR[1]);
-      ctx.lineTo(dBR[0], dBR[1]); ctx.lineTo(dBL[0], dBL[1]);
+      ctx.moveTo(P0[0], P0[1]); ctx.lineTo(P1[0], P1[1]); ctx.lineTo(P2[0], P2[1]);
       ctx.closePath(); ctx.clip();
       if (alpha != null) ctx.globalAlpha = alpha;
-      ctx.setTransform(a, b, c, d, e, ff);
-      ctx.drawImage(img, sx0, sy0, sw, sh, sx0, sy0, sw, sh);
+      ctx.setTransform(M[0], M[1], M[2], M[3], M[4], M[5]);
+      ctx.drawImage(img, rect[0], rect[1], rect[2], rect[3], rect[0], rect[1], rect[2], rect[3]);
       ctx.restore();
       ctx.globalAlpha = 1;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    function texCell(uv, img, alpha) {
+      var pts = uv.pts;
+      for (var i = 0; i < 4; i++) if (pts[i][2] < NEAR) return;
+      var p0 = [sx(pts[0]), sy(pts[0])], p1 = [sx(pts[1]), sy(pts[1])];
+      var p2 = [sx(pts[2]), sy(pts[2])], p3 = [sx(pts[3]), sy(pts[3])];
+      var sx0 = uv.sx0, sy0 = uv.sy0, sw = uv.sw, sh = uv.sh;
+      var s00 = [sx0, sy0], s10 = [sx0 + sw, sy0], s11 = [sx0 + sw, sy0 + sh], s01 = [sx0, sy0 + sh];
+      var rc = [sx0, sy0, sw, sh];
+      triTex(p0, p1, p2, s00, s10, s11, img, alpha, rc);
+      triTex(p0, p2, p3, s00, s11, s01, img, alpha, rc);
     }
 
     /* ---- 바탕 ---- */
@@ -1152,7 +1160,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     var iImgW = img.width, iImgH = img.height;
     /* 화면을 잘게 나눠 그린다 — 큰 스크린(용산 22.4 m)을 가까이서 보면
        한 줄로 그릴 때 원근 때문에 세로 이음새가 생기므로 세로로도 나눈다. */
-    var NX = 16;
+    var NX = 12;
     var NY = Math.max(1, Math.min(4, Math.round(ih / 6)));
     var yB0 = scrB + (scrH - ih) / 2, yT0 = yB0 + ih;
     for (var k2 = 0; k2 < NY; k2++) {
