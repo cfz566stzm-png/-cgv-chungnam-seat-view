@@ -2961,152 +2961,35 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
 
-  /* ---------- 티켓 OCR (Tesseract.js, 필요할 때만 CDN에서 불러옴) ---------- */
-  let tesseractPromise = null;
-  function loadTesseract() {
-    if (window.Tesseract) return Promise.resolve(window.Tesseract);
-    if (tesseractPromise) return tesseractPromise;
-    tesseractPromise = new Promise((resolve, reject) => {
-      const sc = document.createElement('script');
-      sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
-      sc.async = true;
-      sc.onload = () => (window.Tesseract ? resolve(window.Tesseract) : reject(new Error('tesseract')));
-      sc.onerror = () => reject(new Error('cdn'));
-      document.head.appendChild(sc);
-      setTimeout(() => { if (!window.Tesseract) reject(new Error('timeout')); }, 25000);
-    });
-    return tesseractPromise;
-  }
+  /* ---------- 티켓 OCR — Gemini Flash 서버리스(api/ocr.js) ----------
+     사진을 브라우저에서 가볍게 줄여 서버로 한 번 보내고, 읽은 결과는 이 기기에 캐시한다.
+     서버가 아직 없거나(Vercel 미배포) 한도·네트워크가 막히면 느린 브라우저 OCR을 돌리지 않고
+     곧바로 '사진만 붙이고 직접 고르기' 시트로 넘어간다. */
+  const OCR_ENDPOINT = 'https://cgv-chungnam-seat-view.vercel.app/api/ocr';  /* Vercel 배포 URL로 바꾸면 된다 */
+  const OCR_TIMEOUT_MS = 12000;
+  const OCR_CACHE_KEY = 'cgv_ocr_cache_v1';
+  const OCR_CACHE_MAX = 20;
 
-  /* 사진 전처리: 밝은 종이(티켓) 영역 자동 크롭 + 백분위 스트레치 + 선명화 → 회색조/이진화 2종 */
-  function histPct(hist, total, p) {
-    const target = total * p;
-    let acc = 0;
-    for (let i = 0; i < 256; i++) { acc += hist[i]; if (acc >= target) return i; }
-    return 255;
-  }
-  function otsu(g255, hist, total) {
-    let sum = 0;
-    for (let i = 0; i < 256; i++) sum += i * hist[i];
-    let sumB = 0, wB = 0, best = -1, thr = 128;
-    for (let t = 0; t < 256; t++) {
-      wB += hist[t];
-      if (!wB) continue;
-      const wF = total - wB;
-      if (!wF) break;
-      sumB += t * hist[t];
-      const mB = sumB / wB, mF = (sum - sumB) / wF;
-      const v = wB * wF * (mB - mF) * (mB - mF);
-      if (v > best) { best = v; thr = t; }
-    }
-    return thr;
-  }
-
-  function prepImage(file) {
+  /* 사진 → 최대 변 1200px JPEG(품질 0.85). 통신량과 인식 시간을 함께 줄인다. */
+  function ocrShrink(file) {
     return new Promise((resolve) => {
       const fr = new FileReader();
       fr.onload = () => {
         const im = new Image();
         im.onload = () => {
-          const scale = Math.min(2.6, Math.max(0.3, 1900 / Math.max(im.width, im.height)));
-          const base = document.createElement('canvas');
-          base.width = Math.round(im.width * scale);
-          base.height = Math.round(im.height * scale);
-          const bx = base.getContext('2d');
-          bx.drawImage(im, 0, 0, base.width, base.height);
-          const bd = bx.getImageData(0, 0, base.width, base.height);
-          const ba = bd.data;
-          const hist = new Array(256).fill(0);
-          let n = 0;
-          for (let i = 0; i < ba.length; i += 4) {
-            const g = (ba[i] * 0.299 + ba[i + 1] * 0.587 + ba[i + 2] * 0.114) | 0;
-            ba[i] = ba[i + 1] = ba[i + 2] = g;
-            hist[g]++; n++;
-          }
-          /* 밝은 상위 8%가 종이(티켓) — 그 영역만 잘라낸다 */
-          const thrMask = histPct(hist, n, 0.92);
-          let x0 = base.width, y0 = base.height, x1 = 0, y1 = 0, cnt = 0;
-          for (let y = 0; y < base.height; y++) {
-            for (let x = 0; x < base.width; x++) {
-              if (ba[(y * base.width + x) * 4] >= thrMask) {
-                cnt++;
-                if (x < x0) x0 = x; if (x > x1) x1 = x;
-                if (y < y0) y0 = y; if (y > y1) y1 = y;
-              }
-            }
-          }
-          let cropX = 0, cropY = 0, cropW = base.width, cropH = base.height;
-          const areaAll = base.width * base.height;
-          const areaBox = Math.max(1, (x1 - x0) * (y1 - y0));
-          /* 종이(밝은 영역) 상자를 넉넉하게(22%) 늘려 잡는다.
-             그늘진 오른쪽이 잘려 '9관 G열7번'이 반토둥 나던 문제를 막고,
-             동시에 빈 배경을 덜어내 글자를 크게 키우는 효과를 남긴다. */
-          const px = Math.round((x1 - x0) * 0.22), py = Math.round((y1 - y0) * 0.22);
-          const cX = Math.max(0, x0 - px), cY = Math.max(0, y0 - py);
-          const cW = Math.min(base.width - cX, (x1 - x0) + px * 2);
-          const cH = Math.min(base.height - cY, (y1 - y0) + py * 2);
-          if (cnt > 200 && areaBox > areaAll * 0.03 && cW / base.width >= 0.5 && cH / base.height >= 0.5) {
-            cropX = cX; cropY = cY; cropW = cW; cropH = cH;
-          }
-
+          const side = Math.max(im.width, im.height) || 1;
+          const sc = Math.min(1, 1200 / side);
           const c = document.createElement('canvas');
-          const up = Math.min(3.2, Math.max(1, 2350 / Math.max(1, cropW)));
-          c.width = Math.round(cropW * up); c.height = Math.round(cropH * up);
+          c.width = Math.max(1, Math.round(im.width * sc));
+          c.height = Math.max(1, Math.round(im.height * sc));
           const x = c.getContext('2d');
-          x.drawImage(base, cropX, cropY, cropW, cropH, 0, 0, c.width, c.height);
-          const d = x.getImageData(0, 0, c.width, c.height);
-          const a = d.data;
-          const h2 = new Array(256).fill(0);
-          let n2 = 0;
-          for (let i = 0; i < a.length; i += 4) {
-            const g = (a[i] * 0.299 + a[i + 1] * 0.587 + a[i + 2] * 0.114) | 0;
-            a[i] = a[i + 1] = a[i + 2] = g;
-            h2[g]++; n2++;
-          }
-          const lo = histPct(h2, n2, 0.02), hi = Math.max(lo + 8, histPct(h2, n2, 0.985));
-          for (let i = 0; i < a.length; i += 4) {
-            let v = ((a[i] - lo) * 255) / (hi - lo);
-            v = (v - 128) * 1.25 + 132;
-            a[i] = a[i + 1] = a[i + 2] = v < 0 ? 0 : v > 255 ? 255 : v;
-          }
-          /* 언샤프 */
-          const W2 = c.width, H2 = c.height;
-          const src = new Uint8ClampedArray(a);
-          const K = [0, -0.6, 0, -0.6, 3.4, -0.6, 0, -0.6, 0];
-          for (let y = 1; y < H2 - 1; y++) {
-            for (let xx = 1; xx < W2 - 1; xx++) {
-              const o = (y * W2 + xx) * 4;
-              let acc = 0;
-              for (let ky = -1; ky <= 1; ky++) {
-                for (let kx = -1; kx <= 1; kx++) {
-                  acc += src[((y + ky) * W2 + (xx + kx)) * 4] * K[(ky + 1) * 3 + (kx + 1)];
-                }
-              }
-              a[o] = a[o + 1] = a[o + 2] = acc < 0 ? 0 : acc > 255 ? 255 : acc;
-            }
-          }
-          x.putImageData(d, 0, 0);
-          const levels = c.toDataURL('image/jpeg', 0.95);
-
-          /* 이진화는 복사본에서 (원본 회색조 캔버스는 회전용으로 보존) */
-          const c2 = document.createElement('canvas');
-          c2.width = c.width; c2.height = c.height;
-          const x2 = c2.getContext('2d');
-          x2.drawImage(c, 0, 0);
-          const d2 = x2.getImageData(0, 0, c.width, c.height);
-          const a2 = d2.data;
-          const gray = new Uint8Array(c.width * c.height);
-          const h3 = new Array(256).fill(0);
-          for (let i = 0, p2 = 0; i < a2.length; i += 4, p2++) { gray[p2] = a2[i]; h3[a2[i]]++; }
-          const thr = otsu(gray, h3, gray.length);
-          for (let p2 = 0; p2 < gray.length; p2++) {
-            const v = gray[p2] > thr ? 255 : 0;
-            const o = p2 * 4;
-            a2[o] = a2[o + 1] = a2[o + 2] = v;
-          }
-          x2.putImageData(d2, 0, 0);
-          const bin = c2.toDataURL('image/jpeg', 0.95);
-          resolve({ levels: levels, bin: bin, canvas: c });
+          x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);   /* 투명 PNG도 흰 종이로 */
+          x.drawImage(im, 0, 0, c.width, c.height);
+          let url = '';
+          try { url = c.toDataURL('image/jpeg', 0.85); } catch (e) { resolve(null); return; }
+          const cut = url.indexOf(',');
+          if (cut < 0) { resolve(null); return; }
+          resolve({ dataUrl: url, base64: url.slice(cut + 1), mimeType: 'image/jpeg' });
         };
         im.onerror = () => resolve(null);
         im.src = fr.result;
@@ -3116,240 +2999,122 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     });
   }
 
+  function ocrFallbackHash(s) {
+    let h1 = 0x811c9dc5, h2 = 0x01000193;
+    for (let i = 0; i < s.length; i++) {
+      const c = s.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+      h2 = (h2 + Math.imul(c, i + 1)) >>> 0;
+    }
+    return 'f' + h1.toString(16) + h2.toString(16) + '-' + s.length.toString(16);
+  }
+
+  /* 사진 내용 해시 — 같은 사진을 다시 올리면 서버를 부르지 않는다 */
+  function ocrHash(b64) {
+    try {
+      if (!(window.crypto && window.crypto.subtle && window.crypto.subtle.digest)) return Promise.resolve(ocrFallbackHash(b64));
+      const buf = new TextEncoder().encode(b64);
+      return window.crypto.subtle.digest('SHA-256', buf).then((d) => {
+        const a = new Uint8Array(d);
+        let s = '';
+        for (let i = 0; i < a.length; i++) s += a[i].toString(16).padStart(2, '0');
+        return s;
+      }).catch(() => ocrFallbackHash(b64));
+    } catch (e) { return Promise.resolve(ocrFallbackHash(b64)); }
+  }
+
+  function ocrCacheList() {
+    try {
+      const v = JSON.parse(localStorage.getItem(OCR_CACHE_KEY) || '[]');
+      return Array.isArray(v) ? v : [];
+    } catch (e) { return []; }
+  }
+  function ocrCacheGet(k) {
+    if (!k) return null;
+    const hit = ocrCacheList().find((it) => it && it.k === k && it.r);
+    return hit ? hit.r : null;
+  }
+  function ocrCachePut(k, r) {
+    if (!k || !r) return;
+    try {
+      const list = ocrCacheList().filter((it) => it && it.k !== k);
+      list.unshift({ k: k, r: r, t: Date.now() });
+      localStorage.setItem(OCR_CACHE_KEY, JSON.stringify(list.slice(0, OCR_CACHE_MAX)));
+    } catch (e) { /* 저장 공간이 없으면 캐시만 포기한다 */ }
+  }
+
+  function ocrRequest(payload) {
+    const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = setTimeout(() => { if (ctl) ctl.abort(); }, OCR_TIMEOUT_MS);
+    const opts = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64: payload.base64, mimeType: payload.mimeType })
+    };
+    if (ctl) opts.signal = ctl.signal;
+    return fetch(OCR_ENDPOINT, opts).then((res) => res.json().catch(() => null).then((j) => {
+      if (!res.ok || !j || j.ok !== true) {
+        const err = new Error((j && j.error) || ('http_' + res.status));
+        err.code = (j && j.error) || ('http_' + res.status);
+        throw err;
+      }
+      return j;
+    })).then(
+      (j) => { clearTimeout(timer); return j; },
+      (e) => { clearTimeout(timer); throw e; }
+    );
+  }
+
   function normKey(v) { return String(v || '').replace(/\s+/g, '').replace(/[·.,]/g, ''); }
 
-  /* 티켓 글씨는 사진이 기울어져 있는 경우가 많아, 여러 각도로 돌려 읽고 가장 잘 읽힌 것을 쓴다 */
-  function rotateDataUrl(cv, deg) {
-    const r = Math.abs(deg) * Math.PI / 180;
-    const w = cv.width, h = cv.height;
-    const nw = Math.round(Math.abs(w * Math.cos(r)) + Math.abs(h * Math.sin(r)));
-    const nh = Math.round(Math.abs(w * Math.sin(r)) + Math.abs(h * Math.cos(r)));
-    const c2 = document.createElement('canvas');
-    c2.width = nw; c2.height = nh;
-    const x2 = c2.getContext('2d');
-    x2.fillStyle = '#fff'; x2.fillRect(0, 0, nw, nh);
-    x2.translate(nw / 2, nh / 2);
-    x2.rotate(deg * Math.PI / 180);
-    x2.drawImage(cv, -w / 2, -h / 2);
-    return c2.toDataURL('image/jpeg', 0.92);
-  }
+  /* 서버가 돌려준 글자(theater·hall·seat·movie·date)를 기존 매칭 로직이 쓰는 모양으로 바꾼다 */
+  function infoFromOcr(r) {
+    const info = { branch: null, hall: null, rows: [], movie: '', date: '', time: '', raw: '' };
+    if (!r) return info;
 
-  function scoreOcr(t) {
-    let sc = 0;
-    if (/CGV/i.test(t)) sc += 3;
-    if (/\d{1,2}\s*관/.test(t)) sc += 3;
-    if (/[A-Z]\s*열\s*\d/.test(t)) sc += 4;
-    if (/(20\d{2})[.\-/]\d{1,2}/.test(t)) sc += 3;
-    if (/\d{1,2}:\d{2}/.test(t)) sc += 2;
-    if (/입장권|상영|좌석|인원|관람/.test(t)) sc += 2;
-    if (/[가-힣]{3,}/.test(t)) sc += 1;
-    return sc;
-  }
-
-  /* CGV 티켓 전용 파서 */
-  /* 실제 CGV 키오스크 티켓(2026-11-15 천안펜타포트 / 2026-09-24 천안터미널 / 2026-09-12 천안펜타포트) 형식:
-       ★VIP 영화입장권★
-       2026-11-15 09:41 (BOX_KIOSK_5) [전체발권]
-       ==========
-       2D, 15세이상관람가
-       와일드 호스 나인
-       Wild Horse Nine
-       2026.11.15(일) 1회 10:00 - 12:06
-       9관 G열7번               ← '1관[CGV아트하우스] C열10번', '10관 with PRIVATE BOX 5층 H열9~10번'도 같은 자리
-       총1인원 1명(청소년1명)
-       ==========
-       CGV 천안펜타포트(104-81-45690)
-     지점은 맨 아래(사업자번호 괄호 앞), 관·좌석은 가운데 한 줄, 영화 제목은
-     '15세이상관람가'(또는 '2D,') 줄 다음부터 상영일시 줄 전까지입니다. */
-  function parseTicket(text) {
-    const t = String(text || '');
-    const flat = normKey(t);
-    const lines = t.split(/\n+/).map((v) => v.trim()).filter((v) => v && !/^[=\-_~]{2,}$/.test(v));
-    const out = { branch: null, hall: null, rows: [], movie: '', date: '', time: '', raw: t };
-
-    /* 1) 지점: 49개 지점 이름 중 가장 길게 일치하는 것 */
-    let best = 0;
-    DATA.theaters.forEach((th) => {
-      const k = normKey(th.name);
-      if (k.length >= 2 && k.length > best && flat.indexOf(k) >= 0) { best = k.length; out.branch = th; }
-    });
-    /* 'CGV 천안'처럼 짧게 찍힌 경우 보정 */
-    if (!out.branch) {
-      const m = t.match(/CGV\s*([가-힣]{2,8})/);
-      if (m) {
-        const k = normKey(m[1]);
-        const cand = DATA.theaters.filter((th) => normKey(th.name).indexOf(k) >= 0 || k.indexOf(normKey(th.name)) >= 0);
-        if (cand.length) out.branch = cand[0];
+    const tRaw = String(r.theater || '').replace(/^CGV\s*/i, '').replace(/[\(（][^\)）]*[\)）]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (tRaw) {
+      const k = normKey(tRaw);
+      const cand = DATA.theaters.filter((th) => {
+        const n = normKey(th.name);
+        return n === k || (k.length >= 2 && n.indexOf(k) >= 0) || (n.length >= 3 && k.indexOf(n) >= 0);
+      }).sort((a, b) => b.name.length - a.name.length);
+      if (cand.length) info.branch = cand[0];
+      else {
+        /* 한 글자쯤 흘려 읽은 경우: 앞 3자가 같은 지점이 하나뿐이면 그것 */
+        const p3 = DATA.theaters.filter((th) => normKey(th.name).slice(0, 3) === k.slice(0, 3));
+        if (p3.length === 1) info.branch = p3[0];
       }
     }
 
-    /* 1-b) 'CGV 천안펜타포트(104-81-45690)' — 사업자번호 앞 지점명을 직접 집는다.
-       OCR이 '천안 랜타포트'처럼 한 글자를 흘려도 앞부분 3~4자로 다시 찾는다. */
-    if (!out.branch) {
-      const m = t.match(/CGV\s*([가-힣]{2,10})\s*[(（]/) || t.match(/CGV\s*([가-힣]{2,10})/);
-      if (m) {
-        const k = normKey(m[1]);
-        const cand = DATA.theaters
-          .filter((th) => { const n = normKey(th.name); return n.indexOf(k) >= 0 || k.indexOf(n) >= 0 || (k.length >= 3 && n.slice(0, 3) === k.slice(0, 3)); })
-          .sort((a, b) => b.name.length - a.name.length);
-        if (cand.length) out.branch = cand[0];
-      }
+    const hRaw = String(r.hall || '').trim();
+    if (hRaw) {
+      const hm = hRaw.match(/(\d{1,2})\s*관/);
+      if (hm) info.hall = hm[1] + '관';
+      else if (/imax|아이맥스/i.test(hRaw)) info.hall = 'IMAX';
+      else if (/4dx/i.test(hRaw)) info.hall = '4DX';
+      else if (/screen\s*x|스크린\s*x/i.test(hRaw)) info.hall = 'SCREENX';
+      else if (/씨네앤포레/.test(hRaw)) info.hall = '씨네앤포레';
+      else info.hall = hRaw.slice(0, 20);
     }
 
-    /* 2) 상영관 — '9관 G열7번', '1관[CGV아트하우스] C열10번',
-       '10관 with PRIVATE BOX 5층 H열9~10번'처럼 관 번호 뒤에 부가표기가 붙는다.
-       좌석과 같은 줄에 있는 N관을 먼저 믿고, 없을 때만 IMAX·4DX 같은 이름형을 본다. */
-    const hallLine = lines.find((l) => /\d{1,2}\s*관/.test(l) && /[A-Z]\s*열/.test(l))
-      || lines.find((l) => /\d{1,2}\s*관/.test(l));
-    if (hallLine) {
-      const hnum = hallLine.match(/(\d{1,2})\s*관/);
-      if (hnum) out.hall = hnum[1] + '관';
-    }
-    const hallPatterns = [
-      [/IMAX\s*관?|아이맥스/i, 'IMAX'],
-      [/4DX\s*관?/i, '4DX'],
-      [/SCREEN\s*X\s*관?|스크린\s*X/i, 'SCREENX'],
-      [/씨네앤포레/, '씨네앤포레']
-    ];
-    if (!out.hall) {
-      for (const [re, fixed] of hallPatterns) {
-        if (re.test(t)) { out.hall = fixed; break; }
-      }
-    }
-
-    /* 2-b) '9관 G열 7번' / '10관 with PRIVATE BOX 5층 H열9~10번' — 관과 좌석이 한 줄 */
-    const comb = t.match(/(\d{1,2})\s*관[^\n]{0,40}?([A-Z])\s*열\s*([0-9]{1,2})/);
-    if (comb) { out.hall = comb[1] + '관'; out.rows.push({ row: comb[2], num: +comb[3] }); }
-
-    /* 3) 좌석: 'D열 6-7번', 'D6', 'D열 6번' */
-    const seatRe1 = /([A-Z])\s*열\s*(\d{1,2})\s*(?:[-~,]\s*(\d{1,2}))?\s*번?/g;
-    let mm;
-    while ((mm = seatRe1.exec(t))) {
-      const row = mm[1];
-      const a = +mm[2];
-      const b = mm[3] ? +mm[3] : null;
-      out.rows.push({ row, num: a });
-      if (b && b > a && b - a <= 3) for (let k = a + 1; k <= b; k++) out.rows.push({ row, num: k });
-    }
-    if (!out.rows.length) {
-      const m2 = t.match(/\b([A-Z])[\s-]?(\d{1,2})\b/);
-      if (m2) out.rows.push({ row: m2[1], num: +m2[2] });
-    }
-    /* 같은 좌석을 두 규칙이 각각 잡으면 중복된다 — 순서를 유지하며 한 번만 */
-    const seenSeat = {};
-    out.rows = out.rows.filter((r) => {
-      const k = r.row + r.num;
-      if (seenSeat[k]) return false;
-      seenSeat[k] = 1; return true;
+    const seatRaw = String(r.seat || '').toUpperCase();
+    (seatRaw.match(/[A-Z]{1,2}\s*\d{1,3}/g) || []).forEach((tok) => {
+      const m2 = tok.match(/([A-Z]{1,2})\s*(\d{1,3})/);
+      if (!m2 || info.rows.length >= 4) return;
+      const key = m2[1] + (+m2[2]);
+      if (info.rows.some((x) => x.row + x.num === key)) return;
+      info.rows.push({ row: m2[1], num: +m2[2] });
     });
 
-    /* 4) 날짜·시간 */
-    const dm = t.match(/(20\d{2})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})/);
-    if (dm) out.date = `${dm[1]}-${String(dm[2]).padStart(2, '0')}-${String(dm[3]).padStart(2, '0')}`;
-    const tm = t.match(/(\d{1,2})\s*:\s*(\d{2})/);
-    if (tm) out.time = `${String(tm[1]).padStart(2, '0')}:${tm[2]}`;
+    info.movie = String(r.movie || '').trim().slice(0, 60);
 
-    /* 5) 영화 제목: '15세이상관람가'/'12세이상관람가' 또는 '2D,' 줄 다음부터
-       상영일시(2026.11.15(일) 1회 ...) 줄 전까지의 텍스트. */
-    const rateIdx = lines.findIndex((v) => /관람가|이상관람|관람|\b2D\b/.test(v));
-    if (rateIdx >= 0) {
-      const buf = [];
-      for (let i = rateIdx; i < lines.length && buf.length < 5; i++) {
-        let v = lines[i];
-        if (i === rateIdx) v = v.replace(/^.*?(이상)?관람가?[,.]?/, '').replace(/^2D[,.]?/i, '').replace(/[「」]/g, '');
-        if (/20\d{2}\s*[.\-/]\s*\d{1,2}\s*[.\-/]\s*\d{1,2}/.test(v)) break;          /* 상영일시 줄 */
-        if (i > rateIdx && /총\s*\d*\s*인원|^\d{1,2}\s*관|열\s*\d{1,2}\s*번/.test(v)) break; /* 좌석·인원 줄 */
-        v = v.replace(/[|©®★☆]/g, '').trim();
-        if (v) buf.push(v);
-      }
-      /* 마지막 줄이 원제(영문)만 있으면 뺀다 — '와일드 호스 나인 / Wild Horse Nine' */
-      while (buf.length > 1 && /^[A-Za-z0-9\s:!?'&\-.,]+$/.test(buf[buf.length - 1])) buf.pop();
-      const joinTrim = (v) => {
-        let r = v.trim();
-        const cnt = (ch) => (r.split(ch).length - 1);
-        if (r.startsWith('[') && cnt('[') > cnt(']')) r = r.slice(1).trim();
-        if (r.endsWith(']') && cnt(']') > cnt('[')) r = r.slice(0, -1).trim();
-        if (r.startsWith('(') && cnt('(') > cnt(')')) r = r.slice(1).trim();
-        if (r.endsWith(')') && cnt(')') > cnt('(')) r = r.slice(0, -1).trim();
-        return r;
-      };
-      const joined = joinTrim(buf.join(' ').replace(/\s{2,}/g, ' '));
-      const han = (joined.match(/[가-힣]/g) || []).length;
-      const solidChars = joined.replace(/\s/g, '').length || 1;
-      if (han >= 2 && han / solidChars >= 0.5) {
-        out.movie = joined;
-      } else {
-        /* OCR이 제목 줄을 통째로 놓쳤을 때는 한글 음절이 가장 많은 줄 하나만 (아니면 비워 둔다) */
-        let pk = '';
-        buf.forEach((v) => {
-          const clean = v.replace(/[^가-힣0-9A-Za-z\s:!?'()\[\]]/g, ' ').replace(/\s{2,}/g, ' ').trim();
-          const h2 = (clean.match(/[가-힣]/g) || []).length;
-          const s2 = clean.replace(/\s/g, '').length || 1;
-          if (h2 >= 2 && h2 / s2 >= 0.5 && h2 > (pk.match(/[가-힣]/g) || []).length) pk = clean;
-        });
-        out.movie = pk;
-      }
-    }
-
-    /* 5-b) 상영작 목록에 있으면 그것이 정답. 그 외의 '가장 긴 줄' 추측은
-       관람가 줄을 못 찾았을 때(옛 티켓·스크린샷)만 쓴다 — 깨진 줄이 제목으로 들어가지 않게 */
-    const mv = MOVIES.find((m) => normKey(m).length > 1 && flat.indexOf(normKey(m)) >= 0);
-    if (mv) out.movie = mv;
-    else if (rateIdx < 0) {
-      const bad = /(CGV|VIP|입장권|관람|좌석|인원|결제|티켓|상영|번호|일시|지점|관$)/;
-      const cands = t.split(/\n+/).map((v) => v.trim())
-        .filter((v) => v.length >= 2 && v.length <= 48 && !bad.test(v) && !/^[\d\s:.\-/()]+$/.test(v))
-        .sort((a, b) => b.length - a.length);
-      if (cands.length) out.movie = cands[0]
-        .replace(/^[*★\s]+/, '')
-        .replace(/^\d+[Dd]\s*[·,]?\s*/, '')
-        .replace(/\s*\(.*?\)\s*$/, '')
-        .replace(/[|©®]/g, '')
-        .trim();
-    }
-    return out;
-  }
-
-  /* QA용: OCR 원문을 그대로 넣어 파싱 결과를 확인할 수 있게 열어 둔다 */
-  try { window.__parseTicket = parseTicket; } catch (e) {}
-
-  /* 제목 띠 영역만 잘라 다시 읽기 — '15세이상관람가' 줄 다음부터
-     상영일시(날짜)·좌석 줄 전까지. 제목은 티켓에서 가장 큰 글씨다. */
-  function titleBand(data, cv) {
-    if (!data || !cv) return '';
-    let lines = data.lines;
-    if (!lines) {                     /* tesseract.js 5는 blocks 안에 줄이 들어 있다 */
-      lines = [];
-      (data.blocks || []).forEach((b) => (b.paragraphs || []).forEach((p) => (p.lines || []).forEach((l) => lines.push(l))));
-    }
-    const ls = (lines || []).map((l) => ({ t: String(l.text || '').replace(/\s+/g, ''), b: l.bbox })).filter((l) => l.b);
-    const rate = ls.find((l) => /관람가|이상관람|관람|^2D/.test(l.t));
-    if (!rate) return '';
-    const after = ls.filter((l) => l.b.y0 > rate.b.y1 - 2);
-    const stop = after.find((l) => /^20\d{2}[.\-/]/.test(l.t) || /열\d/.test(l.t) || /^\d{1,2}관/.test(l.t));
-    const top = Math.max(0, rate.b.y1 - 4);
-    const bottom = stop ? stop.b.y0 : Math.min(cv.height, rate.b.y1 + Math.round(cv.height * 0.22));
-    const h = bottom - top;
-    if (h < 24 || h > cv.height * 0.6) return '';
-    const c2 = document.createElement('canvas');
-    c2.width = cv.width; c2.height = h;
-    c2.getContext('2d').drawImage(cv, 0, top, cv.width, h, 0, 0, cv.width, h);
-    const c3 = document.createElement('canvas');
-    c3.width = Math.round(cv.width * 1.8); c3.height = Math.round(h * 1.8);
-    c3.getContext('2d').drawImage(c2, 0, 0, c3.width, c3.height);
-    return c3.toDataURL('image/jpeg', 0.95);
-  }
-
-  function pickTitleLine(t) {
-    const ls = String(t || '').split(/\n+/).map((v) => v.trim()).filter(Boolean)
-      .filter((v) => !/관람가|^20\d{2}|^\d{1,2}\s*관|열\s*\d/.test(v));
-    let best = '';
-    ls.forEach((v) => {
-      const han = (v.match(/[가-힣]/g) || []).length;
-      const solid = v.replace(/\s/g, '').length || 1;
-      if (han >= 2 && han / solid >= 0.55 && han > (best.match(/[가-힣]/g) || []).length) best = v;
-    });
-    return best.replace(/[|©®★☆_]/g, '').replace(/\s{2,}/g, ' ').trim();
+    const dRaw = String(r.date || '').trim();
+    const dm = dRaw.match(/(20\d{2})\s*[.\-\/]\s*(\d{1,2})\s*[.\-\/]\s*(\d{1,2})/);
+    if (dm) info.date = dm[1] + '-' + String(dm[2]).padStart(2, '0') + '-' + String(dm[3]).padStart(2, '0');
+    const tm = dRaw.match(/(\d{1,2})\s*:\s*(\d{2})/);
+    if (tm) info.time = String(tm[1]).padStart(2, '0') + ':' + tm[2];
+    return info;
   }
 
   /* 인식 결과 → 좌석 후보 찾기 */
@@ -3403,126 +3168,54 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return el;
   }
   function closeOcr() {
+    ocrRun += 1;                       /* 진행 중인 인식 결과가 뒤늦게 창을 다시 열지 않게 */
     const el = document.getElementById('tocModal');
     if (el) el.remove();
     document.body.style.overflow = '';
   }
 
+  /* 인식을 기다리는 동안 사용자가 창을 닫으면, 늦게 온 응답으로 시트가 다시 뜨지 않게 한다 */
+  let ocrRun = 0;
+
   async function scanTicket(file) {
+    const run = ++ocrRun;
     ocrOverlay(`<div class="toc-card">
       <div class="toc-spin"></div>
       <h3>티켓을 읽고 있어요</h3>
-      <p>처음 한 번은 인식 엔진을 내려받아 10~20초 걸려요.<br>지점·관·좌석·영화를 찾는 중입니다.</p>
-      <div class="toc-bar"><i id="tocBar" style="width:4%"></i></div>
+      <p>사진을 보내 글자를 읽는 중이에요. 보통 2~4초면 끝나요.</p>
       <button class="toc-x" id="tocClose" aria-label="닫기">✕</button>
     </div>`);
     document.body.style.overflow = 'hidden';
 
-    const prep = await prepImage(file);
-    if (!prep) { ocrOverlay(`<div class="toc-card"><h3>사진을 열지 못했어요</h3><p>다른 사진으로 다시 시도해 주세요.</p><button class="btn" id="tocClose" style="width:100%;margin-top:12px">닫기</button></div>`); return; }
-
-    let text = '', bandTitle = '';
-    /* 진행 바는 실제 다운로드처럼 0→100 한 방향으로만 차오릅니다.
-       (회차마다 0으로 되돌아가거나 좌우로 왔다갔다하지 않게 최대값만 올린다) */
-    let maxPct = 4, attempt = 0;
-    const setPct = (p) => {
-      const v = Math.max(0, Math.min(100, Math.round(p)));
-      if (v <= maxPct) return;
-      maxPct = v;
-      const bar = document.getElementById('tocBar');
-      if (bar) bar.style.width = v + '%';
-    };
-    const readCap = () => Math.min(97, 86 + attempt * 4);   /* 재시도할수록 천장을 조금씩 올린다 */
-    try {
-      setPct(8);
-      const T = await loadTesseract();
-      setPct(25);                                            /* 엔진 준비 0~25% */
-      const worker = await T.createWorker('kor+eng', 1, {
-        logger: (m) => {
-          const p = typeof m.progress === 'number' ? m.progress : 0;
-          const s = String(m.status || '');
-          if (/recognizing text/i.test(s)) setPct(65 + p * (readCap() - 65));       /* 글자 판독 65~97% */
-          else if (/lang|traineddata|core|initializ|api/i.test(s)) setPct(25 + p * 40); /* 언어데이터 25~65% */
-        }
-      });
-      try { await worker.setParameters({ preserve_interword_spaces: '1' }); } catch (e) {}
-      setPct(65);
-
-      const read = async (url) => {
-        const o = await worker.recognize(url);
-        return (o && o.data) || null;
-      };
-
-      let best = { sc: -1, t: '', info: null, res: null, data: null };
-      const texts = [];
-      /* 어떤 각도·설정으로 읽은 글이 가장 쓸모 있는지 — 글자 점수만 보지 않고
-         지점·관·좌석이 실제로 풀렸는지까지 계산해 고른다. */
-      const tryRead = async (url) => {
-        attempt += 1;
-        const d = await read(url);
-        const tx = (d && d.text) || '';
-        texts.push(tx);
-        if (!tx) return -1;
-        const info = parseTicket(tx);
-        const res = resolveTicket(info);
-        let sc = scoreOcr(tx);
-        if (res.theater) sc += 6;
-        if (res.hall) sc += 4;
-        if (res.seat) sc += 6;
-        if (info.date) sc += 2;
-        if (info.movie && (info.movie.match(/[가-힣]/g) || []).length >= 2) sc += 3;
-        if (sc > best.sc) best = { sc: sc, t: tx, info: info, res: res, data: d };
-        return sc;
-      };
-      const solved = () => !!(best.res && best.res.theater && best.res.seat);
-
-      await tryRead(prep.levels);
-      /* 영수증은 글자가 한 덩어리로 빽빽해 자동 분할(PSM 3)이 줄을 놓치는 경우가 있다.
-         한 번 더 '균일한 한 덩어리'(PSM 6)로 읽어 더 잘 나온 쪽을 쓴다. */
-      if (best.sc < 14) {
-        try { await worker.setParameters({ tessedit_pageseg_mode: '6' }); } catch (e) {}
-        await tryRead(prep.levels);
-        try { await worker.setParameters({ tessedit_pageseg_mode: '3' }); } catch (e) {}
-      }
-      /* 지점·좌석이 이미 잡혔으면 기울여 다시 읽지 않는다(시간만 든다) */
-      if (!solved() && best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, 18));
-      if (!solved() && best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, -18));
-      if (!solved() && best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, 12));
-      if (!solved() && best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, -12));
-      if (!solved() && best.sc < 12) await tryRead(prep.bin);
-      /* 제목이 비었거나 깨졌으면: '15세이상관람가' 줄과 그 다음 줄 사이 영역만
-         잘라 2배로 키워 한 번 더 읽는다 — 제목은 큰 글씨라 이렇게 읽으면 잘 읽힌다. */
-      let bandTitle = '';
-      if ((!best.info || !best.info.movie || best.info.movie.length < 2) && best.data) {
-        try {
-          const crop = titleBand(best.data, prep.canvas);
-          if (crop) {
-            attempt += 1;
-            const d2 = await read(crop);
-            if (d2 && d2.text) bandTitle = pickTitleLine(d2.text);
-          }
-        } catch (e) {}
-      }
-      try { window.__OCR_LAST__ = { best: best.sc, texts: texts, band: bandTitle }; } catch (e) {}
-      setPct(100);
-      text = best.t;
-      try { await worker.terminate(); } catch (e) {}
-    } catch (e) {
-      ocrOverlay(`<div class="toc-card"><h3>인식 엔진을 불러오지 못했어요</h3>
-        <p>네트워크(CDN) 상태 때문일 수 있어요. 사진은 그대로 첨부하고 직접 골라 남길 수 있어요.</p>
-        <button class="btn" id="tocAttach" style="width:100%;margin-top:12px">사진만 첨부하기</button>
-        <button class="btn ghost" id="tocClose" style="width:100%;margin-top:8px">닫기</button></div>`);
-      const at = document.getElementById('tocAttach');
-      if (at) at.onclick = async () => {
-        const d = await compressImage(file, 560, 0.62);
-        pendingTicket = { url: d, movie: '' };
-        closeOcr(); paintSeatPanel(); toast('티켓 사진을 첨부했어요. 영화·좌석은 직접 골라주세요');
-      };
+    const payload = await ocrShrink(file);
+    if (run !== ocrRun) return;
+    if (!payload) {
+      ocrOverlay(`<div class="toc-card"><h3>사진을 열지 못했어요</h3><p>다른 사진으로 다시 시도해 주세요.</p><button class="btn" id="tocClose" style="width:100%;margin-top:12px">닫기</button></div>`);
       return;
     }
 
-    const info = parseTicket(text);
-    if (bandTitle && (!info.movie || info.movie.length < 2)) info.movie = bandTitle;
+    let read = null;
+    let failed = false;
+    try {
+      const key = await ocrHash(payload.base64);
+      if (run !== ocrRun) return;
+      read = ocrCacheGet(key);
+      if (!read) {
+        const j = await ocrRequest(payload);
+        if (run !== ocrRun) return;
+        read = { theater: j.theater || '', hall: j.hall || '', seat: j.seat || '', movie: j.movie || '', date: j.date || '' };
+        ocrCachePut(key, read);
+      }
+    } catch (e) {
+      failed = true;                   /* 미배포·한도 초과·네트워크 오류 — 느린 엔진 없이 바로 시트로 */
+    }
+    if (run !== ocrRun) return;
+    showTicketSheet(file, read, failed);
+  }
+
+  /* 확인 시트 — 읽은 값이 있으면 채워 두고, 없으면(실패) 지금 보고 있는 자리로 채워 둔 채 직접 고르게 한다 */
+  function showTicketSheet(file, read, failed) {
+    const info = infoFromOcr(read);
     const res = resolveTicket(info);
     /* 사진에서 실제로 읽힌 항목 — 아래 기본값 채우기와 구분해 화면에 표시한다 */
     const readFrom = { theater: !!res.theater, hall: !!res.hall, seat: !!res.seat, movie: !!info.movie };
@@ -3537,19 +3230,22 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       }
     }
     const conf = (v) => (v ? 'on' : 'off');
-    const ctxFilled = !readFrom.theater && !!(res.theater);
-    const confNote = ctxFilled
-      ? '사진에서 지점을 읽지 못해 <b>지금 보고 있는 자리</b>로 먼저 채워 뒀어요. 다르면 눌러서 고쳐주세요.'
-      : '틀린 부분은 눌러서 고칠 수 있어요.';
+    const ctxFilled = !readFrom.theater && !!(res.theater) && !failed;
+    const confNote = failed
+      ? '아래에서 지점·상영관·좌석만 골라 주세요. 사진은 그대로 붙습니다.'
+      : (ctxFilled
+        ? '사진에서 지점을 읽지 못해 <b>지금 보고 있는 자리</b>로 먼저 채워 뒀어요. 다르면 눌러서 고쳐주세요.'
+        : '틀린 부분은 눌러서 고칠 수 있어요.');
     const theaterOpts = DATA.theaters.map((t) => `<option value="${t.id}" ${res.theater && res.theater.id === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
     const hallOpts = res.theater
       ? (res.theater.halls || []).map((h) => `<option value="${h.id}" ${res.hall && res.hall.id === h.id ? 'selected' : ''}>${esc(h.name)}${h.status === 'ok' ? '' : ' (좌석표 없음)'}</option>`).join('')
       : '';
     const seatText = info.rows.map((r) => r.row + r.num).join(', ');
+    const title = failed ? '사진은 잘 올라갔어요!' : '티켓에서 이렇게 읽었어요';
 
     ocrOverlay(`<div class="toc-card">
       <button class="toc-x" id="tocClose" aria-label="닫기">✕</button>
-      <h3>티켓에서 이렇게 읽었어요</h3>
+      <h3>${title}</h3>
       <p class="toc-sub">${confNote}</p>
       <div class="toc-rows">
         <label class="toc-row ${conf(readFrom.theater)}"><span>지점</span>
@@ -3564,8 +3260,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       </div>
       <button class="btn" id="tocGo" style="width:100%;margin-top:12px">${res.seat || res.hall ? '이 자리 열고 사진 붙이기' : '고른 정보로 열고 사진 붙이기'}</button>
       <button class="btn ghost" id="tocOnly" style="width:100%;margin-top:8px;background:#F2F4F6;color:#4E5968">지금 자리에 사진만 붙이기</button>
+      ${failed ? '<button class="btn ghost" id="tocRetry" style="width:100%;margin-top:8px;background:transparent;color:#0B7A4B">티켓 자동 읽기 다시 시도</button>' : ''}
       <button class="btn ghost" id="tocClose" style="width:100%;margin-top:8px;background:transparent;color:#8B95A1">닫기</button>
-      <p class="toc-note">읽지 못한 항목은 직접 골라주세요. 사진은 이 기기(localStorage)에만 저장되고 서버로 보내지 않아요.</p>
+      <p class="toc-note">사진은 글자를 읽기 위해 서버로 한 번 전송되고 저장되지 않아요. 고른 정보와 사진은 이 기기에만 남습니다.</p>
     </div>`);
 
     const selT = document.getElementById('tocTheater');
@@ -3574,6 +3271,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const th = findTheater(selT.value);
       if (selH) selH.innerHTML = '<option value="">상영관 선택</option>' + (th ? (th.halls || []).map((h) => `<option value="${h.id}">${esc(h.name)}${h.status === 'ok' ? '' : ' (좌석표 없음)'}</option>`).join('') : '');
     };
+    const retry = document.getElementById('tocRetry');
+    if (retry) retry.onclick = () => scanTicket(file);
     const only = document.getElementById('tocOnly');
     if (only) only.onclick = async () => {
       const d = await compressImage(file, 560, 0.62);
