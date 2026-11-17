@@ -1371,6 +1371,55 @@ input,select,textarea,
   background:#F2F4F6;color:#4E5968;font-size:13px;font-weight:900;line-height:1}
 .movieinput{padding-right:48px !important}
 
+/* =======================================================================
+   3D 뷰어 조작 바 — 캔버스 위에 겹치지 않고 아래에 한 줄로
+   (풀스크린 ⛶ 크게 에서는 기존처럼 아래쪽 HUD로 겹쳐 띄운다)
+   ======================================================================= */
+.v3d-hud{justify-content:flex-start;gap:6px}
+.v3d-hud .v3d-fov{margin-left:auto}
+.v3d-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;padding:8px;
+  border-radius:14px;background:#fff;border:1px solid #E5E8EB;box-shadow:0 2px 8px rgba(25,31,40,.05)}
+.v3d-bar>button,.v3d-bar .v3d-recline,.v3d-bar .v3d-recline-step{
+  height:38px;padding:0 12px;border-radius:11px;font-size:13px;font-weight:850;white-space:nowrap;
+  background:#F2F4F6;color:#333D4B;border:1px solid #E5E8EB;
+  -webkit-backdrop-filter:none;backdrop-filter:none;touch-action:manipulation}
+.v3d-bar>button:active{background:#E5E8EB}
+.v3d-bar .v3d-vid{background:#047857;color:#fff;border-color:#047857}
+.v3d-bar .v3d-vid[aria-pressed="true"]{background:#065F46;border-color:#065F46;color:#fff}
+.v3d-bar .v3d-mute{width:38px;padding:0;font-size:14px}
+.v3d-bar .v3d-recline{background:#ECFDF5;color:#065F46;border-color:#BBF7D0;padding:0 10px}
+.v3d-bar .v3d-recline[aria-pressed="true"]{background:#FDB44B;color:#3A2100;border-color:#F59E0B}
+.v3d-bar .v3d-recline-step{min-width:44px;padding:0 8px;font-variant-numeric:tabular-nums}
+.v3d-bar .v3d-zoom{display:flex;gap:2px;background:#F2F4F6;padding:3px;border-radius:12px;border:1px solid #E5E8EB}
+.v3d-bar .v3d-zoom button{height:32px;padding:0 10px;border:0;border-radius:9px;background:transparent;
+  font-size:12.5px;font-weight:850;color:#4E5968;white-space:nowrap}
+.v3d-bar .v3d-zoom button[aria-pressed="true"]{background:#047857;color:#fff}
+.v3d-bar .v3d-reset{background:#fff;color:#333D4B}
+.v3d-bar .v3d-big{background:#fff;color:#333D4B}
+.v3d-bar .v3d-recval{flex:1 1 100%;text-align:left;font-size:12px;font-weight:800;color:#6B7684;
+  padding:2px 2px 0;font-variant-numeric:tabular-nums}
+
+/* 풀스크린: 조작 바는 캔버스 아래쪽에 겹쳐 띄우고, 배지 줄은 그 위로 */
+.big-inner{position:relative}
+.big-inner .v3d-bar{position:absolute;left:calc(env(safe-area-inset-left, 0px) + 12px);right:auto;
+  bottom:calc(env(safe-area-inset-bottom, 0px) + 12px);margin:0;padding:0;background:transparent;
+  border:0;box-shadow:none;gap:6px;max-width:calc(100% - 24px);z-index:5}
+.big-inner .v3d-bar>button,.big-inner .v3d-bar .v3d-recline,.big-inner .v3d-bar .v3d-recline-step{
+  height:34px;font-size:12px;background:rgba(255,255,255,.16);color:#fff;border:0;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.big-inner .v3d-bar .v3d-vid{background:rgba(0,168,98,.88);color:#fff}
+.big-inner .v3d-bar .v3d-vid[aria-pressed="true"]{background:rgba(255,255,255,.92);color:#0B1210}
+.big-inner .v3d-bar .v3d-recline{background:rgba(255,255,255,.16);color:#fff;border:0}
+.big-inner .v3d-bar .v3d-recline[aria-pressed="true"]{background:#FDB44B;color:#3A2100}
+.big-inner .v3d-bar .v3d-zoom{background:rgba(8,16,13,.62);border:0}
+.big-inner .v3d-bar .v3d-zoom button{background:transparent;color:rgba(255,255,255,.72)}
+.big-inner .v3d-bar .v3d-zoom button[aria-pressed="true"]{background:#fff;color:#0B3A2A}
+.big-inner .v3d-bar .v3d-reset,.big-inner .v3d-bar .v3d-big{background:rgba(255,255,255,.16);color:#fff;border:0}
+.big-inner .v3d-bar .v3d-recval{color:rgba(255,255,255,.72);flex:0 1 auto}
+.big-inner [data-big]{display:none}
+.big-inner .v3d-hud{bottom:calc(env(safe-area-inset-bottom, 0px) + 58px);top:auto;left:calc(env(safe-area-inset-left, 0px) + 12px);right:auto;
+  justify-content:flex-start;max-width:calc(100% - 24px);z-index:5}
+
 </style>
 </head>
 <body>
@@ -2055,6 +2104,7 @@ input,select,textarea,
       var M = affTri(P0, P1, P2, S0, S1, S2);
       if (!M) return;
       if (alpha != null) ctx.globalAlpha = alpha;
+      ctx.imageSmoothingEnabled = true;
       ctx.setTransform(M[0], M[1], M[2], M[3], M[4], M[5]);
       ctx.drawImage(img, rect[0], rect[1], rect[2], rect[3], rect[0], rect[1], rect[2], rect[3]);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2108,7 +2158,8 @@ input,select,textarea,
       var pts = uv.pts;
       /* 타일을 잘게 나눌수록 원근 근사 오차(기울기 불연속)가 줄어 이음매가 옅어진다.
          서브픽셀 겹침은 타일 사이 안티앨리어싱 틈만 메운다. */
-      var pad = 0.4;
+      /* 인접 조각과 1px 남짓 겹쳐 그린다 — 스트립 경계에 생기던 세로 이음새 제거 */
+      var pad = 1.1;
       var sx0 = uv.sx0 - pad, sy0 = uv.sy0 - pad, sw = uv.sw + pad * 2, sh = uv.sh + pad * 2;
       var s00 = [sx0, sy0], s10 = [sx0 + sw, sy0], s11 = [sx0 + sw, sy0 + sh], s01 = [sx0, sy0 + sh];
       var rc = [sx0, sy0, sw, sh];
@@ -4519,22 +4570,21 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <span class="v3d-type">${esc(hallTypeLabel(h))}</span>
         <span class="v3d-prov ${prov[1]}">${prov[0]}</span>
         <span class="v3d-fov">가로 <b>${fmt(m.hFov, 1)}°</b> · 세로 <b>${fmt(m.vFov, 1)}°</b></span>
-        <span class="v3d-hudbtns">
-          ${recl ? `<span class="v3d-recline-wrap"><button class="v3d-recline" data-recline="1" aria-pressed="false" title="등받이 110° / 160°">🪑 젖히기 <b class="v3d-ang">110°</b></button><button class="v3d-recline-step" data-recline-step="-1" title="등받이 10° 세우기" aria-label="등받이 10도 세우기">−10°</button><button class="v3d-recline-step" data-recline-step="1" title="등받이 10° 젖히기" aria-label="등받이 10도 젖히기">+10°</button><b class="v3d-recval" data-rec-read>눈높이 ${fmt(m.eyeY, 2)} m · 시선 ${fmt(m.neck, 1)}°</b></span>` : ''}
-          <button class="v3d-vid" data-vid="1" aria-pressed="false" title="샘플 영상을 스크린에 재생">▶ 영상</button>
-          <button class="v3d-mute" data-mute="1" aria-pressed="true" style="display:none" title="소리 켜기/끄기">🔇</button>
-          <button class="v3d-big" data-big="1" title="3D 시야를 크게 보기">⛶ 크게</button>
-          <button class="v3d-reset" data-reset="1">정면 리셋</button>
-        </span>
-      </div>
-      <div class="v3d-zoombar">
-        <div class="v3d-zoom" role="group" aria-label="화각">
-          <button data-zoom="1x" aria-pressed="true">기준 화각 1x</button>
-          <button data-zoom="wide" aria-pressed="false">광각 0.5x</button>
-        </div>
       </div>
       <div class="v3d-hint">드래그해서 둘러보기</div>
       <div class="v3d-zoomnote">기준 화각 76° · 실제로 보이는 크기에 가깝게</div>
+    </div>
+    <div class="v3d-bar" role="toolbar" aria-label="3D 시야 조작">
+      <button class="v3d-vid" data-vid="1" aria-pressed="false" title="샘플 영상을 스크린에 재생">▶ 영상</button>
+      <button class="v3d-mute" data-mute="1" aria-pressed="true" style="display:none" title="소리 켜기/끄기">🔇</button>
+      ${recl ? `<button class="v3d-recline" data-recline="1" aria-pressed="false" title="등받이 110° / 160°">🪑 젖히기 <b class="v3d-ang">110°</b></button><button class="v3d-recline-step" data-recline-step="-1" title="등받이 10° 세우기" aria-label="등받이 10도 세우기">−10°</button><button class="v3d-recline-step" data-recline-step="1" title="등받이 10° 젖히기" aria-label="등받이 10도 젖히기">+10°</button>` : ''}
+      <span class="v3d-zoom" role="group" aria-label="화각">
+        <button data-zoom="1x" aria-pressed="true">화각 1x</button>
+        <button data-zoom="wide" aria-pressed="false">광각 0.5x</button>
+      </span>
+      <button class="v3d-reset" data-reset="1">정면 리셋</button>
+      <button class="v3d-big" data-big="1" title="3D 시야를 크게 보기">⛶ 크게</button>
+      ${recl ? `<b class="v3d-recval" data-rec-read>눈높이 ${fmt(m.eyeY, 2)} m · 시선 ${fmt(m.neck, 1)}°</b>` : ''}
     </div>
     <div class="feel">
       <span class="feel-tag ${tag[1]}">${esc(tag[0])}</span>
