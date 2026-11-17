@@ -1430,9 +1430,10 @@ main.wrap{overflow-x:clip}
 
   Viewer.prototype.resize = function () {
     var cv = this.cv;
-    var r = cv.getBoundingClientRect();
-    var cssW = Math.round(r.width || 0);
-    var cssH = Math.round(r.height || 0);
+    /* 회전(라이트박스 가로모드)된 요소는 getBoundingClientRect가 회전된 바깥 상자를
+       돌려주므로 레이아웃 크기(offsetWidth/Height)를 쓴다. */
+    var cssW = Math.round(cv.offsetWidth || 0);
+    var cssH = Math.round(cv.offsetHeight || 0);
     if (!cssW) { cssW = 320; cssH = 200; }
     if (!cssH) cssH = Math.round(cssW * 0.62);
     var dpr = Math.min(global.devicePixelRatio || 1, 2);
@@ -2177,7 +2178,7 @@ main.wrap{overflow-x:clip}
     if (global.ResizeObserver) {
       var lastW = 0;
       v._ro = new ResizeObserver(function () {
-        var w2 = cv.getBoundingClientRect().width;
+        var w2 = cv.offsetWidth;
         if (Math.abs(w2 - lastW) < 2) return;
         lastW = w2;
         v.resize();
