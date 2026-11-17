@@ -1596,11 +1596,18 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 
     /* ---- 영화 화면 ---- */
     var asp = o.aspect || p.aspect;
-    if (vplay) asp = this.video.videoWidth / this.video.videoHeight;   /* 영상 비율대로 레터박스 */
     var iw = scrW, ih = scrW / asp;
     if (ih > scrH) { ih = scrH; iw = scrH * asp; }
     var iImgW = vplay ? this.video.videoWidth : img.width;
     var iImgH = vplay ? this.video.videoHeight : img.height;
+    /* 원본(영상) 비율이 화면과 다르면 가운데를 화면 비율로 잘라 쓴다(cover).
+       세로로 찍은 영상을 넣어도 스크린이 검은 여백으로 비지 않고 꽉 찬다. */
+    var srcX = 0, srcY = 0, srcW = iImgW, srcH = iImgH;
+    if (iImgW && iImgH) {
+      var va = iImgW / iImgH, aa2 = iw / ih;
+      if (va > aa2) { srcW = iImgH * aa2; srcX = (iImgW - srcW) / 2; }
+      else if (va < aa2) { srcH = iImgW / aa2; srcY = (iImgH - srcH) / 2; }
+    }
     /* 화면을 잘게 나눠 그린다 — 큰 스크린(용산 22.4 m)을 가까이서 보면
        한 줄로 그릴 때 원근 때문에 세로 이음새가 생기므로 세로로도 나눈다. */
     var NX = 24;
@@ -1625,7 +1632,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         var a0 = -iw / 2 + iw * j / NX, a1 = -iw / 2 + iw * (j + 1) / NX;
         texCell({
           pts: [toCam(a0, yy1b, scrZ(a0)), toCam(a1, yy1b, scrZ(a1)), toCam(a1, yy0b, scrZ(a1)), toCam(a0, yy0b, scrZ(a0))],
-          sx0: iImgW * j / NX, sy0: iImgH * (NY - 1 - k2) / NY, sw: iImgW / NX, sh: iImgH / NY
+          sx0: srcX + srcW * j / NX, sy0: srcY + srcH * (NY - 1 - k2) / NY, sw: srcW / NX, sh: srcH / NY
         }, img, null);
       }
     }
@@ -1695,7 +1702,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
             var z0 = wz0 + (wz1 - wz0) * k / 5, z1 = wz0 + (wz1 - wz0) * (k + 1) / 5;
             texCell({
               pts: [toCam(xw, wy1, z0), toCam(xw, wy1, z1), toCam(xw, wy0, z1), toCam(xw, wy0, z0)],
-              sx0: iImgW * k / 5, sy0: 0, sw: iImgW / 5, sh: iImgH
+              sx0: srcX + srcW * k / 5, sy0: srcY, sw: srcW / 5, sh: srcH
             }, img, wingAlpha);
           }
         });
@@ -1728,7 +1735,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
           var za = cz0 + (cz1 - cz0) * ck / 8, zb = cz0 + (cz1 - cz0) * (ck + 1) / 8;
           texCell({
             pts: [toCam(-cw, cyy, za), toCam(cw, cyy, za), toCam(cw, cyy, zb), toCam(-cw, cyy, zb)],
-            sx0: 0, sy0: iImgH * ck / 8, sw: iImgW, sh: iImgH / 8
+            sx0: srcX, sy0: srcY + srcH * ck / 8, sw: srcW, sh: srcH / 8
           }, img, vplay ? 0.52 : 0.48);
         }
       } finally {
