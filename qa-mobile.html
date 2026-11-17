@@ -31,6 +31,12 @@
     my:   ['./index.html#/my', '내 기록']
   };
   var pick = map[v] || map.hall;
+  /* 전국 확장 QA용 — ?t=<지점id>&h=<관id>&s=<좌석> 으로 임의 화면을 390×844로 연다 */
+  var q = new URLSearchParams(location.search);
+  if (q.get('t')) {
+    pick = ['#/t/' + q.get('t') + (q.get('h') ? '/h/' + q.get('h') : '') + (q.get('s') ? '/s/' + q.get('s') : ''),
+            (q.get('t') + ' ' + (q.get('h') || '') + ' ' + (q.get('s') || '')).trim()];
+  }
   var f = document.getElementById('f');
   f.src = pick[0].replace('./index.html', './index.html?cb=' + Date.now());
   if (v === 'compare') {
