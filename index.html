@@ -782,7 +782,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       </span>
     </button>
     <span class="topbar-spacer"></span>
-    <span class="top-badge desktop-only"><i class="dot"></i>서울·대전·충청 49개 지점</span>
+    <span class="top-badge desktop-only"><i class="dot"></i><span id="topBadge">서울·대전·충청 49개 지점</span></span>
     <button class="chip sm" data-go="my" style="margin-left:8px">내 기록</button>
   </div>
 </header>
@@ -1791,6 +1791,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
   function render() {
+    const tb = document.getElementById('topBadge');
+    if (tb) tb.textContent = areaScopeLabel() + ' ' + DATA.meta.theaterCount + '개 지점';
     const v = $('#view');
     if (state.view === 'home') v.innerHTML = viewHome();
     else if (state.view === 'theater') v.innerHTML = viewTheater();
