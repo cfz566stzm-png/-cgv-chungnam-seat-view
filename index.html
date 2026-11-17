@@ -3011,10 +3011,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       }
     }
 
-    /* 5-b) 상영작 목록 우선, 없으면 라벨이 아닌 가장 긴 줄 */
+    /* 5-b) 상영작 목록에 있으면 그것이 정답. 그 외의 '가장 긴 줄' 추측은
+       관람가 줄을 못 찾았을 때(옛 티켓·스크린샷)만 쓴다 — 깨진 줄이 제목으로 들어가지 않게 */
     const mv = MOVIES.find((m) => normKey(m).length > 1 && flat.indexOf(normKey(m)) >= 0);
     if (mv) out.movie = mv;
-    else if (!out.movie) {
+    else if (rateIdx < 0) {
       const bad = /(CGV|VIP|입장권|관람|좌석|인원|결제|티켓|상영|번호|일시|지점|관$)/;
       const cands = t.split(/\n+/).map((v) => v.trim())
         .filter((v) => v.length >= 2 && v.length <= 48 && !bad.test(v) && !/^[\d\s:.\-/()]+$/.test(v))
@@ -3035,8 +3036,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   /* 제목 띠 영역만 잘라 다시 읽기 — '15세이상관람가' 줄 다음부터
      상영일시(날짜)·좌석 줄 전까지. 제목은 티켓에서 가장 큰 글씨다. */
   function titleBand(data, cv) {
-    if (!data || !data.lines || !cv) return '';
-    const ls = data.lines.map((l) => ({ t: String(l.text || '').replace(/\s+/g, ''), b: l.bbox })).filter((l) => l.b);
+    if (!data || !cv) return '';
+    let lines = data.lines;
+    if (!lines) {                     /* tesseract.js 5는 blocks 안에 줄이 들어 있다 */
+      lines = [];
+      (data.blocks || []).forEach((b) => (b.paragraphs || []).forEach((p) => (p.lines || []).forEach((l) => lines.push(l))));
+    }
+    const ls = (lines || []).map((l) => ({ t: String(l.text || '').replace(/\s+/g, ''), b: l.bbox })).filter((l) => l.b);
     const rate = ls.find((l) => /관람가/.test(l.t));
     if (!rate) return '';
     const after = ls.filter((l) => l.b.y0 > rate.b.y1 - 2);
@@ -3207,7 +3213,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       /* 제목이 비었거나 깨졌으면: '15세이상관람가' 줄과 그 다음 줄 사이 영역만
          잘라 2배로 키워 한 번 더 읽는다 — 제목은 큰 글씨라 이렇게 읽으면 잘 읽힌다. */
       let bandTitle = '';
-      if ((!best.info || !best.info.movie) && best.data) {
+      if ((!best.info || !best.info.movie || best.info.movie.length < 2) && best.data) {
         try {
           const crop = titleBand(best.data, prep.canvas);
           if (crop) {
