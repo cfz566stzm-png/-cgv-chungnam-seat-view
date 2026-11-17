@@ -1359,6 +1359,9 @@ input,select,textarea,
 .v3d-prov.real{background:#047857;color:#fff}
 .v3d-prov.est{background:#FDE68A;color:#7C2D12}
 
+/* 미니맵 라벨 — 캔버스 위 작은 글씨도 읽히게 */
+.minimap span{font-size:11px}
+
 </style>
 </head>
 <body>
@@ -3263,6 +3266,20 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   const FIX_LOCAL = 'cgv_fix_requests_v1';
   const HELP = { counts: Object.create(null), at: 0, busy: false, off: false };
   const FIXQ = { off: false };
+  const SB_MISS = 'cgv_sb_miss_v1';   /* 테이블이 없다고 확인된 시각 — 하루에 한 번만 다시 확인한다 */
+  function sbMissing(tbl) {
+    try {
+      const m = JSON.parse(localStorage.getItem(SB_MISS) || '{}') || {};
+      const t = m[tbl];
+      return t && Date.now() - t < 86400000;
+    } catch (e) { return false; }
+  }
+  function sbMarkMissing(tbl) {
+    try {
+      const m = JSON.parse(localStorage.getItem(SB_MISS) || '{}') || {};
+      m[tbl] = Date.now(); localStorage.setItem(SB_MISS, JSON.stringify(m));
+    } catch (e) {}
+  }
   function lsGet(k, dflt) {
     try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return (v && typeof v === 'object') ? v : dflt; } catch (e) { return dflt; }
   }
@@ -3283,12 +3300,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function helpFetch(force) {
     if (HELP.off || HELP.busy) return;
     if (!force && Date.now() - HELP.at < 120000) return;
+    if (sbMissing('seat_review_helpful')) return;
     HELP.busy = true;
     const tm = sbTimer(12000);
     const url = SB_URL + '/rest/v1/seat_review_helpful?select=target_key&limit=5000';
     fetch(url, { headers: sbHeaders(), signal: tm.signal, cache: 'no-store' })
       .then((r) => {
-        if (r.status === 404) { HELP.off = true; return []; }
+        if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); return []; }
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       })
@@ -3331,7 +3349,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         method: 'POST', signal: tm.signal,
         headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
         body: JSON.stringify({ target_key: String(key).slice(0, 120), voter_id: deviceId() })
-      }).then((r) => { tm.done(); if (r.status === 404) { HELP.off = true; return; } })
+      }).then((r) => { tm.done(); if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); } })
         .catch(() => { tm.done(); });
     } catch (e) {}
   }
@@ -3377,14 +3395,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       };
       closeFix();
       toast('수정 요청이 접수되었어요. 고마워요!');
-      if (FIXQ.off) { fixStore(body); return; }
+      if (FIXQ.off || sbMissing('seat_correction_requests')) { fixStore(body); return; }
       try {
         const tm = sbTimer(12000);
         fetch(SB_URL + '/rest/v1/seat_correction_requests', {
           method: 'POST', signal: tm.signal,
           headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
           body: JSON.stringify({ ...body, created_at: new Date().toISOString() })
-        }).then((r) => { tm.done(); if (!r.ok) { FIXQ.off = (r.status === 404); fixStore(body); } })
+        }).then((r) => { tm.done(); if (!r.ok) { FIXQ.off = (r.status === 404); if (r.status === 404) sbMarkMissing('seat_correction_requests'); fixStore(body); } })
           .catch(() => { tm.done(); fixStore(body); });
       } catch (e) { fixStore(body); }
     };
