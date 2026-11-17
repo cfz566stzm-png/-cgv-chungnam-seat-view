@@ -1129,6 +1129,18 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
   /* 흐릿한 확장 스크린(윙·천장)은 96×54 로 한 번 줄여 그린 캔버스를 확대 투사한다.
      매 프레임 ctx.filter='blur()' 를 쓰면 모바일에서 프레임이 크게 떨어진다. */
   var WING_W = 96, WING_H = 54, wingCv = null;
+  /* 아이폰 Safari에서는 <video>를 drawImage로 그릴 때마다 텍스처 업로드가 일어난다.
+     24개 타일마다 비디오를 직접 그리면 프레임이 끊기므로, 프레임당 딱 한 번만
+     640×360 버퍼에 복사하고 타일은 그 버퍼에서 잘라 쓴다. */
+  var VID_W = 640, VID_H = 360, vidBuf = null;
+
+  function videoBuffer() {
+    if (!vidBuf) {
+      vidBuf = document.createElement('canvas');
+      vidBuf.width = VID_W; vidBuf.height = VID_H;
+    }
+    return vidBuf;
+  }
 
   function wingTexture() {
     if (!wingCv) {
@@ -1615,6 +1627,17 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       if (va > aa2) { srcW = iImgH * aa2; srcX = (iImgW - srcW) / 2; }
       else if (va < aa2) { srcH = iImgW / aa2; srcY = (iImgH - srcH) / 2; }
     }
+    /* 스크린 타일이 그릴 텍스처 — 영상은 프레임당 한 번만 버퍼로 복사한다 */
+    var tex = img, tX = srcX, tY = srcY, tW = srcW, tH = srcH;
+    if (vplay) {
+      var vb = videoBuffer();
+      var vctx = vb.getContext('2d');
+      try {
+        vctx.imageSmoothingEnabled = true;
+        vctx.drawImage(this.video, srcX, srcY, srcW, srcH, 0, 0, VID_W, VID_H);
+        tex = vb; tX = 0; tY = 0; tW = VID_W; tH = VID_H;
+      } catch (e) { tex = img; }
+    }
     /* 화면을 잘게 나눠 그린다 — 큰 스크린(용산 22.4 m)을 가까이서 보면
        한 줄로 그릴 때 원근 때문에 세로 이음새가 생기므로 세로로도 나눈다. */
     var NX = 24;
@@ -1639,8 +1662,8 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         var a0 = -iw / 2 + iw * j / NX, a1 = -iw / 2 + iw * (j + 1) / NX;
         texCell({
           pts: [toCam(a0, yy1b, scrZ(a0)), toCam(a1, yy1b, scrZ(a1)), toCam(a1, yy0b, scrZ(a1)), toCam(a0, yy0b, scrZ(a0))],
-          sx0: srcX + srcW * j / NX, sy0: srcY + srcH * (NY - 1 - k2) / NY, sw: srcW / NX, sh: srcH / NY
-        }, img, null);
+          sx0: tX + tW * j / NX, sy0: tY + tH * (NY - 1 - k2) / NY, sw: tW / NX, sh: tH / NY
+        }, tex, null);
       }
     }
     ctx.restore();
@@ -1701,7 +1724,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       wcx.imageSmoothingEnabled = true;
       try { wcx.imageSmoothingQuality = 'high'; } catch (e) {}
       try {
-        if (iImgW && iImgH) wcx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, WING_W, WING_H);
+        if (tW && tH) wcx.drawImage(tex, tX, tY, tW, tH, 0, 0, WING_W, WING_H);
       } catch (e) { wingTex = img; }
       ctx.imageSmoothingEnabled = true;
     }
