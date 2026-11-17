@@ -2357,10 +2357,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   const MOVIES = (window.__MOVIES__ || []);
 
   /* ---------- 영화 정보 레이어 (현재 상영작 24편: 감독·장르·연도·러닝타임·관람등급) ----------
-     movies_kofa.json = {cur:{영화명:{g:등급,y:연도,rt:분,gn:장르,d:감독,no:CGV번호,rr:재개봉}}}
+     movies_current.json = {cur:{영화명:{g:등급,y:연도,rt:분,gn:장르,d:감독,no:CGV번호,rr:재개봉}}}
      감독·장르·러닝타임·관람등급은 CGV 영화 상세에서, 제목·번호는 CGV 편성 데이터 기준.
      index.html 용량을 키우지 않도록 별도 JSON을 필요할 때 한 번만 받아 쓴다. */
-  const MVDB_URL = 'movies_kofa.json';
+  const MVDB_URL = 'movies_current.json';
   let MVIDX = null, MVMAP = null, MVLOAD = null;
   const mvNorm = (s) => String(s || '').toLowerCase().replace(/[\-–—·:：,.'"()\[\]~\/\s│|]/g, '');
 
