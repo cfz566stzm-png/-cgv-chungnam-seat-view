@@ -38,7 +38,8 @@
             (q.get('t') + ' ' + (q.get('h') || '') + ' ' + (q.get('s') || '')).trim()];
   }
   var f = document.getElementById('f');
-  f.src = pick[0].replace('./index.html', './index.html?cb=' + Date.now());
+  var hash = pick[0].replace(/^\.\/index\.html/, '');
+  f.src = './index.html?cb=' + Date.now() + hash;
   if (v === 'compare') {
     f.addEventListener('load', function () {
       setTimeout(function () {
