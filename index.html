@@ -824,8 +824,6 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .tabsrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .tabsrow .rtabs{flex:0 0 auto}
 .homebtns{display:flex;gap:8px;align-items:center}
-.ticketchip{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
-.ticketchip input{display:none}
 .nearchip[aria-pressed="true"]{background:var(--green);color:#fff;border-color:var(--green)}
 .nearchip[aria-pressed="true"]::after{content:""}
 .nearnote{margin-top:10px;padding:10px 13px;border-radius:14px;background:var(--mint);border:1px solid var(--green-soft);color:var(--green-dd);font-size:12.5px;font-weight:700;line-height:1.55}
@@ -848,7 +846,8 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
   .tabsrow .rtab{flex:0 0 auto;min-width:auto;padding:0 18px;text-overflow:clip;overflow:visible}
   .homebtns .chip{height:38px}
   .hero h1{font-size:30px}
-  .hero-ticket{display:none}            /* PC는 상단 '티켓 등록' 버튼으로 */
+  /* PC에서도 티켓 등록은 히어로 카드 버튼 하나로 통일 — 홈 목록 위 중복 버튼은 두지 않는다 */
+  .hero-ticket{margin-top:18px;padding:12px 20px;font-size:13.5px}
   .tcard{padding:16px 16px 15px}
 }
 
@@ -1136,9 +1135,12 @@ body{font-size:16px}
 /* --- 지역 탭 스크롤 힌트 --- */
 .rtabs-wrap{position:relative;flex:1 1 auto;min-width:0;display:flex}
 .rtabs-wrap .rtabs{flex:1 1 auto}
-.rtabs-hint{position:absolute;right:2px;top:0;bottom:0;display:none;align-items:center;padding:0 10px 0 18px;
+/* 힌트(›) 폭만큼 탭 줄에 오른쪽 여백을 줘서 마지막 탭 글자가 힌트 밑으로 들어가지 않게 한다.
+   끝까지 스크롤되면 힌트를 감춘다(.scrollable 해제) — IMG_7249 '주' 가림 수정 */
+.rtabs-wrap.overflowing .rtabs{padding-right:30px}
+.rtabs-hint{position:absolute;right:0;top:0;bottom:0;width:30px;display:none;align-items:center;justify-content:flex-end;
   font-size:17px;font-weight:900;color:#047857;pointer-events:none;
-  background:linear-gradient(90deg,rgba(237,240,243,0),#EDF0F3 62%)}
+  background:linear-gradient(90deg,rgba(237,240,243,0),#EDF0F3 55%)}
 .rtabs-wrap.scrollable .rtabs-hint{display:flex}
 @media (min-width:960px){ .rtabs-hint{display:none !important} }
 
@@ -3162,13 +3164,34 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       if (state.seatKey && state._deepSeat && !isDesk()) { state._deepSeat = false; openSheet(true); }
     }
     else { const b = document.getElementById('cmpBar'); if (b) b.remove(); }
-    if (state.view === 'home') paintRegionHint();
+    if (state.view === 'home') { paintRegionHint(); regionTabIntoView(); paintRegionHint(); }
   }
+  /* 지역 탭 스크롤 힌트(›)
+     IMG_7249: 오른쪽 끝까지 스크롤한 상태에서 힌트가 마지막 탭 '광주·전라·제주'의 '주'를 덮었다.
+     → 넘치는 동안에는 탭 줄에 오른쪽 여백(힌트 폭)을 줘서 글자가 힌트 밑으로 들어가지 않게 하고,
+       끝까지 스크롤되면 힌트를 감춘다. */
+  const RTAB_HINT_W = 30;
   function paintRegionHint() {
     const box = document.getElementById('rtabs');
     const wr = box && box.closest('.rtabs-wrap');
     if (!box || !wr) return;
-    wr.classList.toggle('scrollable', box.scrollWidth > box.clientWidth + 2);
+    const max = Math.max(0, box.scrollWidth - box.clientWidth);
+    const overflow = max > 2;
+    const atEnd = max <= 2 || box.scrollLeft >= max - 3;
+    wr.classList.toggle('overflowing', overflow);   /* 오른쪽 여백(힌트 폭) 유지 */
+    wr.classList.toggle('scrollable', overflow && !atEnd);  /* 화살표 표시 */
+    wr.classList.toggle('at-end', atEnd);
+  }
+  /* 선택된 지역 탭이 화면 밖이면(마지막 탭 등) 힌트 폭만큼 여유를 두고 끝까지 스크롤한다 */
+  function regionTabIntoView() {
+    const box = document.getElementById('rtabs');
+    if (!box) return;
+    const sel = box.querySelector('.rtab[aria-selected="true"]');
+    if (!sel) return;
+    const br = box.getBoundingClientRect(), sr = sel.getBoundingClientRect();
+    if (sr.left >= br.left && sr.right <= br.right) return;
+    const max = Math.max(0, box.scrollWidth - box.clientWidth);
+    box.scrollLeft = Math.max(0, Math.min(max, box.scrollLeft + (sr.right - br.right) + RTAB_HINT_W + 8));
   }
 
   /* 상단 막대 높이를 재서 '현재 지점·상영관' 막대가 그 바로 아래에 붙게 */
@@ -3399,7 +3422,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         </div>
         <div class="homebtns">
           <button class="chip sm" data-go="my">내 좌석 기록</button>
-          <label class="chip sm ticketchip" for="ticketOcrHome2">🎟️ 티켓 등록<input type="file" id="ticketOcrHome2" accept="image/*"></label>
+          <!-- 티켓 등록은 상단 히어로 카드의 '티켓 사진으로 바로 기록하기' 하나로 통합 (중복 버튼 제거) -->
         </div>
       </div>
       <div class="searchrow">
@@ -5866,6 +5889,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   render();
   window.addEventListener('popstate', () => { applyHash(); render(); });
   window.addEventListener('hashchange', () => { applyHash(); render(); });
+  /* 지역 탭 줄을 좌우로 스크롤할 때 힌트 표시/숨김을 바로 반영 (scroll은 버블하지 않아 capture로 받는다) */
+  document.addEventListener('scroll', (e) => {
+    if (e.target && e.target.id === 'rtabs') paintRegionHint();
+  }, true);
   /* 화면 돌리기·창 크기 바뀔 때: 배치도 칸 크기와 미니맵, 상단 막대 위치 재계산 */
   let rzT = 0;
   window.addEventListener('resize', () => {
