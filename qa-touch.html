@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>모바일 3D 터치 드래그 QA</title>
+<style>
+  html,body{margin:0;padding:0;background:#0E1116;color:#E5E8EB;font:13px/1.5 -apple-system,system-ui,sans-serif}
+  .row{display:flex;gap:12px;padding:10px}
+  .phone{width:390px;height:844px;border:1px solid #333;border-radius:18px;overflow:hidden;background:#fff;flex:0 0 auto}
+  iframe{width:390px;height:844px;border:0;display:block}
+  pre{white-space:pre-wrap;background:#161B22;padding:12px;border-radius:10px;font-size:12.5px;max-width:560px;margin:0}
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="phone"><iframe id="f" title="view"></iframe></div>
+  <pre id="out">준비 중…</pre>
+</div>
+<script>
+var f = document.getElementById('f');
+var out = document.getElementById('out');
+function log(o) { out.textContent = JSON.stringify(o, null, 1); }
+f.src = './index.html?cb=' + Date.now() + '#/t/0013/h/0013-n16/s/E13';
+f.addEventListener('load', function () {
+  setTimeout(run, 1600);
+});
+function run() {
+  try {
+    var w = f.contentWindow, d = w.document;
+    var sheet = d.getElementById('sheet');
+    var body = d.getElementById('sheetBody');
+    var cv = body.querySelector('.v3d-canvas');
+    var v = w.Viewer3D.findFor(body);
+    function touch(el, type, x, y) {
+      var t = new w.Touch({ identifier: 7, target: el, clientX: x, clientY: y, pageX: x, pageY: y, radiusX: 6, radiusY: 6, force: 1 });
+      var ev = new w.TouchEvent(type, { bubbles: true, cancelable: true,
+        touches: type === 'touchend' ? [] : [t], targetTouches: type === 'touchend' ? [] : [t], changedTouches: [t] });
+      el.dispatchEvent(ev);
+    }
+    var res = { sheetOpenBefore: sheet.classList.contains('open'), seat: (d.querySelector('#sheetHead b') || {}).textContent || '' };
+    var r = cv.getBoundingClientRect();
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    /* 1) 3D 캔버스 위에서 아래로 드래그 — 시트가 닫히면 안 된다 */
+    touch(cv, 'touchstart', cx, cy);
+    touch(cv, 'touchmove', cx, cy + 120);
+    touch(cv, 'touchend', cx, cy + 120);
+    res.afterCanvasDown = { sheetOpen: sheet.classList.contains('open'), pitch: +v.pitch.toFixed(1) };
+    /* 2) 캔버스 위에서 왼쪽으로 크게 8회 드래그 — yaw는 -55도에서 멈춰야 한다 */
+    for (var i = 0; i < 8; i++) {
+      touch(cv, 'touchstart', cx, cy);
+      touch(cv, 'touchmove', cx - 90, cy);
+      touch(cv, 'touchend', cx - 90, cy);
+    }
+    res.afterCanvasLeft = { sheetOpen: sheet.classList.contains('open'), yaw: +v.yaw.toFixed(1) };
+    /* 3) 위로 크게 드래그 — pitch 상한 36도 */
+    for (var j = 0; j < 8; j++) {
+      touch(cv, 'touchstart', cx, cy);
+      touch(cv, 'touchmove', cx, cy + 90);
+      touch(cv, 'touchend', cx, cy + 90);
+    }
+    res.afterCanvasUp = { sheetOpen: sheet.classList.contains('open'), pitch: +v.pitch.toFixed(1) };
+    /* 4) 캔버스가 아닌 시트 본문에서 아래로 스와이프 — 이때는 닫히는 게 정상 */
+    var h = body.querySelector('.ana-head') || body.querySelector('h4');
+    var hr = h.getBoundingClientRect();
+    touch(h, 'touchstart', hr.left + 20, hr.top + 2);
+    touch(h, 'touchmove', hr.left + 20, hr.top + 200);
+    touch(h, 'touchend', hr.left + 20, hr.top + 200);
+    res.afterBodySwipe = { sheetOpen: sheet.classList.contains('open') };
+    log(res);
+  } catch (e) {
+    log({ error: e.name + ': ' + e.message });
+  }
+}
+</script>
+</body>
+</html>
