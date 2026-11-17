@@ -1977,6 +1977,8 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
   Viewer.prototype.destroy = function () {
     var cv = this.cv;
     if (this.raf) { cancelAnimationFrame(this.raf); this.raf = 0; }
+    /* 화면에서 사라지는 뷰어는 영상도 멈춘다(다른 화면에서 소리·재생이 남지 않게) */
+    if (this.video) { try { this.video.pause(); } catch (e) {} }
     cv.removeEventListener('pointerdown', this._onDown);
     cv.removeEventListener('pointermove', this._onMove);
     cv.removeEventListener('pointerup', this._onUp);
@@ -2073,7 +2075,24 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     return cv ? (byCanvas.get(cv) || null) : null;
   }
 
-  global.Viewer3D = { mount: mount, create: create, dispose: dispose, frame: movieFrame, findFor: findFor, riserTable: RISER_STEP };
+  /* 페이지 어디에서든 영상 재생을 끝낸다 — 뒤로가기·홈 이동·시트 닫기에서 호출 */
+  function stopAll() {
+    if (sharedVideo) {
+      try { sharedVideo.pause(); sharedVideo.currentTime = 0; } catch (e) {}
+    } else {
+      var vs = document.querySelectorAll('video');
+      for (var i = 0; i < vs.length; i++) { try { vs[i].pause(); vs[i].currentTime = 0; } catch (e) {} }
+    }
+    var btns = document.querySelectorAll('[data-vid]');
+    for (var k = 0; k < btns.length; k++) {
+      btns[k].textContent = '\u25b6 \uc601\uc0c1';
+      btns[k].setAttribute('aria-pressed', 'false');
+    }
+    var mbs = document.querySelectorAll('[data-mute]');
+    for (var m = 0; m < mbs.length; m++) mbs[m].style.display = 'none';
+  }
+
+  global.Viewer3D = { mount: mount, create: create, dispose: dispose, frame: movieFrame, findFor: findFor, riserTable: RISER_STEP, stopAll: stopAll };
 
 })(window);
 
@@ -2188,6 +2207,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   /* PC 레이아웃(2단 분할) 기준 — 모바일(<960px)은 기존 1열·바텀시트 그대로 */
   const isDesk = () => window.matchMedia('(min-width:960px)').matches;
+
+  /* 화면을 떠날 때 3D 영상 재생을 확실히 끝낸다 (뒤로가기·홈 이동·시트 닫기) */
+  function stopMedia() {
+    try { if (window.Viewer3D && window.Viewer3D.stopAll) window.Viewer3D.stopAll(); } catch (e) {}
+    document.querySelectorAll('video').forEach((v) => { try { v.pause(); v.currentTime = 0; } catch (e) {} });
+  }
 
   function toast(msg) {
     const t = $('#toast');
@@ -2330,6 +2355,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     try { (push ? history.pushState : history.replaceState).call(history, { h }, '', h); } catch (e) { location.hash = h; }
   }
   function applyHash() {
+    stopMedia();
     const seg = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
     if (!seg.length) { state.view = 'home'; state.theaterId = null; state.hallId = null; state.seatKey = null; resetCompare(); return; }
     if (seg[0] === 'my') { state.view = 'my'; return; }
@@ -2373,6 +2399,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       state._cmpHallKey = curHallKey;
       resetCompare();
     }
+    stopMedia();
     const tb = document.getElementById('topBadge');
     if (tb) tb.textContent = areaScopeLabel() + ' ' + DATA.meta.theaterCount + '개 지점';
     const v = $('#view');
@@ -3172,6 +3199,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function openSheet(open) {
     const s = $('#sheet'), sc = $('#scrim');
     if (!s) return;
+    if (!open) stopMedia();
     s.style.transform = '';
     s.classList.toggle('open', open);
     if (sc) sc.classList.toggle('open', open);
@@ -4151,6 +4179,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   applyHash();
   render();
   window.addEventListener('popstate', () => { applyHash(); render(); });
+  window.addEventListener('hashchange', () => { applyHash(); render(); });
   window.__APP__ = { state, metrics, render, setNickname, setNear, clearNear, toggleNear, toChoseong, distKm, homeList, openCompare, toggleCompare };
   try {
     const askedLS = localStorage.getItem('cgv-chn-nick-asked');
