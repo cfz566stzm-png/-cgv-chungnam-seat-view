@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA — 티켓 가리기(마스킹)</title>
+<style>
+  html,body{margin:0;padding:0;background:#C9CFD6;font:600 12px -apple-system,sans-serif}
+  .stage{width:390px;height:844px;margin:8px;border:8px solid #111;border-radius:34px;overflow:hidden;background:#fff}
+  iframe{width:390px;height:844px;border:0;display:block}
+  #out{position:fixed;right:8px;top:8px;max-width:520px;background:#111;color:#fff;padding:10px 12px;border-radius:8px;
+       font:600 12px/1.6 ui-monospace,monospace;white-space:pre-wrap;z-index:9}
+</style>
+</head>
+<body>
+<div class="stage"><iframe id="f" title="view"></iframe></div>
+<div id="out">준비 중…</div>
+<script>
+  var out = document.getElementById('out');
+  var log = [];
+  function say(s) { log.push(s); out.textContent = log.join('\n'); }
+  var f = document.getElementById('f');
+  f.src = './index.html?cb=' + Date.now() + '#/t/cheonan-pentaport/h/cheonan-pentaport-n9/s/F11';
+  f.addEventListener('load', function () {
+    setTimeout(run, 900);
+  });
+  function pt(cv, fx, fy) {
+    var r = cv.getBoundingClientRect();
+    return { clientX: r.left + r.width * fx, clientY: r.top + r.height * fy };
+  }
+  function ev(el, type, p, id) {
+    var e = new PointerEvent(type, Object.assign({
+      bubbles: true, cancelable: true, pointerId: id, pointerType: 'touch', isPrimary: true
+    }, p));
+    el.dispatchEvent(e);
+    return e;
+  }
+  async function run() {
+    try {
+      var w = f.contentWindow, d = w.document, A = w.__APP__;
+      if (!A) { say('✗ __APP__ 없음 — 스크립트 오류'); return; }
+      var res = await fetch('./photos/cheonan-pentaport-imax-f11-ticket.jpg');
+      var blob = await res.blob();
+      var file = new w.File([blob], 'ticket.jpg', { type: 'image/jpeg' });
+      A.openMask(file, 'ocr');
+      await new Promise(function (r) { setTimeout(r, 600); });
+      var modal = d.getElementById('maskModal');
+      say('모달: ' + (modal ? '열림' : '없음'));
+      var cv = d.getElementById('maskCv');
+      if (!cv) { say('✗ 캔버스 없음'); return; }
+      say('캔버스: ' + cv.width + '×' + cv.height + ' (표시 ' + Math.round(cv.getBoundingClientRect().width) + ')');
+      /* 바코드 부근을 손가락으로 문지르는 동작 */
+      ev(cv, 'pointerdown', pt(cv, 0.08, 0.80), 11);
+      ev(cv, 'pointermove', pt(cv, 0.30, 0.84), 11);
+      ev(cv, 'pointermove', pt(cv, 0.46, 0.93), 11);
+      ev(cv, 'pointerup', pt(cv, 0.46, 0.93), 11);
+      /* 한 번 더 — 이름 영역 */
+      ev(cv, 'pointerdown', pt(cv, 0.30, 0.30), 12);
+      ev(cv, 'pointermove', pt(cv, 0.70, 0.36), 12);
+      ev(cv, 'pointerup', pt(cv, 0.70, 0.36), 12);
+      say('가린 곳: ' + d.getElementById('maskCount').textContent);
+      /* 가린 결과가 실제로 검게 칠해졌는지 픽셀로 확인 */
+      var ctx = cv.getContext('2d');
+      var px1 = ctx.getImageData(Math.round(cv.width * 0.20), Math.round(cv.height * 0.86), 1, 1).data;
+      var px2 = ctx.getImageData(Math.round(cv.width * 0.50), Math.round(cv.height * 0.50), 1, 1).data;
+      say('가린 지점 픽셀: ' + [px1[0], px1[1], px1[2]].join(',') + ' / 안 가린 지점: ' + [px2[0], px2[1], px2[2]].join(','));
+      /* 가린 상태로 읽기 → 서버가 없으니 실패 시트로 넘어가야 한다 */
+      d.getElementById('maskGo').click();
+      await new Promise(function (r) { setTimeout(r, 2600); });
+      var toc = d.getElementById('tocModal');
+      say('확인 시트: ' + (toc ? '열림' : '없음'));
+      if (toc) {
+        say('시트 제목: ' + (toc.querySelector('h3') ? toc.querySelector('h3').textContent : ''));
+        say('안내문: ' + (toc.querySelector('.toc-sub') ? toc.querySelector('.toc-sub').textContent.slice(0, 120) : ''));
+        say('개인정보 안내 항목: ' + toc.querySelectorAll('.toc-priv li').length);
+        say('직접 입력 버튼: ' + (toc.querySelectorAll('.toc-rows select').length ? '있음' : '없음'));
+      }
+      say('JS 오류: ' + JSON.stringify((w.__ERRS__ || []).slice(0, 3)));
+    } catch (e) {
+      say('✗ ' + e.message);
+    }
+  }
+</script>
+</body>
+</html>
