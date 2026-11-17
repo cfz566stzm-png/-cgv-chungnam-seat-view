@@ -2337,6 +2337,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       if (seg[2] === 'h' && seg[3]) {
         state.hallId = seg[3]; state.view = 'hall'; state._mapHall = null; resetCompare();
         state.seatKey = (seg[4] === 's' && seg[5]) ? decodeURIComponent(seg[5]) : null;
+        state._deepSeat = !!state.seatKey;   /* 주소로 바로 들어온 좌석은 모바일에서 시트를 한 번 열어준다 */
         const hh = findHall(state.theaterId, state.hallId);
         if (!hh) { state.view = 'theater'; state.hallId = null; state.seatKey = null; return; }
         state.aspect = String(hh.params.aspect);
@@ -2382,7 +2383,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     else if (state.view === 'hall') v.innerHTML = viewHall();
     else if (state.view === 'my') v.innerHTML = viewMy();
     window.scrollTo({ top: 0 });
-    if (state.view === 'hall') { paintSeatMap(); paintSeatPanel(); paintCompareBar(); }
+    if (state.view === 'hall') {
+      paintSeatMap(); paintSeatPanel(); paintCompareBar();
+      if (state.seatKey && state._deepSeat && !isDesk()) { state._deepSeat = false; openSheet(true); }
+    }
     else { const b = document.getElementById('cmpBar'); if (b) b.remove(); }
   }
 
