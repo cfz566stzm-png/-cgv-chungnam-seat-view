@@ -3096,8 +3096,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (sheetHead) sheetHead.innerHTML = seat ? sheetHeadHtml(h, seat) : '';
     if (seat) {
       const p = h.params, m = metrics(p, seat);
-      const opts = { p: p, seat: seat, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || p.aspect, mode: state.mode, hallKey: h.id, fourSide: isFourSide(h),
-        videoSrc: isFourSide(h) ? 'media/yongsan-screenx.mp4' : 'media/preview.mp4' };
+      const opts = { p: p, seat: seat, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || p.aspect, mode: state.mode, hallKey: h.id, fourSide: isFourSide(h) };
       [panel, sheetBody].filter(Boolean).forEach((root) => {
         const pc = root.querySelector('.profile-canvas');
         if (pc) drawProfile(pc, p, m, seat);
@@ -3230,8 +3229,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (!el) return;
     document.body.appendChild(el);
     document.body.style.overflow = 'hidden';
-    const opts = { p: h.params, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || h.params.aspect, mode: 'center', hallKey: h.id, fourSide: isFourSide(h),
-      videoSrc: isFourSide(h) ? 'media/yongsan-screenx.mp4' : 'media/preview.mp4' };
+    const opts = { p: h.params, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || h.params.aspect, mode: 'center', hallKey: h.id, fourSide: isFourSide(h) };
     el.querySelectorAll('.cmp-cell').forEach((cell) => {
       const seat = h._byKey ? h._byKey[cell.dataset.cmpseat] : null;
       const cv = cell.querySelector('.v3d-canvas');
