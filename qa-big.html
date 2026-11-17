@@ -21,55 +21,43 @@
   f.style.width = w + 'px'; f.style.height = h + 'px';
   var path = q.get('p') || '#/t/cheonan-pentaport/h/cheonan-pentaport-n9/s/F11';
   document.getElementById('tag').textContent = w + '×' + h + ' · ' + path;
+
+  /* 콘솔 오류 수집 — iframe 창이 생기는 즉시 리스너를 붙인다(파싱·실행보다 앞서도록 폴링) */
+  window.__errs = [];
+  var hooked = false;
+  var iv = setInterval(function () {
+    if (hooked) { clearInterval(iv); return; }
+    try {
+      var cw = f.contentWindow;
+      if (!cw || !cw.document || cw === window) return;
+      if (cw.__qaHooked) return;
+      cw.__qaHooked = true; hooked = true; clearInterval(iv);
+      cw.addEventListener('error', function (e) {
+        window.__errs.push('error: ' + (e.message || '') + ' @ ' + (e.filename || '').split('/').pop() + ':' + (e.lineno || 0));
+      }, true);
+      cw.addEventListener('unhandledrejection', function (e) {
+        window.__errs.push('rejection: ' + ((e.reason && (e.reason.message || e.reason)) || ''));
+      });
+    } catch (e) {}
+  }, 8);
+
   f.src = './index.html' + path;
 
   window.__qa = {
-    /* 헤드리스에서는 화면 밖으로 나가지 않게 스크롤·축소 없이 그대로 측정한다 */
-    doc: function () { return f.contentDocument; },
-    open3d: function () {
-      var d = f.contentDocument;
-      var tab = d.querySelector('[data-tab="sim"], .ptabs button');
-      return !!tab;
-    },
-    /* 큰 화면 열기: 좌석 상세의 ⛶ 크게 버튼 */
-    big: function () {
-      var d = f.contentDocument;
-      var b = d.querySelector('[data-big]');
-      if (b) { b.click(); return true; }
-      return false;
-    },
-    play: function () {
-      var d = f.contentDocument;
-      var v = d.querySelector('.bigmodal [data-vid]');
-      if (v) { v.click(); return true; }
-      return false;
-    },
+    errs: function () { return window.__errs.slice(); },
     rects: function () {
       var d = f.contentDocument;
       var out = {};
-      [' .big-x', '.big-tag', '.bigmodal .v3d-vid', '.bigmodal .v3d-mute', '.bigmodal .v3d-fov', '.bigmodal .v3d-hudbtns'].forEach(function (sel) {
-        var el = d.querySelector(sel.trim());
-        if (!el) { out[sel.trim()] = null; return; }
+      ['.big-x', '.big-tag', '.bigmodal .v3d-vid', '.bigmodal .v3d-mute', '.bigmodal .v3d-fov', '.bigmodal .v3d-hudbtns'].forEach(function (sel) {
+        var el = d.querySelector(sel);
+        if (!el) { out[sel] = null; return; }
         var r = el.getBoundingClientRect();
         var cs = f.contentWindow.getComputedStyle(el);
-        out[sel.trim()] = { x: +r.x.toFixed(1), y: +r.y.toFixed(1), w: +r.width.toFixed(1), h: +r.height.toFixed(1),
-                            vis: cs.display !== 'none' && r.width > 0 && r.height > 0 };
+        out[sel] = { x: +r.x.toFixed(1), y: +r.y.toFixed(1), w: +r.width.toFixed(1), h: +r.height.toFixed(1),
+                     vis: cs.display !== 'none' && r.width > 0 };
       });
       return out;
-    },
-    overlaps: function () {
-      var r = window.__qa.rects();
-      var keys = Object.keys(r).filter(function (k) { return r[k] && r[k].vis; });
-      var hits = [];
-      for (var i = 0; i < keys.length; i++) for (var j = i + 1; j < keys.length; j++) {
-        var a = r[keys[i]], b = r[keys[j]];
-        var ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
-        var oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
-        if (ox > 0.5 && oy > 0.5) hits.push([keys[i], keys[j], +ox.toFixed(1), +oy.toFixed(1)]);
-      }
-      return hits;
-    },
-    vw: function () { return { w: f.contentWindow.innerWidth, h: f.contentWindow.innerHeight }; }
+    }
   };
 </script>
 </body>
