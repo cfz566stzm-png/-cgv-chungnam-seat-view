@@ -575,8 +575,9 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .calcn-g b{display:block;font-size:12.5px;color:var(--ink-2);font-weight:850;font-variant-numeric:tabular-nums;margin-top:1px}
 
 /* --- 한마디 남기기(간단 폼) --- */
+#seatPanel.card{padding:18px 16px}
 .ugc{margin-top:18px}
-.ugc-sub{margin:4px 0 14px;font-size:12.5px;color:var(--mute);font-weight:650;line-height:1.5;word-break:keep-all}
+.ugc-sub{margin:4px 0 0;font-size:12.5px;color:var(--mute);font-weight:650;line-height:1.5;word-break:keep-all}
 .shotrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:stretch}
 .shotup{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   width:100%;height:100%;min-height:76px;box-sizing:border-box;
@@ -662,7 +663,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .hero-stats .hstat span{white-space:nowrap}
 
 /* --- 티켓 OCR --- */
-.ticketscan{display:flex;align-items:center;gap:10px;margin:2px 0 14px;padding:12px 13px;border-radius:16px;background:linear-gradient(135deg,#0F766E,#047857);color:#fff;cursor:pointer;box-shadow:0 8px 20px rgba(4,120,87,.22)}
+.ticketscan{display:flex;align-items:center;gap:10px;margin:14px 0;padding:12px 13px;border-radius:16px;background:linear-gradient(135deg,#0F766E,#047857);color:#fff;cursor:pointer;box-shadow:0 8px 20px rgba(4,120,87,.22)}
 .ticketscan:active{transform:scale(.995)}
 .ticketscan input,.hero-ticket input{display:none}
 .ts-ic{font-size:20px;flex:0 0 auto}
@@ -2773,7 +2774,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           let cropX = 0, cropY = 0, cropW = base.width, cropH = base.height;
           const areaAll = base.width * base.height;
           const areaBox = Math.max(1, (x1 - x0) * (y1 - y0));
-          if (cnt > 200 && areaBox > areaAll * 0.03 && areaBox < areaAll * 0.98) {
+          const wide = (x1 - x0) / base.width, tall = (y1 - y0) / base.height;
+          /* 종이 영역이 화면을 거의 다 덮을 때만 잘라낸다.
+             한쪽이 그늘지면 밝기 마스크가 티켓 오른쪽을 놓쳐 글자가 잘리므로(9관 G열7번 → 9과 G열7버),
+             폭이나 높이가 80%보다 작으면 원본 전체를 그대로 읽는다. */
+          if (cnt > 200 && areaBox > areaAll * 0.03 && areaBox < areaAll * 0.98 && wide >= 0.8 && tall >= 0.8) {
             const pad = Math.round(Math.min(base.width, base.height) * 0.03);
             cropX = Math.max(0, x0 - pad); cropY = Math.max(0, y0 - pad);
             cropW = Math.min(base.width - cropX, (x1 - x0) + pad * 2);
@@ -2781,7 +2786,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           }
 
           const c = document.createElement('canvas');
-          const up = Math.min(2.4, Math.max(1, 1500 / Math.max(1, cropW)));
+          const up = Math.min(2.4, Math.max(1, 1900 / Math.max(1, cropW)));
           c.width = Math.round(cropW * up); c.height = Math.round(cropH * up);
           const x = c.getContext('2d');
           x.drawImage(base, cropX, cropY, cropW, cropH, 0, 0, c.width, c.height);
@@ -3125,6 +3130,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       };
 
       await tryRead(prep.levels);
+      /* 영수증은 글자가 한 덩어리로 빽빽해 자동 분할(PSM 3)이 줄을 놓치는 경우가 있다.
+         한 번 더 '균일한 한 덩어리'(PSM 6)로 읽어 더 잘 나온 쪽을 쓴다. */
+      if (best.sc < 14) {
+        try { await worker.setParameters({ tessedit_pageseg_mode: '6' }); } catch (e) {}
+        await tryRead(prep.levels);
+        try { await worker.setParameters({ tessedit_pageseg_mode: '3' }); } catch (e) {}
+      }
       if (best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, 18));
       if (best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, -18));
       if (best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, 12));
