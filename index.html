@@ -1152,7 +1152,7 @@ main.wrap{overflow-x:clip}
     /* SCREENX는 좌우 윙 스크린이 정면 스크린 모서리에서 뒤쪽으로 벌어지므로 관 폭이 더 넓다.
        (사용자 실사 사진 IMG_7228: 윙이 90° 직각이 아니라 108~112° 둔각으로 벌어져 있다) */
     var isSX = /SCREENX/i.test(tags.join(' '));
-    var wingFlare = isSX ? 2.6 : 0;
+    var wingFlare = isSX ? 2.8 : 0;
     var wallX = Math.max(bankHalf + 1.2, p.screenW / 2 + 1.6 + wingFlare);
     var ceilY = Math.max(p.screenBottom + p.screenH + 2.0, 5.6);
     var dCam = p.firstRow + seat.y * p.rowGap + ((p._extra && p._extra[seat.y]) || 0);
@@ -1849,11 +1849,11 @@ main.wrap{overflow-x:clip}
     }
     if (/SCREENX/i.test(tagsStr)) {
       /* 좌우 윙 스크린: 정면 스크린 양옆 모서리(±scrW/2 + 0.32m)에서 시작해 뒤쪽 관객 방향으로
-         9m 가면서 바깥으로 2.6m씩 벌어지는 사선 — 정면 스크린과 108~112° 둔각.
+         8m 가면서 바깥으로 2.8m씩 벌어지는 사선 — 정면 스크린과 약 109° 둔각.
          (사용자 실사 사진 IMG_7228에서 SCREENX 윙은 90° 직각이 아니라 둔각으로 크게 벌어져 있다)
          정면보다 흐릿하고(축소 캔버스 확대) 어둡게(alpha 0.46) 그려 벽 패널 위 투사처럼 보이게 한다. */
       var halfW2 = scrW / 2;
-      var wz0 = -0.12, wz1 = -Math.min(9.0, Math.max(6.0, s.rearD - 1.5));
+      var wz0 = -0.12, wz1 = -Math.min(8.0, Math.max(6.0, s.rearD - 1.5));
       var wy0 = scrB, wy1 = scrB + scrH;
       var flare = s.wingFlare || 0;
       var wingX = function (z) {
