@@ -1535,6 +1535,50 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalAlpha = 1;
     }
+    /* ---- 근평면(z>=0.4) 클리핑 + 삼각형 클립 아핀 텍스처 ----
+       윙·천장처럼 카메라 가까이/옆으로 뻗는 판은 네 꼭짓점 중 일부가 카메라 뒤로
+       넘어가 투영이 폭발해 초록 조각으로 찢어졌다. 판을 세그먼트로 나누고,
+       각 조각을 근평면에서 잘라낸 뒤 삼각형마다 클립해 그리면 겹침·튐이 없다. */
+    var NEAR_C = 0.4;
+    function triClip(P0, P1, P2, S0, S1, S2, img, alpha, rect) {
+      var M = affTri(P0, P1, P2, S0, S1, S2);
+      if (!M) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(P0[0], P0[1]); ctx.lineTo(P1[0], P1[1]); ctx.lineTo(P2[0], P2[1]);
+      ctx.closePath(); ctx.clip();
+      if (alpha != null) ctx.globalAlpha = alpha;
+      ctx.imageSmoothingEnabled = true;
+      ctx.setTransform(M[0], M[1], M[2], M[3], M[4], M[5]);
+      ctx.drawImage(img, rect[0], rect[1], rect[2], rect[3], rect[0], rect[1], rect[2], rect[3]);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+    /* 사각형(카메라좌표 4점 + 텍스처 uv 4점)을 근평면에서 자른 뒤 삼각분할 */
+    function quadTex(cam4, uv4, img, alpha, full) {
+      var poly = [], n = 4, i;
+      for (i = 0; i < n; i++) poly.push({ p: cam4[i], uv: uv4[i] });
+      var out = [];
+      for (i = 0; i < n; i++) {
+        var a = poly[i], b = poly[(i + 1) % n];
+        var ain = a.p[2] >= NEAR_C, bin = b.p[2] >= NEAR_C;
+        if (ain) out.push(a);
+        if (ain !== bin) {
+          var t = (NEAR_C - a.p[2]) / (b.p[2] - a.p[2]);
+          out.push({
+            p: [a.p[0] + (b.p[0] - a.p[0]) * t, a.p[1] + (b.p[1] - a.p[1]) * t, NEAR_C],
+            uv: [a.uv[0] + (b.uv[0] - a.uv[0]) * t, a.uv[1] + (b.uv[1] - a.uv[1]) * t]
+          });
+        }
+      }
+      if (out.length < 3) return;
+      var sc = out.map(function (q) { return [sx(q.p), sy(q.p)]; });
+      for (i = 1; i + 1 < out.length; i++) {
+        triClip(sc[0], sc[i], sc[i + 1], out[0].uv, out[i].uv, out[i + 1].uv, img, alpha, full);
+      }
+    }
+
     function texCell(uv, img, alpha) {
       var pts = uv.pts;
       for (var i = 0; i < 4; i++) if (pts[i][2] < NEAR) return;
@@ -1758,22 +1802,26 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       var wz0 = -0.12, wz1 = -7.8, wy0 = scrB, wy1 = scrB + scrH;
       var wingAlpha = vplay ? 0.5 : 0.46;
       var wing2 = wingTex;
+      var WSEG = 10;
       [-1, 1].forEach(function (sgn) {
-        var xw = sgn * (wallX - 0.05);
-        for (var k = 0; k < 5; k++) {
-          var z0 = wz0 + (wz1 - wz0) * k / 5, z1 = wz0 + (wz1 - wz0) * (k + 1) / 5;
-          texCell({
-            pts: [toCam(xw, wy1, z0), toCam(xw, wy1, z1), toCam(xw, wy0, z1), toCam(xw, wy0, z0)],
-            sx0: WING_W * k / 5, sy0: 0, sw: WING_W / 5, sh: WING_H
-          }, wing2, wingAlpha);
+        var xw = sgn * (wallX - 0.06);
+        for (var k = 0; k < WSEG; k++) {
+          var z0 = wz0 + (wz1 - wz0) * k / WSEG, z1 = wz0 + (wz1 - wz0) * (k + 1) / WSEG;
+          /* 뒤로 갈수록 서서히 사라져 벽면에 자연스럽게 스며든다 */
+          var fade = 1 - 0.62 * (k / (WSEG - 1));
+          quadTex(
+            [toCam(xw, wy1, z0), toCam(xw, wy1, z1), toCam(xw, wy0, z1), toCam(xw, wy0, z0)],
+            [[WING_W * k / WSEG, 0], [WING_W * (k + 1) / WSEG, 0],
+             [WING_W * (k + 1) / WSEG, WING_H], [WING_W * k / WSEG, WING_H]],
+            wing2, wingAlpha * fade, [0, 0, WING_W, WING_H]);
         }
       });
       [-1, 1].forEach(function (sgn) {
         var xw = sgn * (wallX - 0.05);
         /* 윙 스크린 안쪽으로 떨어지는 어두운 그라데이션 — 벽에 투사된 느낌 */
         var wg = ctx.createLinearGradient(W / 2, 0, sgn > 0 ? W : 0, 0);
-        wg.addColorStop(0, 'rgba(4,6,7,0)');
-        wg.addColorStop(1, 'rgba(4,6,7,0.45)');
+        wg.addColorStop(0, 'rgba(4,6,7,0.10)');
+        wg.addColorStop(1, 'rgba(4,6,7,0.52)');
         if (path([toCam(xw, wy0, wz0), toCam(xw, wy0, wz1), toCam(xw, wy1, wz1), toCam(xw, wy1, wz0)])) {
           ctx.fillStyle = wg; ctx.fill();
         }
@@ -1790,13 +1838,16 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       var cyFront = ceilY - 1.55, cyBack = ceilY - 0.06;
       function cyAt(zz) { var kk = (zz - cz0) / (cz1 - cz0); return cyFront + (cyBack - cyFront) * kk; }
       var ceilTex = wingTex || img;
-      for (var ck = 0; ck < 8; ck++) {
-        var za = cz0 + (cz1 - cz0) * ck / 8, zb = cz0 + (cz1 - cz0) * (ck + 1) / 8;
+      var CSEG = 8;
+      for (var ck = 0; ck < CSEG; ck++) {
+        var za = cz0 + (cz1 - cz0) * ck / CSEG, zb = cz0 + (cz1 - cz0) * (ck + 1) / CSEG;
         var ya = cyAt(za), yb = cyAt(zb);
-        texCell({
-          pts: [toCam(-cw, ya, za), toCam(cw, ya, za), toCam(cw, yb, zb), toCam(-cw, yb, zb)],
-          sx0: 0, sy0: WING_H * ck / 8, sw: WING_W, sh: WING_H / 8
-        }, ceilTex, vplay ? 0.55 : 0.5);
+        var cfade = 1 - 0.55 * (ck / (CSEG - 1));
+        quadTex(
+          [toCam(-cw, ya, za), toCam(cw, ya, za), toCam(cw, yb, zb), toCam(-cw, yb, zb)],
+          [[0, WING_H * ck / CSEG], [WING_W, WING_H * ck / CSEG],
+           [WING_W, WING_H * (ck + 1) / CSEG], [0, WING_H * (ck + 1) / CSEG]],
+          ceilTex, 0.40 * cfade, [0, 0, WING_W, WING_H]);
       }
       /* 천장 스크린 테두리(앞모서리는 밝게) + 번지는 빛 */
       face([toCam(-cw, cyAt(cz0), cz0), toCam(cw, cyAt(cz0), cz0),
@@ -1811,7 +1862,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         var cxp = sx(ccen), cyp = sy(ccen);
         var crd = Math.max(90, f * (cw * 1.1) / ccen[2]);
         var cg = ctx.createRadialGradient(cxp, cyp, crd * 0.2, cxp, cyp, crd);
-        cg.addColorStop(0, 'rgba(255,232,205,0.10)');
+        cg.addColorStop(0, 'rgba(255,232,205,0.04)');
         cg.addColorStop(1, 'rgba(255,205,165,0)');
         ctx.fillStyle = cg; ctx.fillRect(cxp - crd, cyp - crd, crd * 2, crd * 2);
         ctx.restore();
@@ -2004,8 +2055,8 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
       var ig = ctx.createRadialGradient(imx, imy, ird * 0.42, imx, imy, ird);
-      ig.addColorStop(0, 'rgba(210,226,255,0.050)');
-      ig.addColorStop(0.55, 'rgba(180,205,255,0.022)');
+      ig.addColorStop(0, 'rgba(210,226,255,0.035)');
+      ig.addColorStop(0.55, 'rgba(180,205,255,0.016)');
       ig.addColorStop(1, 'rgba(150,180,255,0)');
       ctx.fillStyle = ig; ctx.fillRect(0, 0, W, H);
       ctx.restore();
