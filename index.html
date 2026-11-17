@@ -1654,13 +1654,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const isImax = h.tags.includes('IMAX');
     const own = Number(h.params.aspect);
     if (isImax) {
-      return {
-        label: '화면비 · IMAX LASER',
-        opts: [
-          [`${own.toFixed(2)}`, `IMAX ${own.toFixed(2)} : 1`],
-          ['2.39', '2.39 : 1 · 일반 영화']
-        ]
-      };
+      const opts = [];
+      if (h.params.native === 1.43) opts.push(['1.43', 'IMAX 1.43 : 1 · 풀스크린']);
+      opts.push([`${own.toFixed(2)}`, `IMAX ${own.toFixed(2)} : 1`]);
+      opts.push(['2.39', '2.39 : 1 · 일반 영화']);
+      return { label: h.params.native === 1.43 ? '화면비 · IMAX GT(1.43 스크린)' : '화면비 · IMAX LASER', opts: opts };
     }
     const name = own > 2.2 ? '시네마스코프' : own > 1.7 ? '플랫' : `화면비 ${own.toFixed(2)}`;
     return { label: '화면비', opts: [[`${own.toFixed(2)}`, `${own.toFixed(2)} : 1 · ${name}`]] };
@@ -1821,7 +1819,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
   function feelTag(m) {
-    if (m.hFov >= 58) return ['화면이 아주 가까움', 'mid'];
+    if (m.hFov >= 75) return ['화면이 아주 가까움', 'mid'];
+    if (m.hFov >= 58) return ['시야를 가득 채우는 자리', 'good'];
     if (m.hFov < 26) return ['화면이 멀게 느껴짐', 'mid'];
     if (Math.abs(m.yaw) >= 14) return ['측면 자리', 'mid'];
     return ['보기 편한 자리', 'good'];
@@ -2568,8 +2567,23 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
   /* 시작 */
   hallSeats_init();
+  /* 공개자료로 확인된 스크린 제원 (좌석표 heuristics 값 덮어쓰기) */
+  const SCREEN_FIX = {
+    '0013-n14': { w: 31.0, h: 22.4, aspect: 1.43, native: 1.43, conf: 'B',
+      note: 'IMAX GT Laser 스크린 31 × 22.4 m (공개자료: 극장 안내·후기 다수 일치)' }
+  };
+
   function hallSeats_init() {
-    DATA.theaters.forEach((t) => t.halls.forEach((h) => { if (h.status === 'ok' && h.rows) hallSeats(h); }));
+    DATA.theaters.forEach((t) => t.halls.forEach((h) => {
+      const fx = SCREEN_FIX[h.id];
+      if (fx && h.params) {
+        h.params.screenW = fx.w; h.params.screenH = fx.h;
+        h.params.aspect = fx.aspect; h.params.native = fx.native; h.params.conf = fx.conf;
+        h.params.curve = Math.max(h.params.curve || 0, 1.9);
+        h.title = (h.title || h.name) + ' · 스크린 공개제원';
+      }
+      if (h.status === 'ok' && h.rows) hallSeats(h);
+    }));
   }
   applyHash();
   render();
