@@ -1240,6 +1240,9 @@ body{font-size:16px}
   .big-x{width:34px;height:34px;font-size:14px}
   .big-tag{font-size:11px;top:calc(env(safe-area-inset-top, 0px) + 12px)}
 }
+/* 아주 좁은 화면(320~359px): HUD가 여러 줄로 접혀 '드래그해서 둘러보기' 안내와 겹치므로
+   안내 문구만 감춘다(조작 버튼은 그대로) */
+@media (max-width:359px){ .v3d-hint{display:none} }
 
 </style>
 </head>
