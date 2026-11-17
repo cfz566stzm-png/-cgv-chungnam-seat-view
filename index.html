@@ -400,6 +400,8 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
   background:var(--green);border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.2);
 }
 .seat.hascam{box-shadow:0 0 0 1.5px rgba(0,168,98,.55) inset}
+/* 블로그 원문 링크만 있는 좌석 — 사진은 없음 */
+.seat.haslink{box-shadow:0 0 0 1px rgba(107,118,132,.4) inset}
 .seat.dim{opacity:.18}
 .seat.dim:hover{opacity:.4}
 .photochip{background:var(--green-l);border-color:var(--green-soft);color:var(--green-d)}
@@ -535,6 +537,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .sh-t b{font-size:21px;font-weight:850;letter-spacing:-.04em;line-height:1.15}
 .sh-t span{font-size:12.5px;font-weight:700;color:var(--mute)}
 .sh-cam{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--green-d);background:var(--green-l);padding:4px 8px;border-radius:8px}
+.sh-cam.link{color:#4E5968;background:#F2F4F6}
 .sheet-x{flex:0 0 auto;width:44px;height:44px;min-width:44px;border-radius:14px;display:grid;place-items:center;background:#F2F4F6;color:#4E5968;margin-left:4px;touch-action:manipulation}
 .sheet-x:active{background:#E5E8EB}
 .sheet-x svg{pointer-events:none}
@@ -1734,11 +1737,21 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (!b || !b.seats) return [];
     return b.seats[seatKey] || [];
   }
+  /* '실사'는 실제 이미지 파일(src)이 있는 사진만 센다 — 블로그 원문 링크만 있는 항목은
+     사진이 아니라 링크로 따로 센다(좌석판 초록 점·실사 필터에 섞이지 않게). */
+  const hasImg = (p) => !!(p && p.src);
+  const imgCount = (arr) => (arr || []).filter(hasImg).length;
+  const linkCount = (arr) => (arr || []).filter((p) => p && !p.src && p.source).length;
   function hallPhotoCount(hallId) {
     const b = PHOTOS[hallId];
-    if (!b || !b.seats) return { seats: 0, shots: 0 };
+    if (!b || !b.seats) return { seats: 0, shots: 0, links: 0 };
     const keys = Object.keys(b.seats);
-    return { seats: keys.length, shots: keys.reduce((a, k) => a + b.seats[k].length, 0) };
+    const withImg = keys.filter((k) => (b.seats[k] || []).some(hasImg));
+    return {
+      seats: withImg.length,
+      shots: keys.reduce((a, k) => a + imgCount(b.seats[k]), 0),
+      links: keys.reduce((a, k) => a + linkCount(b.seats[k]), 0)
+    };
   }
   const tierLabel = (t) => (t === '1x' ? '1배율' : t === 'wide' ? '광각' : '실사');
 
@@ -1788,13 +1801,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (seg[0] === 't' && seg[1]) {
       state.theaterId = seg[1];
       if (seg[2] === 'h' && seg[3]) {
-        state.hallId = seg[3]; state.view = 'hall'; state._mapHall = null; state.compare = [];
+        state.hallId = seg[3]; state.view = 'hall'; state._mapHall = null; resetCompare();
         state.seatKey = (seg[4] === 's' && seg[5]) ? decodeURIComponent(seg[5]) : null;
         const hh = findHall(state.theaterId, state.hallId);
         if (!hh) { state.view = 'theater'; state.hallId = null; state.seatKey = null; return; }
         state.aspect = String(hh.params.aspect);
         state.photoIdx = 0; state.tab = 'sim';
-      } else { state.view = 'theater'; state.hallId = null; state.seatKey = null; state.compare = []; }
+      } else { state.view = 'theater'; state.hallId = null; state.seatKey = null; resetCompare(); }
       return;
     }
     state.view = 'home';
@@ -2043,7 +2056,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <div class="maptools">
           <div class="chip-row">
             <button class="chip sm photochip" data-photoonly="1" aria-pressed="${state.photoOnly}">📷 실사 있는 좌석만</button>
-            ${pc.seats ? `<button class="chip sm" data-photogal="1">실사 모아보기 ${pc.shots}컷</button>` : ''}
+            ${pc.seats || pc.links ? `<button class="chip sm" data-photogal="1">${pc.seats ? '실사 모아보기 ' + pc.shots + '컷' : '원문 링크 모아보기 ' + pc.links}</button>` : ''}
             <button class="chip sm cmpchip" data-cmpmode="1" aria-pressed="${state.cmpMode}">⚖️ 좌석 비교${(state.compare || []).length ? ' ' + state.compare.length : ''}</button>
           </div>
           <div class="chip-row">
@@ -2144,9 +2157,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         const key = row.l + m[1];
         const isSel = state.seatKey === key;
         const isCmp = (state.compare || []).indexOf(key) >= 0;
-        const has = photosFor(h.id, key).length > 0;
+        const arr = photosFor(h.id, key);
+        const has = arr.some(hasImg);                       /* 이미지 파일이 있는 좌석만 '실사' */
+        const linkOnly = !has && arr.length > 0;
         const dim = state.photoOnly && !has;
-        cells += `<button class="seat ${isSel ? 'sel' : ''} ${isCmp ? 'cmp' : ''} ${has ? 'hascam' : ''} ${dim ? 'dim' : ''}" data-seat="${key}" data-t="${m[2]}" title="${esc(key)} ${TYPES[m[2]] || ''}${has ? ' · 실사 사진 있음' : ''}">
+        const tagTxt = has ? ' · 실사 사진 있음' : linkOnly ? ' · 원문 링크만' : '';
+        cells += `<button class="seat ${isSel ? 'sel' : ''} ${isCmp ? 'cmp' : ''} ${has ? 'hascam' : ''} ${linkOnly ? 'haslink' : ''} ${dim ? 'dim' : ''}" data-seat="${key}" data-t="${m[2]}" title="${esc(key)} ${TYPES[m[2]] || ''}${tagTxt}">
           <span class="sn">${m[1]}</span>${has ? '<i class="cam"></i>' : ''}</button>`;
       }
       return `<div class="srow${row.gapBefore ? ' gap-before' : ''}">${lab}<div class="rcells" style="grid-template-columns:${tpl}">${cells}</div></div>`;
@@ -2168,7 +2184,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
   /* ---------- 좌석 상세 ---------- */
   function emptySeatHtml(h) {
-    const withPhotos = hallSeats(h).filter((s) => photosFor(h.id, s.key).length);
+    const withPhotos = hallSeats(h).filter((s) => photosFor(h.id, s.key).some(hasImg));
     return `<div class="empty-state">
       <div class="empty-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 17V9a2 2 0 012-2h2a2 2 0 012 2v1h4V9a2 2 0 012-2h2a2 2 0 012 2v8" stroke="#047857" stroke-width="1.7" stroke-linecap="round"/><path d="M2 19h20" stroke="#047857" stroke-width="1.7" stroke-linecap="round"/></svg></div>
       <h3>좌석을 하나 골라보세요</h3>
@@ -2209,7 +2225,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <b>${esc(seat.key)}</b>
           <span>${esc(h ? h.name : '')}${h && seat ? ' · ' + (TYPES[seat.t] || '일반석') : ''}</span>
         </div>
-        ${photosFor(h ? h.id : '', seat.key).length ? `<span class="sh-cam">📷 ${photosFor(h ? h.id : '', seat.key).length}</span>` : ''}
+        ${(() => { const a = photosFor(h ? h.id : '', seat.key); const im = imgCount(a), ln = linkCount(a);
+          return (im ? `<span class="sh-cam">📷 ${im}</span>` : '') + (!im && ln ? `<span class="sh-cam link">🔗 링크 ${ln}</span>` : ''); })()}
         <button class="sheet-x" id="sheetClose" aria-label="닫기">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#4E5968" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
@@ -2333,7 +2350,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <button class="back mini" data-go="hallback" style="margin:0 0 10px">‹ 좌석 선택으로</button>
       <div class="ptabs" role="tablist">
         <button data-ptab="sim" aria-pressed="${tab === 'sim'}">3D 시야</button>
-        <button data-ptab="photo" aria-pressed="${tab === 'photo'}" ${arr.length ? '' : 'disabled'}>실사 사진${arr.length ? ' ' + arr.length : ''}</button>
+        <button data-ptab="photo" aria-pressed="${tab === 'photo'}" ${arr.length ? '' : 'disabled'}>${imgCount(arr) ? '실사 사진 ' + imgCount(arr) : (linkCount(arr) ? '원문 링크 ' + linkCount(arr) : '실사 사진')}</button>
         <button data-ptab="profile" aria-pressed="${tab === 'profile'}">단면도</button>
       </div>
       <div class="tabbody">
@@ -2449,6 +2466,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     else arr.push(seatKey);
     paintSeatMap();
     paintCompareBar();
+  }
+
+  /* 관·지점을 옮기면 비교 상태를 통째로 끈다(목록·비교 모드·떠 있는 비교 창까지) */
+  function resetCompare() {
+    state.compare = [];
+    state.cmpMode = false;
+    const bar = document.getElementById('cmpBar');
+    if (bar) bar.remove();
+    const modal = document.getElementById('cmpModal');
+    if (modal) modal.remove();
   }
 
   function paintCompareBar() {
@@ -3340,7 +3367,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         }
       }
       if (!seatV) seatV = rawSeat.replace(/[^A-Z0-9]/g, '');
-      state.theaterId = tid; state.hallId = hid || null; state.seatKey = seatV || null; state._mapHall = null; state.compare = [];
+      state.theaterId = tid; state.hallId = hid || null; state.seatKey = seatV || null; state._mapHall = null; resetCompare();
       state.view = hid ? 'hall' : 'theater'; state.tab = 'sim'; state.aspect = null; state._sheetSeat = null;
       const hh = hid ? findHall(tid, hid) : null;
       if (hh) { state.aspect = String(hh.params.aspect); if (seatV && !(hh._byKey && hh._byKey[seatV])) state.seatKey = null; }
@@ -3607,10 +3634,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const go = e.target.closest('[data-go]');
     if (go) {
       const v = go.dataset.go;
-      if (v === 'home') { state.view = 'home'; state.theaterId = null; state.hallId = null; state.seatKey = null; state.compare = []; }
-      if (v === 'theater') { state.view = 'theater'; state.theaterId = go.dataset.id || state.theaterId; state.hallId = null; state.seatKey = null; state.compare = []; }
+      if (v === 'home') { state.view = 'home'; state.theaterId = null; state.hallId = null; state.seatKey = null; resetCompare(); }
+      if (v === 'theater') { state.view = 'theater'; state.theaterId = go.dataset.id || state.theaterId; state.hallId = null; state.seatKey = null; resetCompare(); }
       if (v === 'hall') {
-        state.view = 'hall'; state.theaterId = go.dataset.tid; state.hallId = go.dataset.hid; state._mapHall = null; state.compare = [];
+        state.view = 'hall'; state.theaterId = go.dataset.tid; state.hallId = go.dataset.hid; state._mapHall = null; resetCompare();
         state.seatKey = go.dataset.seat || null; state.aspect = null; state.photoIdx = 0; state.tab = 'sim';
         const hh = findHall(state.theaterId, state.hallId); if (hh) state.aspect = String(hh.params.aspect);
       }
