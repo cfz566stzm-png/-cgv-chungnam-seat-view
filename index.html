@@ -875,6 +875,14 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
   .cmp-cell canvas{aspect-ratio:16/10}
 }
 
+/* 3D HUD: 리클라이너 젖히기 버튼 */
+.v3d-hud{flex-wrap:wrap;row-gap:6px}
+.v3d-hudbtns{flex-wrap:wrap;justify-content:flex-end}
+.v3d-recline{height:30px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:11px;font-weight:850;white-space:nowrap;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.v3d-recline .v3d-ang{font-style:normal;font-variant-numeric:tabular-nums;font-weight:850;opacity:.92}
+.v3d-recline[aria-pressed="true"]{background:#FDB44B;color:#3A2100}
+@media (min-width:960px){ .v3d-recline{height:34px;padding:0 12px;font-size:11.5px} }
+
 </style>
 </head>
 <body>
@@ -1110,6 +1118,9 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
   /* 화면 밖에 두는 <video> 한 개를 모든 뷰어가 함께 쓴다.
      (좌석을 바꿀 때마다 새로 만들면 매번 다시 받아 재생이 끊긴다)
      iOS Safari 자동재생 규칙 때문에 muted + playsInline 으로 시작한다. */
+  var RECLINE_UP = 110, RECLINE_BACK = 160;   /* 등받이 각도(°) — 정자세 110°, 젖힘 160° */
+  var recState = { key: null, v: 0 };
+
   var sharedVideo = null;
   function getVideo(src) {
     if (!sharedVideo) {
@@ -1156,6 +1167,9 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     this.vpitch = 0;
     this.drag = null;
     this.raf = 0;
+    this.hallKey = (opts && opts.hallKey) || null;
+    this._rec = (recState.key && recState.key === this.hallKey) ? recState.v : 0;
+    this._recTween = null;
     this.videoSrc = (opts && opts.videoSrc) || 'media/preview.mp4';
     this.video = getVideo(this.videoSrc);
     this._bindControls();
@@ -1190,6 +1204,24 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       mb.style.display = on ? '' : 'none';
       mb.textContent = this.video && this.video.muted ? '🔇' : '🔊';
     }
+  };
+
+  Viewer.prototype._paintRecBtn = function () {
+    var btn = this.root && this.root.querySelector('[data-recline]');
+    if (!btn) return;
+    var deg = Math.round(RECLINE_UP + (RECLINE_BACK - RECLINE_UP) * (this._rec || 0));
+    var ang = btn.querySelector('.v3d-ang');
+    if (ang) ang.textContent = deg + '\u00b0';
+    btn.setAttribute('aria-pressed', (this._rec || 0) > 0.5 ? 'true' : 'false');
+    btn.title = (this._rec || 0) > 0.5 ? '\ub4f1\ubc1b\uc774 ' + deg + '\u00b0 \u00b7 \ub2e4\uc2dc \ub204\ub974\uba74 \uc815\uc790\uc138' : '\ub4f1\ubc1b\uc774 ' + deg + '\u00b0 \u00b7 \ub4a4\ub85c \uc816\ud600\ubcf4\uae30';
+  };
+
+  Viewer.prototype.toggleRecline = function () {
+    var target = (this._rec || 0) > 0.5 ? 0 : 1;
+    this._recTween = { t0: performance.now(), dur: 700, from: this._rec || 0, to: target };
+    recState.key = this.hallKey; recState.v = target;
+    if (!this.raf) this._loop();
+    this._paintRecBtn();
   };
 
   Viewer.prototype.toggleVideo = function () {
@@ -1256,6 +1288,15 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         self.vyaw *= 0.90; self.vpitch *= 0.90;
         if (Math.abs(self.vyaw) < 0.02 && Math.abs(self.vpitch) < 0.02) { self.vyaw = self.vpitch = 0; }
         else moved = true;
+      }
+      if (self._recTween) {
+        var rk = (performance.now() - self._recTween.t0) / self._recTween.dur;
+        if (rk > 1) rk = 1;
+        var re = 1 - Math.pow(1 - rk, 3);          /* ease-out */
+        self._rec = self._recTween.from + (self._recTween.to - self._recTween.from) * re;
+        self._paintRecBtn();
+        moved = true;
+        if (rk === 1) { self._rec = self._recTween.to; self._recTween = null; self._paintRecBtn(); }
       }
       self.yaw = clamp(self.yaw, YAW_MIN, YAW_MAX);
       self.pitch = clamp(self.pitch, PITCH_MIN, PITCH_MAX);
@@ -1348,10 +1389,14 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     var f = (W / 2) / Math.tan(fovH * D2R / 2);
     var cam = s.cam;
     var cyaw = Math.cos(this.yaw * D2R), syaw = Math.sin(this.yaw * D2R);
-    var cpit = Math.cos(this.pitch * D2R), spit = Math.sin(this.pitch * D2R);
+    /* 등받이를 젖히면(recline 0→1) 눈높이가 12cm 내려가고 시선이 15도 위로 넘어간다 */
+    var rec = this._rec || 0;
+    var pitchEff = this.pitch + 15 * rec;
+    var cpit = Math.cos(pitchEff * D2R), spit = Math.sin(pitchEff * D2R);
+    var camY = cam.y - 0.12 * rec;
 
     function toCam(x, y, z) {
-      var dx = x - cam.x, dy = y - cam.y, dz = z - cam.z;
+      var dx = x - cam.x, dy = y - camY, dz = z - cam.z;
       var xc = dx * cyaw - dz * syaw;
       var z0 = dx * syaw + dz * cyaw;
       var yc = dy * cpit - z0 * spit;
@@ -1636,15 +1681,36 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     /* ---- SCREENX 좌우 윙 스크린 ---- */
     var tagsStr = (o.tags || []).join(' ');
     if (/SCREENX/i.test(tagsStr)) {
+      /* 좌우 윙 스크린: 정면 화면의 양옆을 이어서 투사하되, 실제 SCREENX처럼
+         정면보다 흐릿하고(blur) 어둡게(alpha 0.46) 그린다. 벽 패널 질감·비네팅은 그대로 남긴다. */
       var wz0 = -1.1, wz1 = -7.4, wy0 = 1.5, wy1 = 5.6;
+      var wingAlpha = vplay ? 0.5 : 0.46;
+      ctx.save();
+      try { ctx.filter = 'blur(2.5px)'; } catch (e) {}
+      ctx.globalCompositeOperation = 'source-over';
+      try {
+        [-1, 1].forEach(function (sgn) {
+          var xw = sgn * (wallX - 0.05);
+          for (var k = 0; k < 5; k++) {
+            var z0 = wz0 + (wz1 - wz0) * k / 5, z1 = wz0 + (wz1 - wz0) * (k + 1) / 5;
+            texCell({
+              pts: [toCam(xw, wy1, z0), toCam(xw, wy1, z1), toCam(xw, wy0, z1), toCam(xw, wy0, z0)],
+              sx0: iImgW * k / 5, sy0: 0, sw: iImgW / 5, sh: iImgH
+            }, img, wingAlpha);
+          }
+        });
+      } finally {
+        ctx.filter = 'none';           /* 정면 스크린은 100% 선명도 유지 */
+        ctx.restore();
+      }
       [-1, 1].forEach(function (sgn) {
         var xw = sgn * (wallX - 0.05);
-        for (var k = 0; k < 5; k++) {
-          var z0 = wz0 + (wz1 - wz0) * k / 5, z1 = wz0 + (wz1 - wz0) * (k + 1) / 5;
-          texCell({
-            pts: [toCam(xw, wy1, z0), toCam(xw, wy1, z1), toCam(xw, wy0, z1), toCam(xw, wy0, z0)],
-            sx0: iImgW * k / 5, sy0: 0, sw: iImgW / 5, sh: iImgH
-          }, img, 0.5);
+        /* 윙 스크린 안쪽으로 떨어지는 어두운 그라데이션 — 벽에 투사된 느낌 */
+        var wg = ctx.createLinearGradient(W / 2, 0, sgn > 0 ? W : 0, 0);
+        wg.addColorStop(0, 'rgba(4,6,7,0)');
+        wg.addColorStop(1, 'rgba(4,6,7,0.45)');
+        if (path([toCam(xw, wy0, wz0), toCam(xw, wy0, wz1), toCam(xw, wy1, wz1), toCam(xw, wy1, wz0)])) {
+          ctx.fillStyle = wg; ctx.fill();
         }
         face([toCam(xw, wy0, wz0), toCam(xw, wy0, wz1), toCam(xw, wy1, wz1), toCam(xw, wy1, wz0)],
              null, 'rgba(255,255,255,0.07)', 2);
@@ -1890,6 +1956,11 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     if (vb) {
       v._vidButton(!!(v.video && !v.video.paused));
       vb.addEventListener('click', function (e) { e.preventDefault(); v.toggleVideo(); });
+    }
+    var rcb = wrap.querySelector('[data-recline]');
+    if (rcb) {
+      v._paintRecBtn();
+      rcb.addEventListener('click', function (e) { e.preventDefault(); v.toggleRecline(); });
     }
     var mb = wrap.querySelector('[data-mute]');
     if (mb) {
@@ -2791,6 +2862,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return '일반관';
   }
 
+  /* 리클라이너 좌석이 있는 관 — 태그/이름에 리클라이너·RECLINER·TEMPUR, 또는 릴렉스시트(r) 좌석이 있는 관 */
+  function isReclinerHall(h) {
+    const t = ((h.tags || []).join(' ') + ' ' + (h.name || '')).toUpperCase();
+    if (/리클라이너|RECLINER|TEMPUR/.test(t)) return true;
+    return !!(h.seatTypes && (h.seatTypes.r || 0) > 0);
+  }
+
   function simHtml(h, seat, m) {
     const tag = feelTag(m);
     return `<div class="v3d" data-v3d>
@@ -2798,6 +2876,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <div class="v3d-hud">
         <span class="v3d-type">${esc(hallTypeLabel(h))}</span>
         <span class="v3d-hudbtns">
+          ${isReclinerHall(h) ? `<button class="v3d-recline" data-recline="1" aria-pressed="false" title="등받이 110°">🪑 젖히기 <b class="v3d-ang">110°</b></button>` : ''}
           <button class="v3d-vid" data-vid="1" aria-pressed="false" title="샘플 영상을 스크린에 재생">▶ 영상</button>
           <button class="v3d-mute" data-mute="1" aria-pressed="true" style="display:none" title="소리 켜기/끄기">🔇</button>
           <button class="v3d-reset" data-reset="1">정면 리셋</button>
@@ -2977,7 +3056,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (sheetHead) sheetHead.innerHTML = seat ? sheetHeadHtml(h, seat) : '';
     if (seat) {
       const p = h.params, m = metrics(p, seat);
-      const opts = { p: p, seat: seat, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || p.aspect, mode: state.mode };
+      const opts = { p: p, seat: seat, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || p.aspect, mode: state.mode, hallKey: h.id };
       [panel, sheetBody].filter(Boolean).forEach((root) => {
         const pc = root.querySelector('.profile-canvas');
         if (pc) drawProfile(pc, p, m, seat);
@@ -3110,7 +3189,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (!el) return;
     document.body.appendChild(el);
     document.body.style.overflow = 'hidden';
-    const opts = { p: h.params, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || h.params.aspect, mode: 'center' };
+    const opts = { p: h.params, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || h.params.aspect, mode: 'center', hallKey: h.id };
     el.querySelectorAll('.cmp-cell').forEach((cell) => {
       const seat = h._byKey ? h._byKey[cell.dataset.cmpseat] : null;
       const cv = cell.querySelector('.v3d-canvas');
