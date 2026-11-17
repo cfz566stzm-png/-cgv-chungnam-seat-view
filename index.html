@@ -970,7 +970,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     var bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, '#16211D'); bg.addColorStop(0.55, '#12201B'); bg.addColorStop(1, '#0B1613');
+    bg.addColorStop(0, '#1D2A25'); bg.addColorStop(0.55, '#18261F'); bg.addColorStop(1, '#0F1B17');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
     var p = s.p, wallX = s.wallX, ceilY = s.ceilY, rearD = s.rearD;
@@ -979,12 +979,12 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 
     /* ---- 앞벽 (스크린 둘레) ---- */
     var fw = toCam(-wallX, 0, 0); var fw2 = toCam(wallX, 0, 0);
-    face([fw, fw2, toCam(wallX, ceilY, 0), toCam(-wallX, ceilY, 0)], '#2A3833');
+    face([fw, fw2, toCam(wallX, ceilY, 0), toCam(-wallX, ceilY, 0)], '#36463F');
 
     /* 앞벽 위쪽 흡음재 줄 */
     for (var wx = -wallX + 1.4; wx < wallX - 0.6; wx += 1.9) {
       face([toCam(wx, scrB + scrH + 0.9, 0), toCam(wx + 1.2, scrB + scrH + 0.9, 0),
-            toCam(wx + 1.2, ceilY - 0.2, 0), toCam(wx, ceilY - 0.2, 0)], '#33443D');
+            toCam(wx + 1.2, ceilY - 0.2, 0), toCam(wx, ceilY - 0.2, 0)], '#405148');
     }
 
     /* ---- 스크린 마스크(검은 면) ---- */
@@ -1046,11 +1046,11 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     /* ---- 옆벽 ---- */
     [-1, 1].forEach(function (sgn) {
       var xw = sgn * wallX;
-      face([toCam(xw, 0, 0), toCam(xw, 0, -rearD), toCam(xw, ceilY, -rearD), toCam(xw, ceilY, 0)], '#22302B');
+      face([toCam(xw, 0, 0), toCam(xw, 0, -rearD), toCam(xw, ceilY, -rearD), toCam(xw, ceilY, 0)], '#2C3A34');
       /* 벽면 흡음 패널 */
       for (var z = -1.5; z > -rearD; z -= 2.2) {
         face([toCam(xw * 0.999, 0.35, z), toCam(xw * 0.999, 0.35, z - 1.6),
-              toCam(xw * 0.999, ceilY - 0.6, z - 1.6), toCam(xw * 0.999, ceilY - 0.6, z)], '#2A3833');
+              toCam(xw * 0.999, ceilY - 0.6, z - 1.6), toCam(xw * 0.999, ceilY - 0.6, z)], '#35453E');
       }
       /* 벽 하단 유도선 */
       face([toCam(xw * 0.999, 0.62, -1.0), toCam(xw * 0.999, 0.62, -rearD),
@@ -1058,7 +1058,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     });
 
     /* ---- 천장 ---- */
-    face([toCam(-wallX, ceilY, 0), toCam(wallX, ceilY, 0), toCam(wallX, ceilY, -rearD), toCam(-wallX, ceilY, -rearD)], '#1D2A25');
+    face([toCam(-wallX, ceilY, 0), toCam(wallX, ceilY, 0), toCam(wallX, ceilY, -rearD), toCam(-wallX, ceilY, -rearD)], '#25322C');
     for (var lz = -3.2; lz > -rearD; lz -= 4.4) {
       [-1, 1].forEach(function (sgn) {
         var lx = sgn * wallX * 0.55;
@@ -1076,7 +1076,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     }
 
     /* ---- 뒷벽 + 출입문 ---- */
-    face([toCam(-wallX, 0, -rearD), toCam(wallX, 0, -rearD), toCam(wallX, ceilY, -rearD), toCam(-wallX, ceilY, -rearD)], '#1E2B26');
+    face([toCam(-wallX, 0, -rearD), toCam(wallX, 0, -rearD), toCam(wallX, ceilY, -rearD), toCam(-wallX, ceilY, -rearD)], '#27342E');
     face([toCam(-1.15, 0, -rearD + 0.02), toCam(1.15, 0, -rearD + 0.02),
           toCam(1.15, 2.35, -rearD + 0.02), toCam(-1.15, 2.35, -rearD + 0.02)], '#0F1A16');
     face([toCam(-0.5, 2.52, -rearD + 0.03), toCam(0.5, 2.52, -rearD + 0.03),
@@ -1101,7 +1101,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 
     /* 스크린 앞 바닥 */
     face([toCam(-wallX, 0.01, 0), toCam(wallX, 0.01, 0),
-          toCam(wallX, 0.01, -(p.firstRow - p.rowGap * 0.5)), toCam(-wallX, 0.01, -(p.firstRow - p.rowGap * 0.5))], '#24322C');
+          toCam(wallX, 0.01, -(p.firstRow - p.rowGap * 0.5)), toCam(-wallX, 0.01, -(p.firstRow - p.rowGap * 0.5))], '#2E3D36');
 
     var order = [];
     for (var i2 = 0; i2 < p.rows; i2++) {
@@ -1117,11 +1117,11 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       var zf = -(dc - g * 0.5), zb = -(dc + g * 0.5);
 
       /* 디딤판 */
-      face([toCam(-wallX, hz, zf), toCam(wallX, hz, zf), toCam(wallX, hz, zb), toCam(-wallX, hz, zb)], '#2A3933');
+      face([toCam(-wallX, hz, zf), toCam(wallX, hz, zf), toCam(wallX, hz, zb), toCam(-wallX, hz, zb)], '#35443D');
       /* 단차(앞면) */
       if (i > 0) {
         face([toCam(-wallX, (i - 1) * p.riser, zf), toCam(wallX, (i - 1) * p.riser, zf),
-              toCam(wallX, hz, zf), toCam(-wallX, hz, zf)], '#202D28');
+              toCam(wallX, hz, zf), toCam(-wallX, hz, zf)], '#2A3731');
         /* 단차 코 밝은 선 */
         face([toCam(-wallX, hz - 0.03, zf), toCam(wallX, hz - 0.03, zf),
               toCam(wallX, hz, zf), toCam(-wallX, hz, zf)], 'rgba(150,190,170,0.10)');
@@ -1154,7 +1154,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         drewBack = true;
         seatX.push({ x: xc0, key: key, cell: cell });
       }
-      if (drewBack) { ctx.fillStyle = '#35473F'; ctx.fill(); }
+      if (drewBack) { ctx.fillStyle = '#44574E'; ctx.fill(); }
 
       /* 등받이 상단(스크린 빛을 받는 면) */
       ctx.beginPath();
@@ -1171,7 +1171,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         ctx.closePath();
         drewTop = true;
       }
-      if (drewTop) { ctx.fillStyle = '#59706A'; ctx.fill(); }
+      if (drewTop) { ctx.fillStyle = '#6E8479'; ctx.fill(); }
 
       /* 앞사람 머리 실루엣 */
       ctx.beginPath();
@@ -1211,7 +1211,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     /* ---- 비네트 ---- */
     var vg = ctx.createRadialGradient(W / 2, H * 0.52, Math.min(W, H) * 0.34, W / 2, H * 0.52, Math.max(W, H) * 0.78);
     vg.addColorStop(0, 'rgba(0,0,0,0)');
-    vg.addColorStop(1, 'rgba(0,0,0,0.34)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.22)');
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   };
 
