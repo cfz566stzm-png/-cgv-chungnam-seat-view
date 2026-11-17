@@ -1362,6 +1362,15 @@ input,select,textarea,
 /* 미니맵 라벨 — 캔버스 위 작은 글씨도 읽히게 */
 .minimap span{font-size:11px}
 
+/* 영화 목록 머리줄 + 입력칸 옆 열기 버튼 */
+.mvsug-head{padding:8px 12px;font-size:12px;font-weight:850;color:#047857;background:#F2F9F5;border-bottom:1px solid var(--line-2);
+  position:sticky;top:0;z-index:1}
+.mvsug button{padding:10px 12px}
+.mvsug button b{font-size:14px}
+.mvdrop{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:10px;
+  background:#F2F4F6;color:#4E5968;font-size:13px;font-weight:900;line-height:1}
+.movieinput{padding-right:48px !important}
+
 </style>
 </head>
 <body>
@@ -2842,7 +2851,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     MVLOAD = fetch(MVDB_URL, { cache: 'force-cache' })
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => { if (j && j.cur) mvIndex(j); return j; })
-      .catch(() => null);
+      .catch(() => null)
+      /* JSON을 못 받아와도 빌드에 박힌 현재 상영작 목록으로 채운다 */
+      .then((j) => {
+        if (!MVIDX && MOVIES && MOVIES.length) {
+          const cur = {};
+          MOVIES.forEach((t) => { if (t) cur[t] = {}; });
+          mvIndex({ cur });
+        }
+        return j;
+      });
     return MVLOAD;
   }
 
@@ -2873,10 +2891,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return mvMeta(mvFind(title));
   }
 
-  /* 자동완성 후보: 현재 상영작 → 제목 시작 → 제목 포함 순 */
+  /* 자동완성 후보: 빈 칸이면 지금 상영작 전부, 글자를 치면 제목 시작 → 제목 포함 순 */
   function mvSearch(q, limit) {
     const k = mvNorm(q);
-    if (!k || !MVIDX) return [];
+    if (!MVIDX) return [];
+    if (!k) {
+      const cur = MVIDX.filter((e) => e.cur);
+      const list = (cur.length ? cur : MVIDX).slice();
+      list.sort((a, b) => a.t.localeCompare(b.t, 'ko'));
+      return list.slice(0, limit || 30);
+    }
     const out = [];
     for (const e of MVIDX) {
       if (e.n === k) { out.push([0, e]); continue; }
@@ -3322,6 +3346,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
             const b = el.querySelector('b');
             if (b) b.textContent = Number(el.dataset.helpbase || 0) + helpCount(el.dataset.helpcount);
           });
+          /* 아직 그려지지 않은 카드(사진 탭·후기 목록)도 숫자를 맞춰 다시 그린다 */
+          if (state.view === 'hall') paintSeatPanel();
         } catch (e) {}
       })
       .catch(() => {})
@@ -3349,7 +3375,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         method: 'POST', signal: tm.signal,
         headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
         body: JSON.stringify({ target_key: String(key).slice(0, 120), voter_id: deviceId() })
-      }).then((r) => { tm.done(); if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); } })
+      }).then((r) => {
+        tm.done();
+        if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); return; }
+        if (r.ok) { /* 서버에 기록됐으니 이 기기 임시 카운트는 서버 값으로 옮긴다(두 번 세지 않게) */
+          const mv = helpMine(); delete mv[key]; lsPut(HELP_MINE, mv);
+          HELP.counts[key] = (HELP.counts[key] || 0) + 1;
+        }
+      })
         .catch(() => { tm.done(); });
     } catch (e) {}
   }
@@ -5069,6 +5102,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
       <div class="mvwrap">
         <input class="movieinput" id="movieInput" maxlength="40" placeholder="본 영화 (선택)" value="${esc(movie)}" autocomplete="off">
+        <button class="mvdrop" id="movieDrop" type="button" aria-label="지금 상영 중인 영화 목록 열기" title="지금 상영 중인 영화 목록">▾</button>
         <div class="mvsug" id="movieSug" hidden></div>
       </div>
       <div class="mvmeta" id="movieMeta"></div>
@@ -5281,12 +5315,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       if (!mvmeta || !mvi) return;
       mvmeta.textContent = mvMetaOf(mvi.value);
     };
-    const paintSug = () => {
+    const paintSug = (force) => {
       if (!mvsug || !mvi) return;
-      if (!MVIDX || !mvNorm(mvi.value)) { mvsug.hidden = true; mvsug.innerHTML = ''; return; }
-      const hits = mvSearch(mvi.value, 8);
+      if (!MVIDX) { if (force || mvi.value) mvLoad().then(() => paintSug(force)); return; }
+      const q = mvi.value || '';
+      const typed = !!mvNorm(q);
+      const hits = mvSearch(q, typed ? 8 : 30);
       if (!hits.length) { mvsug.hidden = true; mvsug.innerHTML = ''; return; }
-      mvsug.innerHTML = hits.map((e, i) => `<button type="button" data-mvi="${i}"><b>${esc(e.t)}</b><i>${esc(mvMeta(e))}</i></button>`).join('');
+      mvsug.innerHTML = (typed ? '' : `<div class="mvsug-head">지금 상영 중 ${hits.length}편 · 제목을 누르면 바로 넣어요</div>`)
+        + hits.map((e, i) => `<button type="button" data-mvi="${i}"><b>${esc(e.t)}</b><i>${esc(mvMeta(e))}</i></button>`).join('');
       mvsug.hidden = false;
       mvsug.querySelectorAll('[data-mvi]').forEach((b) => {
         b.onmousedown = (ev) => ev.preventDefault();
@@ -5303,7 +5340,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       paintMeta();
       mvLoad().then(() => { paintMeta(); if (document.activeElement === mvi) paintSug(); });
       mvi.addEventListener('input', () => { paintMeta(); paintSug(); });
-      mvi.addEventListener('focus', () => { mvLoad().then(paintSug); });
+      /* 칸을 누르기만 해도 지금 상영작 목록이 열린다(예전에는 한 글자를 쳐야만 보였다) */
+      mvi.addEventListener('focus', () => { mvLoad().then(() => paintSug()); });
+      mvi.addEventListener('click', () => { mvLoad().then(() => paintSug()); });
       mvi.addEventListener('keydown', (ev) => {
         if (!mvsug || mvsug.hidden) return;
         const btns = [...mvsug.querySelectorAll('[data-mvi]')];
@@ -5313,6 +5352,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         else if (ev.key === 'Escape') { mvsug.hidden = true; }
       });
       mvi.addEventListener('blur', () => setTimeout(() => { if (mvsug) mvsug.hidden = true; }, 140));
+      const mvd = root.querySelector('#movieDrop');
+      if (mvd) mvd.onclick = () => { if (mvi.value) mvi.value = ''; paintMeta(); mvLoad().then(() => { paintSug(true); if (mvi.focus) mvi.focus(); }); };
     }
 
     root.querySelectorAll('#tags button').forEach((b) => {
