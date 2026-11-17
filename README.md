@@ -68,6 +68,8 @@ CGV **서울 29개 · 대전·충청 20개 지점**의 실제 예매 좌석표�
 | `충남권-cgv-조사결과.md` | 지점·상영관별 전수조사 표와 검증 결과 원문 |
 | `preview-seat-view.png` | 좌석 선택 후 1인칭 시야 화면 |
 | `preview-seat-profile.png` | 단면도·고개 각도 화면 |
+| `api/ocr.js` | 티켓 사진 OCR 서버리스 함수(Vercel, Gemini 2.5 Flash) |
+| `vercel.json` | `api/ocr.js` 함수 설정(maxDuration 15초) |
 
 데이터 구조:
 
@@ -81,7 +83,13 @@ CGV **서울 29개 · 대전·충청 20개 지점**의 실제 예매 좌석표�
 
 ## 배포
 
-GitHub Pages, `main` 브랜치 루트(`/`)를 그대로 서빙합니다. 빌드 과정은 없습니다.
+- **사이트**: GitHub Pages, `main` 브랜치 루트(`/`)를 그대로 서빙합니다. 빌드 과정은 없습니다.
+- **티켓 OCR 함수**: `api/ocr.js`는 Vercel에 따로 올려 `/api/ocr`로 동작합니다(GitHub Pages는 Node 함수를 실행하지 않습니다).
+  1. Vercel에서 이 저장소를 Import (프레임워크 없음 / 그대로 배포)
+  2. 프로젝트 → Settings → Environment Variables 에 `GEMINI_API_KEY` 추가 (키는 저장소에 넣지 않습니다)
+  3. 배포 후 나온 도메인의 `https://<도메인>/api/ocr`을 `index.html`의 `OCR_ENDPOINT` 상수에 넣고 다시 배포
+  - CORS는 `https://cfz566stzm-png.github.io`와 `http://localhost:*`/`http://127.0.0.1:*`만 허용합니다.
+  - 함수가 없거나 한도(429)·네트워크 오류면 앱은 느린 브라우저 OCR을 돌리지 않고, 사진만 붙인 채 지점·관·좌석을 직접 고르는 시트로 바로 넘어갑니다.
 
 ## 고지
 
