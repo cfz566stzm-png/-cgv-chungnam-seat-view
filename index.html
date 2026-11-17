@@ -2020,7 +2020,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         }
       });
       bindUgc(h, seat);
-      if (window.innerWidth <= 900) {
+      /* 좌석이 새로 선택됐을 때만 시트를 연다 (비교 모드·재렌더링 때 다시 열리지 않게) */
+      if (window.innerWidth <= 900 && !state.cmpMode && state._sheetSeat !== seat.key) {
+        state._sheetSeat = seat.key;
         const sh = $('#sheet');
         if (sh) sh.scrollTop = 0;
         openSheet(true);
@@ -2558,7 +2560,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const soon = e.target.closest('[data-soon]');
     if (soon) { toast('이 상영관은 좌석표를 아직 확인하지 못했어요'); return; }
     if (e.target.closest('#editNick')) { nicknameModal(true); return; }
-    if (e.target.closest('#sheetClose') || e.target.id === 'scrim') { openSheet(false); return; }
+    if (e.target.closest('#sheetClose') || e.target.id === 'scrim') { state._sheetSeat = null; openSheet(false); return; }
     const nav = e.target.closest('[data-tab]');
     if (nav) { state.view = nav.dataset.tab; render(); return; }
   });
