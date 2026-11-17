@@ -1493,23 +1493,23 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     })();
 
     /* ---- 천장 다운라이트 → 벽면 빛 번짐 + 스크린 쪽 스포트 ---- */
-    var lampZ = [];
-    for (var lz = -1.8; lz > -rearD; lz -= 4.2) lampZ.push(lz);
+    var lampZ = [-0.9];
+    for (var lz = -2.6; lz > -rearD; lz -= 3.6) lampZ.push(lz);
     lampZ.forEach(function (z, idx) {
       [-1, 1].forEach(function (sgn) {
         var lx = sgn * wallX * 0.55;
-        var c0 = toCam(lx, ceilY - 0.03, z);
+        var c0 = toCam(lx, ceilY - 0.10, z);
         if (c0[2] > NEAR) {
-          var rr = Math.max(0.9, f * 0.055 / c0[2]);
-          ctx.fillStyle = 'rgba(255,244,220,0.95)';
+          var rr = Math.max(1.1, f * 0.07 / c0[2]);
+          ctx.fillStyle = 'rgba(255,246,226,0.97)';
           ctx.beginPath(); ctx.arc(sx(c0), sy(c0), rr, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = 'rgba(255,228,184,0.11)';
-          ctx.beginPath(); ctx.arc(sx(c0), sy(c0), rr * 2.6, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(255,228,184,0.13)';
+          ctx.beginPath(); ctx.arc(sx(c0), sy(c0), rr * 3.0, 0, Math.PI * 2); ctx.fill();
         }
         /* 벽면에 떨어지는 빛 웅덩이 */
-        pool(toCam(sgn * (wallX - 0.02), ceilY - 0.85, z), 2.1, '255,226,180', idx === 0 ? 0.075 : 0.05, 1.4);
+        pool(toCam(sgn * (wallX - 0.02), ceilY - 0.95, z), 2.1, '255,226,180', idx === 0 ? 0.10 : 0.065, 1.4);
         /* 천장 자체 번짐 */
-        pool(toCam(lx, ceilY - 0.02, z), 1.1, '255,224,180', 0.08, 1);
+        pool(toCam(lx, ceilY - 0.02, z), 1.2, '255,224,180', 0.09, 1);
       });
     });
 
