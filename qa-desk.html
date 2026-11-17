@@ -30,6 +30,31 @@
   var f = document.getElementById('f');
   f.src = './index.html?cb=' + Date.now() + pick[0];
   document.getElementById('tag').textContent = '1280×800 · ' + pick[1];
+  if (v === 'near' || v === 'cho') {
+    f.addEventListener('load', function () {
+      setTimeout(function () {
+        try {
+          var w = f.contentWindow, d = w.document, A = w.__APP__;
+          var out = [];
+          if (v === 'near') {
+            A.setNear(37.5650, 126.9770);   /* 서울시청 좌표로 가정 */
+            A.render();
+            var cards = d.querySelectorAll('#tgrid .tcard');
+            for (var i = 0; i < Math.min(6, cards.length); i++) {
+              out.push(cards[i].querySelector('.tname').textContent + ' ' + (cards[i].querySelector('.tkm') || {}).textContent);
+            }
+            document.getElementById('tag').textContent = '내 주변(서울시청 기준) · ' + out.join(' / ');
+          } else {
+            A.state.q = 'ㅇㅅ'; A.render();
+            var names = [];
+            d.querySelectorAll('#tgrid .tcard .tname').forEach(function (n) { names.push(n.textContent); });
+            out = names;
+            document.getElementById('tag').textContent = '초성 ㅇㅅ · ' + names.join(' / ');
+          }
+        } catch (e) { document.getElementById('tag').textContent = '오류 ' + e.message; }
+      }, 900);
+    });
+  }
   if (v === 'compare') {
     f.addEventListener('load', function () {
       setTimeout(function () {
