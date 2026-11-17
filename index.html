@@ -593,6 +593,18 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .shotup i{font-style:normal;font-size:11px;font-weight:700;color:var(--green-d);opacity:.85}
 .movieinput{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:0 12px;font-size:16px !important;font-weight:700;margin-top:12px;color:var(--ink)}
 .movieinput::placeholder{color:var(--mute);font-weight:700}
+/* 영화 정보(자동완성 목록 + 감독·장르·연도·러닝타임·등급 한 줄) */
+.mvwrap{position:relative;margin-top:12px}
+.mvwrap .movieinput{margin-top:0}
+.mvsug{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:60;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 26px rgba(16,24,40,.16);overflow-y:auto;max-height:240px}
+.mvsug[hidden]{display:none}
+.mvsug button{display:block;width:100%;text-align:left;padding:9px 12px;border:0;border-top:1px solid var(--line-2);background:#fff;cursor:pointer}
+.mvsug button:first-child{border-top:0}
+.mvsug button:hover,.mvsug button:focus{background:#F2F8F4;outline:none}
+.mvsug button b{display:block;font-size:13.5px;font-weight:850;color:var(--ink);letter-spacing:-.02em}
+.mvsug button i{display:block;font-style:normal;font-size:11.5px;font-weight:700;color:var(--mute);margin-top:3px}
+.mvmeta{font-size:11.5px;font-weight:750;color:var(--mute);margin-top:6px;line-height:1.5;letter-spacing:-.01em}
+.mvmeta:empty{display:none}
 .tagpick{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
 .tagpick button{height:32px;padding:0 11px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:800;color:var(--sub)}
 .tagpick button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
@@ -762,10 +774,11 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
   .my-sub{font-size:12.5px}
 }
 
-/* --- 지역 탭: 데이터에 지역이 늘어도(강원 등) 한 줄에 깔끔하게 --- */
-.rtabs{flex-wrap:nowrap;overflow:hidden}
-.rtab{flex:1 1 0;min-width:0;padding:0 4px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
-@media (max-width:420px){ .rtabs{gap:4px;padding:4px} .rtab{font-size:12px;height:38px} }
+/* --- 지역 탭: 데이터에 지역이 늘어도(강원 등) 한 줄에 글자 잘림 없이 --- */
+.rtabs{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch}
+.rtabs::-webkit-scrollbar{display:none;height:0}
+.rtab{flex:1 1 auto;min-width:max-content;padding:0 10px;white-space:nowrap;text-overflow:clip;overflow:visible;flex-shrink:0}
+@media (max-width:420px){ .rtabs{gap:4px;padding:4px} .rtab{font-size:12px;height:38px;padding:0 8px} }
 
 /* DOLBY ATMOS 배지 색 */
 .badge.dolby{background:#EAF1FE;color:#1D4ED8}
@@ -2342,6 +2355,78 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
   const MOVIES = (window.__MOVIES__ || []);
 
+  /* ---------- 영화 정보 레이어 (현재 상영작 24편: 감독·장르·연도·러닝타임·관람등급) ----------
+     movies_kofa.json = {cur:{영화명:{g:등급,y:연도,rt:분,gn:장르,d:감독,no:CGV번호,rr:재개봉}}}
+     감독·장르·러닝타임·관람등급은 CGV 영화 상세에서, 제목·번호는 CGV 편성 데이터 기준.
+     index.html 용량을 키우지 않도록 별도 JSON을 필요할 때 한 번만 받아 쓴다. */
+  const MVDB_URL = 'movies_kofa.json';
+  let MVIDX = null, MVMAP = null, MVLOAD = null;
+  const mvNorm = (s) => String(s || '').toLowerCase().replace(/[\-–—·:：,.'"()\[\]~\/\s│|]/g, '');
+
+  function mvIndex(db) {
+    const cur = (db && db.cur) || {};
+    const idx = [];
+    Object.keys(cur).forEach((t) => {
+      const c = cur[t] || {};
+      idx.push({ t, n: mvNorm(t), y: c.y, gn: c.gn, rt: c.rt, d: c.d, g: c.g, rr: c.rr, cur: 1 });
+    });
+    MVIDX = idx;
+    MVMAP = new Map();
+    idx.forEach((e) => {
+      const prev = MVMAP.get(e.n);
+      if (!prev || (e.cur && !prev.cur)) MVMAP.set(e.n, e);
+    });
+  }
+
+  function mvLoad() {
+    if (MVLOAD) return MVLOAD;
+    MVLOAD = fetch(MVDB_URL, { cache: 'force-cache' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (j && j.cur) mvIndex(j); return j; })
+      .catch(() => null);
+    return MVLOAD;
+  }
+
+  function mvFind(title) {
+    const k = mvNorm(title);
+    if (!k || !MVMAP) return null;
+    const hit = MVMAP.get(k);
+    if (hit) return hit;
+    let loose = null;
+    for (const e of MVIDX) {
+      if (e.cur && k.length >= 2 && e.n.startsWith(k)) { loose = e; break; }
+    }
+    return loose;
+  }
+
+  function mvMeta(e) {
+    if (!e) return '';
+    const bits = [];
+    if (e.d) bits.push(e.d);
+    if (e.gn) bits.push(e.gn);
+    if (e.y) bits.push(String(e.y) + (e.rr ? ' 재개봉' : ''));
+    if (e.rt) bits.push(e.rt + '분');
+    if (e.g) bits.push(e.g);
+    return bits.join(' · ');
+  }
+
+  function mvMetaOf(title) {
+    return mvMeta(mvFind(title));
+  }
+
+  /* 자동완성 후보: 현재 상영작 → 제목 시작 → 제목 포함 순 */
+  function mvSearch(q, limit) {
+    const k = mvNorm(q);
+    if (!k || !MVIDX) return [];
+    const out = [];
+    for (const e of MVIDX) {
+      if (e.n === k) { out.push([0, e]); continue; }
+      if (e.n.startsWith(k)) out.push([e.cur ? 1 : 2, e]);
+      else if (e.n.includes(k)) out.push([e.cur ? 3 : 4, e]);    }
+    out.sort((a, b) => a[0] - b[0] || (b[1].y || 0) - (a[1].y || 0));
+    return out.slice(0, limit || 8).map((x) => x[1]);
+  }
+
   const state = {
     view: 'home', filter: 'all', region: 'all', q: '', theaterId: null, hallId: null, seatKey: null,
     aspect: null, mode: 'center', tab: 'sim', photoIdx: 0, photoOnly: false, compare: [], cmpMode: false,
@@ -3674,7 +3759,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
       <div class="tagpick" id="tags">${tags.map((tg) => `<button data-tag="${tg}" aria-pressed="${mine && (mine.tags || []).includes(tg)}">${tg}</button>`).join('')}</div>
 
-      <input class="movieinput" id="movieInput" maxlength="40" placeholder="본 영화 (선택)" value="${esc(movie)}">
+      <div class="mvwrap">
+        <input class="movieinput" id="movieInput" maxlength="40" placeholder="본 영화 (선택)" value="${esc(movie)}" autocomplete="off">
+        <div class="mvsug" id="movieSug" hidden></div>
+      </div>
+      <div class="mvmeta" id="movieMeta"></div>
 
       <button class="btn" id="saveReview" style="width:100%;margin-top:16px">${mine ? '내 한마디 수정' : '한마디 남기기'}</button>
 
@@ -3682,6 +3771,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         ${reviews.map((r) => `<div class="review">
           <div class="review-top"><span>${esc(r.author || '익명')}</span><span>${esc(r.date)}</span></div>
           ${r.movie ? `<span class="movie">🎬 ${esc(r.movie)}</span>` : ''}${r.ticket ? `<span class="ticketbadge">티켓 인증</span>` : ''}
+          ${r.movie && (r.mm || mvMetaOf(r.movie)) ? `<div class="mvmeta">${esc(r.mm || mvMetaOf(r.movie))}</div>` : ''}
           ${r.text ? `<p>${esc(r.text)}</p>` : ''}
           ${r.tags && r.tags.length ? `<div class="rts">${r.tags.map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
           ${(r.shots && r.shots.length) || r.ticket ? `<div class="shots">${r.ticket ? `<img src="${r.ticket}" alt="티켓">` : ''}${(r.shots || []).map((s) => `<img src="${s}" alt="시야">`).join('')}</div>` : ''}
@@ -3727,6 +3817,48 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const root = (document.getElementById('sheetBody') && window.innerWidth <= 900) ? document.getElementById('sheetBody') : document.getElementById('seatPanel');
     if (!root) return;
 
+    /* 영화 입력: 자동완성 + 감독·장르·연도·러닝타임·관람등급 한 줄 */
+    const mvi = root.querySelector('#movieInput');
+    const mvsug = root.querySelector('#movieSug');
+    const mvmeta = root.querySelector('#movieMeta');
+    const paintMeta = () => {
+      if (!mvmeta || !mvi) return;
+      mvmeta.textContent = mvMetaOf(mvi.value);
+    };
+    const paintSug = () => {
+      if (!mvsug || !mvi) return;
+      if (!MVIDX || !mvNorm(mvi.value)) { mvsug.hidden = true; mvsug.innerHTML = ''; return; }
+      const hits = mvSearch(mvi.value, 8);
+      if (!hits.length) { mvsug.hidden = true; mvsug.innerHTML = ''; return; }
+      mvsug.innerHTML = hits.map((e, i) => `<button type="button" data-mvi="${i}"><b>${esc(e.t)}</b><i>${esc(mvMeta(e))}</i></button>`).join('');
+      mvsug.hidden = false;
+      mvsug.querySelectorAll('[data-mvi]').forEach((b) => {
+        b.onmousedown = (ev) => ev.preventDefault();
+        b.onclick = () => {
+          const e = hits[+b.dataset.mvi];
+          if (!e) return;
+          mvi.value = e.t;
+          mvsug.hidden = true;
+          paintMeta();
+        };
+      });
+    };
+    if (mvi) {
+      paintMeta();
+      mvLoad().then(() => { paintMeta(); if (document.activeElement === mvi) paintSug(); });
+      mvi.addEventListener('input', () => { paintMeta(); paintSug(); });
+      mvi.addEventListener('focus', () => { mvLoad().then(paintSug); });
+      mvi.addEventListener('keydown', (ev) => {
+        if (!mvsug || mvsug.hidden) return;
+        const btns = [...mvsug.querySelectorAll('[data-mvi]')];
+        const cur = btns.findIndex((b) => b === document.activeElement);
+        if (ev.key === 'ArrowDown') { ev.preventDefault(); (btns[cur + 1] || btns[0]).focus(); }
+        else if (ev.key === 'ArrowUp') { ev.preventDefault(); (btns[cur - 1] || btns[btns.length - 1]).focus(); }
+        else if (ev.key === 'Escape') { mvsug.hidden = true; }
+      });
+      mvi.addEventListener('blur', () => setTimeout(() => { if (mvsug) mvsug.hidden = true; }, 140));
+    }
+
     root.querySelectorAll('#tags button').forEach((b) => {
       b.onclick = () => {
         const tg = b.dataset.tag; const i = draft.tags.indexOf(tg);
@@ -3739,7 +3871,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const pt = pendingTicket; pendingTicket = null;
       draft.ticket = pt.url;
       const mv2 = root.querySelector('#movieInput');
-      if (mv2 && !mv2.value) mv2.value = pt.movie || '';
+      if (mv2 && !mv2.value && pt.movie) { mv2.value = pt.movie; mv2.dispatchEvent(new Event('input')); }
       const th2 = root.querySelector('#thumbs');
       if (th2) th2.insertAdjacentHTML('afterbegin', `<figure><img src="${pt.url}" alt="티켓"><figcaption>티켓</figcaption></figure>`);
       const st2 = root.querySelector('#ticketState');
@@ -3775,7 +3907,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const bucket2 = ugcBucket();
       const prev = bucket2.seats[seat.key];
       const id = prev && prev.id ? prev.id : 'r' + Date.now();
-      const rec = { id, seat: seat.key, hall: h.name, author: nickname || '익명', text, tags: [...draft.tags], movie: mv, ticket: draft.ticket || null, shots: [...draft.shots], date: new Date().toISOString().slice(0, 10) };
+      const rec = { id, seat: seat.key, hall: h.name, author: nickname || '익명', text, tags: [...draft.tags], movie: mv, mm: mv ? mvMetaOf(mv) : '', ticket: draft.ticket || null, shots: [...draft.shots], date: new Date().toISOString().slice(0, 10) };
       bucket2.seats[seat.key] = rec;
       bucket2.list = bucket2.list.filter((r) => !(r.seat === seat.key && r.id === id));
       bucket2.list.unshift({ ...rec, help: prev ? prev.help || 0 : 0 });
@@ -4349,7 +4481,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
               <div class="seat-sub">${esc(r.date)} · ${'★'.repeat(r.rating)}</div></div>
               <span class="badge ok" style="flex:0 0 auto">보기</span>
             </div>
-            ${r.movie ? `<div style="margin-top:8px"><span class="movie">🎬 ${esc(r.movie)}</span>${r.ticket ? '<span class="ticketbadge">티켓 인증</span>' : ''}</div>` : (r.ticket ? `<div style="margin-top:8px"><span class="ticketbadge">티켓 인증</span></div>` : '')}
+            ${r.movie ? `<div style="margin-top:8px"><span class="movie">🎬 ${esc(r.movie)}</span>${r.ticket ? '<span class="ticketbadge">티켓 인증</span>' : ''}</div>${r.mm || mvMetaOf(r.movie) ? `<div class="mvmeta">${esc(r.mm || mvMetaOf(r.movie))}</div>` : ''}` : (r.ticket ? `<div style="margin-top:8px"><span class="ticketbadge">티켓 인증</span></div>` : '')}
             ${r.text ? `<p class="sub" style="font-size:13px;margin-top:8px;line-height:1.55">${esc(r.text)}</p>` : ''}
             ${(r.shots && r.shots.length) || r.ticket ? `<div class="shots">${r.ticket ? `<img src="${r.ticket}" alt="티켓">` : ''}${(r.shots || []).map((s) => `<img src="${s}" alt="시야">`).join('')}</div>` : ''}
             ${r.tags && r.tags.length ? `<div class="rts" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">${r.tags.map((x) => `<span class="badge ok">${esc(x)}</span>`).join('')}</div>` : ''}
