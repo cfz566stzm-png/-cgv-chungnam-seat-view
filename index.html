@@ -1428,6 +1428,23 @@ input,select,textarea,
 .seat.sel.cmp{background:#FFE4E6 !important;box-shadow:inset 0 0 0 2.5px #E11D48,0 0 0 2px #fff !important;transform:none}
 .seat.sel.cmp .sn{color:#9F1239}
 
+/* =======================================================================
+   마무리 다듬기 — 여백·정렬·말줄임·포커스
+   ======================================================================= */
+.chip:focus-visible,.btn:focus-visible,.rtab:focus-visible,.tcard:focus-visible,.hcard:focus-visible,
+.v3d-bar button:focus-visible,.seat:focus-visible,.helpbtn:focus-visible,.fixbtn:focus-visible,
+.mapzoom button:focus-visible,.gal-item:focus-visible,.review .helpful:focus-visible{
+  outline:2px solid #047857;outline-offset:2px}
+.tname,.hname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ana-row>.ana-v{margin-left:auto;text-align:right}
+.ana-row .cfb{flex:0 0 auto}
+.modal-card{padding-bottom:calc(26px + env(safe-area-inset-bottom, 0px))}
+@media (min-width:960px){
+  .v3d-bar .v3d-recval{flex:0 1 auto;margin-left:auto;text-align:right;padding-top:0}
+}
+.ugc-sub,.dstat-note,.ana-note,.v3d-disc{line-height:1.62}
+.card-pad{box-sizing:border-box}
+
 </style>
 </head>
 <body>
