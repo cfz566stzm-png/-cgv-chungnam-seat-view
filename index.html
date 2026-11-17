@@ -2457,16 +2457,21 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const inRegion = (t) => state.region === 'all' || t.area === state.region;
     const q = (state.q || '').trim();
     const jamo = isJamo(q);
-    const hitQ = (t) => {
+    /* 1차: 지점명(초성 포함) → 결과가 없을 때만 주소까지 넓힌다.
+       (주소를 늘 섞으면 'ㅇㅅ'에 '서울특별시'·'광역시'가 걸려 결과가 지저분해진다) */
+    const hitName = (t) => {
       if (!q) return true;
       if (t.name.includes(q)) return true;
+      return jamo && toChoseong(t.name).includes(q);
+    };
+    const hitAny = (t) => {
       const hay = t.name + ' ' + (t.address || '');
-      if (hay.includes(q)) return true;
-      /* 'ㅇㅅ' 같은 자모 입력은 초성 문자열로도 비교 */
-      return jamo && toChoseong(hay).includes(q);
+      return hay.includes(q) || (jamo && toChoseong(hay).includes(q));
     };
     const mappedOf = (t) => (t.halls || []).filter((h) => h.status === 'ok').length;
-    const list = theaters.filter((t) => inRegion(t) && filterHit(t, state.filter) && hitQ(t));
+    const base = theaters.filter((t) => inRegion(t) && filterHit(t, state.filter));
+    let list = base.filter(hitName);
+    if (q && !list.length) list = base.filter(hitAny);
     if (state.near) {
       return list.slice().sort((a, b) => {
         const da = distKm(a), db = distKm(b);
