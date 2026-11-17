@@ -1966,6 +1966,22 @@ input,select,textarea,
       return out;
     }
 
+    /* 카메라 좌표 폴리곤을 텍스처 근평면(NEAR_C)에서 자른다 */
+    function clipNearC(poly) {
+      var out = [], n = poly.length, EPS = 1e-6;
+      for (var i = 0; i < n; i++) {
+        var a = poly[i], b = poly[(i + 1) % n];
+        var ain = a[2] >= NEAR_C, bin = b[2] >= NEAR_C;
+        if (ain) out.push(a);
+        if (ain !== bin) {
+          var dz = b[2] - a[2];
+          var t = Math.abs(dz) < EPS ? 0 : (NEAR_C - a[2]) / dz;
+          out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, NEAR_C]);
+        }
+      }
+      return out;
+    }
+
     function path(poly) {
       var p = clipNear(poly);
       if (p.length < 3) return false;
@@ -2090,17 +2106,23 @@ input,select,textarea,
 
     function texCell(uv, img, alpha) {
       var pts = uv.pts;
-      for (var i = 0; i < 4; i++) if (pts[i][2] < NEAR) return;
-      var p0 = [sx(pts[0]), sy(pts[0])], p1 = [sx(pts[1]), sy(pts[1])];
-      var p2 = [sx(pts[2]), sy(pts[2])], p3 = [sx(pts[3]), sy(pts[3])];
       /* 타일을 잘게 나눌수록 원근 근사 오차(기울기 불연속)가 줄어 이음매가 옅어진다.
          서브픽셀 겹침은 타일 사이 안티앨리어싱 틈만 메운다. */
       var pad = 0.4;
       var sx0 = uv.sx0 - pad, sy0 = uv.sy0 - pad, sw = uv.sw + pad * 2, sh = uv.sh + pad * 2;
       var s00 = [sx0, sy0], s10 = [sx0 + sw, sy0], s11 = [sx0 + sw, sy0 + sh], s01 = [sx0, sy0 + sh];
       var rc = [sx0, sy0, sw, sh];
-      triTex(p0, p1, p2, s00, s10, s11, img, alpha, rc);
-      triTex(p0, p2, p3, s00, s11, s01, img, alpha, rc);
+      /* 네 점이 모두 근평면 앞이면 빠른 두 삼각형 경로 */
+      if (pts[0][2] >= NEAR_C && pts[1][2] >= NEAR_C && pts[2][2] >= NEAR_C && pts[3][2] >= NEAR_C) {
+        var p0 = [sx(pts[0]), sy(pts[0])], p1 = [sx(pts[1]), sy(pts[1])];
+        var p2 = [sx(pts[2]), sy(pts[2])], p3 = [sx(pts[3]), sy(pts[3])];
+        triTex(p0, p1, p2, s00, s10, s11, img, alpha, rc);
+        triTex(p0, p2, p3, s00, s11, s01, img, alpha, rc);
+        return;
+      }
+      /* 일부만 근평면을 걸치면 타일을 통째로 버리지 않고 근평면에서 잘라 그린다.
+         (좌우로 끝까지 돌리면 앞줄·측면 좌석에서 스크린이 사라지던 원인) */
+      quadTex(pts, [s00, s10, s11, s01], img, alpha, rc);
     }
 
     var p = s.p, wallX = s.wallX, ceilY = s.ceilY, rearD = s.rearD;
@@ -2231,17 +2253,26 @@ input,select,textarea,
     var yB0 = scrB + (scrH - ih) / 2, yT0 = yB0 + ih;
     /* 화면 영역 밖으로 넘치지 않게 한 번만 클립 (타일마다 클립하면 그 경계가 격자로 보임) */
     ctx.save();
-    ctx.beginPath();
+    /* 화면 테두리를 근평면에서 먼저 잘라 클립 영역을 만든다.
+       카메라 뒤로 넘어간 점을 그대로 투영하면 클립 영역이 화면 전체를 덮어
+       스크린이 통째로 사라지거나 엉뚱한 곳이 잘렸다. */
+    var outline = [];
     for (var ci = 0; ci <= 24; ci++) {
-      var cu = -iw / 2 + iw * ci / 24, cp = toCam(cu, yT0, scrZ(cu));
-      if (ci === 0) ctx.moveTo(sx(cp), sy(cp)); else ctx.lineTo(sx(cp), sy(cp));
+      var cu = -iw / 2 + iw * ci / 24;
+      outline.push(toCam(cu, yT0, scrZ(cu)));
     }
     for (var cj = 24; cj >= 0; cj--) {
-      var cu2 = -iw / 2 + iw * cj / 24, cp2 = toCam(cu2, yB0, scrZ(cu2));
-      ctx.lineTo(sx(cp2), sy(cp2));
+      var cu2 = -iw / 2 + iw * cj / 24;
+      outline.push(toCam(cu2, yB0, scrZ(cu2)));
     }
-    ctx.closePath();
-    ctx.clip();
+    var vis = clipNearC(outline);
+    if (vis.length >= 3) {
+      ctx.beginPath();
+      ctx.moveTo(sx(vis[0]), sy(vis[0]));
+      for (var vi = 1; vi < vis.length; vi++) ctx.lineTo(sx(vis[vi]), sy(vis[vi]));
+      ctx.closePath();
+      ctx.clip();
+    }
     for (var k2 = 0; k2 < NY; k2++) {
       var yy0b = yB0 + ih * k2 / NY, yy1b = yB0 + ih * (k2 + 1) / NY;
       for (var j = 0; j < NX; j++) {
