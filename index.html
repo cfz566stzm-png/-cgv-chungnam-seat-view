@@ -1692,7 +1692,8 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     if (/SCREENX/i.test(tagsStr)) {
       /* 좌우 윙 스크린: 정면 화면의 양옆을 이어서 투사하되, 실제 SCREENX처럼
          정면보다 흐릿하고(blur) 어둡게(alpha 0.46) 그린다. 벽 패널 질감·비네팅은 그대로 남긴다. */
-      var wz0 = -1.1, wz1 = -7.4, wy0 = 1.5, wy1 = 5.6;
+      /* 윙은 정면 스크린과 같은 높이로, 앞벽 모서리(z=0)에서 벽을 따라 뒤로 이어진다 */
+      var wz0 = -0.12, wz1 = -7.8, wy0 = scrB, wy1 = scrB + scrH;
       var wingAlpha = vplay ? 0.5 : 0.46;
       ctx.save();
       try { ctx.filter = 'blur(2.5px)'; } catch (e) {}
@@ -1729,24 +1730,31 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     /* ---- 용산 SCREENX 4면 스크린: 앞쪽 천장에도 확장 화면이 투사된다 ----
        (정면·좌우 윙에 이어 천장까지 이어지는 실제 4면 구조. 젖히면 시선이 위로 넘어가며 보인다) */
     if (o.fourSide) {
-      var cw = wallX * 0.72, cz0 = -0.85, cz1 = -6.9, cyy = ceilY - 0.04;
+      /* 천장 스크린은 관객 쪽 앞모서리가 낮고 뒤로 갈수록 천장에 붙는 기울어진 판 */
+      var cw = wallX * 0.64, cz0 = -1.15, cz1 = -7.6;
+      var cyFront = ceilY - 1.55, cyBack = ceilY - 0.06;
+      function cyAt(zz) { var kk = (zz - cz0) / (cz1 - cz0); return cyFront + (cyBack - cyFront) * kk; }
       ctx.save();
       try { ctx.filter = 'blur(3px)'; } catch (e) {}
       try {
         for (var ck = 0; ck < 8; ck++) {
           var za = cz0 + (cz1 - cz0) * ck / 8, zb = cz0 + (cz1 - cz0) * (ck + 1) / 8;
+          var ya = cyAt(za), yb = cyAt(zb);
           texCell({
-            pts: [toCam(-cw, cyy, za), toCam(cw, cyy, za), toCam(cw, cyy, zb), toCam(-cw, cyy, zb)],
+            pts: [toCam(-cw, ya, za), toCam(cw, ya, za), toCam(cw, yb, zb), toCam(-cw, yb, zb)],
             sx0: srcX, sy0: srcY + srcH * ck / 8, sw: srcW, sh: srcH / 8
-          }, img, vplay ? 0.52 : 0.48);
+          }, img, vplay ? 0.55 : 0.5);
         }
       } finally {
         ctx.filter = 'none';
         ctx.restore();
       }
-      /* 천장 스크린 테두리 + 주변 천장으로 번지는 빛 */
-      face([toCam(-cw, cyy, cz0), toCam(cw, cyy, cz0), toCam(cw, cyy, cz1), toCam(-cw, cyy, cz1)],
-           null, 'rgba(220,228,232,0.10)', 1.4);
+      /* 천장 스크린 테두리(앞모서리는 밝게) + 번지는 빛 */
+      face([toCam(-cw, cyAt(cz0), cz0), toCam(cw, cyAt(cz0), cz0),
+            toCam(cw, cyAt(cz1), cz1), toCam(-cw, cyAt(cz1), cz1)],
+           null, 'rgba(220,228,232,0.13)', 1.4);
+      seg(toCam(-cw, cyAt(cz0), cz0), toCam(cw, cyAt(cz0), cz0), 'rgba(235,240,245,0.22)', 1.6);
+      var cyy = cyAt((cz0 + cz1) / 2);
       var ccen = toCam(0, cyy, (cz0 + cz1) / 2);
       if (ccen[2] > NEAR) {
         ctx.save();
