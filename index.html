@@ -1556,7 +1556,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
   const state = {
     view: 'home', filter: 'all', region: 'all', q: '', theaterId: null, hallId: null, seatKey: null,
-    aspect: null, mode: 'center', tab: 'sim', photoIdx: 0, photoOnly: false, compare: [], cmpMode: false
+    aspect: null, mode: 'center', tab: 'sim', photoIdx: 0, photoOnly: false, compare: [], cmpMode: false,
+    _mapHall: null   /* 좌석판을 마지막으로 그린 관 — 관에 처음 들어올 때만 가운데로 맞춘다 */
   };
 
   /* ---------- 저장소 ---------- */
@@ -1785,7 +1786,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (seg[0] === 't' && seg[1]) {
       state.theaterId = seg[1];
       if (seg[2] === 'h' && seg[3]) {
-        state.hallId = seg[3]; state.view = 'hall';
+        state.hallId = seg[3]; state.view = 'hall'; state._mapHall = null;
         state.seatKey = (seg[4] === 's' && seg[5]) ? decodeURIComponent(seg[5]) : null;
         const hh = findHall(state.theaterId, state.hallId);
         if (!hh) { state.view = 'theater'; state.hallId = null; state.seatKey = null; return; }
@@ -2150,6 +2151,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }).join('');
     const lg = $('#legend');
     if (lg) lg.innerHTML = legendHtml(h);
+    /* 넓은 관은 관에 처음 들어올 때 좌석판 가운데부터 보이게 (좌석 선택 같은 재렌더에서는 유지) */
+    const sc = box.closest('.seatmap-scroll') || box.parentElement;
+    if (sc && sc.clientWidth > 0) {
+      const fresh = state._mapHall !== h.id;
+      state._mapHall = h.id;
+      if (fresh && sc.scrollWidth > sc.clientWidth + 2) {
+        sc.scrollLeft = Math.round((sc.scrollWidth - sc.clientWidth) / 2);
+      }
+    }
     const g = $('#photoGallery');
     if (g && state.photoOnly) g.scrollIntoView({ block: 'nearest' });
   }
@@ -3213,7 +3223,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         }
       }
       if (!seatV) seatV = rawSeat.replace(/[^A-Z0-9]/g, '');
-      state.theaterId = tid; state.hallId = hid || null; state.seatKey = seatV || null;
+      state.theaterId = tid; state.hallId = hid || null; state.seatKey = seatV || null; state._mapHall = null;
       state.view = hid ? 'hall' : 'theater'; state.tab = 'sim'; state.aspect = null; state._sheetSeat = null;
       const hh = hid ? findHall(tid, hid) : null;
       if (hh) { state.aspect = String(hh.params.aspect); if (seatV && !(hh._byKey && hh._byKey[seatV])) state.seatKey = null; }
@@ -3483,7 +3493,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       if (v === 'home') { state.view = 'home'; state.theaterId = null; state.hallId = null; state.seatKey = null; }
       if (v === 'theater') { state.view = 'theater'; state.theaterId = go.dataset.id || state.theaterId; state.hallId = null; state.seatKey = null; }
       if (v === 'hall') {
-        state.view = 'hall'; state.theaterId = go.dataset.tid; state.hallId = go.dataset.hid;
+        state.view = 'hall'; state.theaterId = go.dataset.tid; state.hallId = go.dataset.hid; state._mapHall = null;
         state.seatKey = go.dataset.seat || null; state.aspect = null; state.photoIdx = 0; state.tab = 'sim';
         const hh = findHall(state.theaterId, state.hallId); if (hh) state.aspect = String(hh.params.aspect);
       }
