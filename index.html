@@ -1551,7 +1551,10 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     }
 
     var p = s.p, wallX = s.wallX, ceilY = s.ceilY, rearD = s.rearD;
-    var scrW = p.screenW, scrH = p.screenH, scrB = p.screenBottom, curve = p.curve || 0;
+    var isImax = /IMAX/i.test((o.tags || []).join(' '));
+    var scrW = p.screenW, scrH = p.screenH, scrB = p.screenBottom;
+    /* IMAX는 곡면 스크린의 휘어짐을 조금 더 살려 압도감을 준다(각도·거리 계산은 그대로) */
+    var curve = (p.curve || 0) * (isImax ? 1.18 : 1);
     function scrZ(u) { var r = 2 * u / scrW; return -(curve * r * r); }
 
     /* ---- 바탕: 상영관 안쪽은 거의 검정 ---- */
@@ -1993,6 +1996,20 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         ctx.beginPath(); ctx.arc(sx(lc), sy(lc), rr2, 0, Math.PI * 2); ctx.fill();
       });
     });
+
+    /* ---- IMAX 스크린 반사광: 화면 둘레로 크게 번지는 빛(벽·천장까지) ---- */
+    if (isImax && scrMid[2] > NEAR) {
+      var imx = sx(scrMid), imy = sy(scrMid);
+      var ird = Math.max(160, f * (scrW * 1.05) / scrMid[2]);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      var ig = ctx.createRadialGradient(imx, imy, ird * 0.42, imx, imy, ird);
+      ig.addColorStop(0, 'rgba(210,226,255,0.050)');
+      ig.addColorStop(0.55, 'rgba(180,205,255,0.022)');
+      ig.addColorStop(1, 'rgba(150,180,255,0)');
+      ctx.fillStyle = ig; ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
 
     /* ---- 스크린 빛이 객석 앞쪽으로 퍼지는 옅은 안개 ---- */
     var sc = toCam(0, scrB + scrH * 0.45, -0.2);
