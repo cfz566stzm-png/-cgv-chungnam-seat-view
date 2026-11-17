@@ -3945,8 +3945,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
               <button class="chip sm cmpchip" data-cmpmode="1" aria-pressed="${state.cmpMode}">⚖️ 좌석 비교${(state.compare || []).length ? ' ' + state.compare.length : ''}</button>
             </div>
             <div class="chip-row">
-              <button class="chip sm" data-mode="center" aria-pressed="${state.mode === 'center'}">화면 응시</button>
-              <button class="chip sm" data-mode="level" aria-pressed="${state.mode === 'level'}">정면 고정</button>
+              <button class="chip sm" data-mode="center" aria-pressed="${state.mode === 'center'}" title="스크린 중앙을 바라보는 시점">화면 응시</button>
+              <button class="chip sm" data-mode="level" aria-pressed="${state.mode === 'level'}" title="고개를 들지 않고 정면을 보는 시점">정면 고정</button>
               <span class="mapzoom" role="group" aria-label="좌석 배치도 확대·축소">
                 <button data-mapzoom="-1" aria-label="배치도 축소" ${mapZoomNow() <= 1 ? 'disabled' : ''}>−</button>
                 <span id="mapZoomLabel">${Math.round(mapZoomNow() * 100)}%</span>
@@ -4566,9 +4566,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <div>좌석 배치·좌석 수 <em>${cfBadge(pr.seatmap)}</em> CGV 예매 좌석표 · ${esc(DATA.meta.surveyedAt || "2026-11-18")} 확인</div>
         <div>스크린 크기 <em>${cfBadge(pr.screen)}</em> ${p.conf === 'B' ? (h.tags.includes('IMAX') ? 'IMAX 공개 제원' : '극장 공개자료') : '좌석표·사진으로 유형 추정'}
           ${p.src ? `· <a href="${esc(p.src)}" target="_blank" rel="noopener noreferrer">원문 보기 ↗</a>` : ''}</div>
-        ${p.basis ? `<div>제원 보정 <em class="cfb e">근거</em> ${esc(p.basis)}</div>` : ''}
+        ${p.basis ? `<div>제원 보정 <em class="cfb e">보정 근거</em> ${esc(p.basis)}</div>` : ''}
         ${stepLine(p)}
-        <div>최근 갱신 <em class="cfb u">조회</em> ${esc(DATA.meta.surveyedAt || '2026-11-17')}</div>
+        <div>최근 갱신 <b>${esc(DATA.meta.surveyedAt || '2026-11-17')}</b> 조회</div>
       </div>
       ${(p.conf === 'B' || p.calib) ? '' : '<p class="ana-note">이 상영관은 실제 좌석에서 잰 값이 없어 스크린 거리·시야각은 유형 표준값으로 계산한 <b>추정치</b>예요. 이 자리의 실사 사진이 등록되면 실측으로 바뀝니다.</p>'}
     </section>`;
