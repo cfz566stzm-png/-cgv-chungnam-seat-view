@@ -1217,7 +1217,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 
   Viewer.prototype.toggleRecline = function () {
     var target = (this._rec || 0) > 0.5 ? 0 : 1;
-    this._recTween = { t0: performance.now(), dur: 700, from: this._rec || 0, to: target };
+    this._recTween = { t0: performance.now(), dur: 1800, from: this._rec || 0, to: target };
     recState.key = this.hallKey; recState.v = target;
     if (!this.raf) this._loop();
     this._paintRecBtn();
@@ -1292,7 +1292,8 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       if (self._recTween) {
         var rk = (performance.now() - self._recTween.t0) / self._recTween.dur;
         if (rk > 1) rk = 1;
-        var re = 1 - Math.pow(1 - rk, 3);          /* ease-out */
+        /* easeInOutCubic — 천천히 시작해 천천히 멈춘다(1.8초) */
+        var re = rk < 0.5 ? 4 * rk * rk * rk : 1 - Math.pow(-2 * rk + 2, 3) / 2;
         self._rec = self._recTween.from + (self._recTween.to - self._recTween.from) * re;
         self._paintRecBtn();
         moved = true;
