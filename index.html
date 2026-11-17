@@ -2774,19 +2774,19 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           let cropX = 0, cropY = 0, cropW = base.width, cropH = base.height;
           const areaAll = base.width * base.height;
           const areaBox = Math.max(1, (x1 - x0) * (y1 - y0));
-          const wide = (x1 - x0) / base.width, tall = (y1 - y0) / base.height;
-          /* 종이 영역이 화면을 거의 다 덮을 때만 잘라낸다.
-             한쪽이 그늘지면 밝기 마스크가 티켓 오른쪽을 놓쳐 글자가 잘리므로(9관 G열7번 → 9과 G열7버),
-             폭이나 높이가 80%보다 작으면 원본 전체를 그대로 읽는다. */
-          if (cnt > 200 && areaBox > areaAll * 0.03 && areaBox < areaAll * 0.98 && wide >= 0.8 && tall >= 0.8) {
-            const pad = Math.round(Math.min(base.width, base.height) * 0.03);
-            cropX = Math.max(0, x0 - pad); cropY = Math.max(0, y0 - pad);
-            cropW = Math.min(base.width - cropX, (x1 - x0) + pad * 2);
-            cropH = Math.min(base.height - cropY, (y1 - y0) + pad * 2);
+          /* 종이(밝은 영역) 상자를 넉넉하게(22%) 늘려 잡는다.
+             그늘진 오른쪽이 잘려 '9관 G열7번'이 반토둥 나던 문제를 막고,
+             동시에 빈 배경을 덜어내 글자를 크게 키우는 효과를 남긴다. */
+          const px = Math.round((x1 - x0) * 0.22), py = Math.round((y1 - y0) * 0.22);
+          const cX = Math.max(0, x0 - px), cY = Math.max(0, y0 - py);
+          const cW = Math.min(base.width - cX, (x1 - x0) + px * 2);
+          const cH = Math.min(base.height - cY, (y1 - y0) + py * 2);
+          if (cnt > 200 && areaBox > areaAll * 0.03 && cW / base.width >= 0.5 && cH / base.height >= 0.5) {
+            cropX = cX; cropY = cY; cropW = cW; cropH = cH;
           }
 
           const c = document.createElement('canvas');
-          const up = Math.min(2.4, Math.max(1, 1900 / Math.max(1, cropW)));
+          const up = Math.min(3.2, Math.max(1, 2350 / Math.max(1, cropW)));
           c.width = Math.round(cropW * up); c.height = Math.round(cropH * up);
           const x = c.getContext('2d');
           x.drawImage(base, cropX, cropY, cropW, cropH, 0, 0, c.width, c.height);
@@ -2980,12 +2980,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
     /* 5) 영화 제목: '15세이상관람가'/'12세이상관람가' 또는 '2D,' 줄 다음부터
        상영일시(2026.11.15(일) 1회 ...) 줄 전까지의 텍스트. */
-    const rateIdx = lines.findIndex((v) => /이상관람가|관람가|^2D\b/.test(v));
+    const rateIdx = lines.findIndex((v) => /관람가|이상관람|관람|\b2D\b/.test(v));
     if (rateIdx >= 0) {
       const buf = [];
       for (let i = rateIdx; i < lines.length && buf.length < 5; i++) {
         let v = lines[i];
-        if (i === rateIdx) v = v.replace(/^.*?(이상)?관람가[,.]?/, '').replace(/^2D[,.]?/i, '').replace(/[「」]/g, '');
+        if (i === rateIdx) v = v.replace(/^.*?(이상)?관람가?[,.]?/, '').replace(/^2D[,.]?/i, '').replace(/[「」]/g, '');
         if (/20\d{2}\s*[.\-/]\s*\d{1,2}\s*[.\-/]\s*\d{1,2}/.test(v)) break;          /* 상영일시 줄 */
         if (i > rateIdx && /총\s*\d*\s*인원|^\d{1,2}\s*관|열\s*\d{1,2}\s*번/.test(v)) break; /* 좌석·인원 줄 */
         v = v.replace(/[|©®★☆]/g, '').trim();
@@ -3043,7 +3043,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       (data.blocks || []).forEach((b) => (b.paragraphs || []).forEach((p) => (p.lines || []).forEach((l) => lines.push(l))));
     }
     const ls = (lines || []).map((l) => ({ t: String(l.text || '').replace(/\s+/g, ''), b: l.bbox })).filter((l) => l.b);
-    const rate = ls.find((l) => /관람가/.test(l.t));
+    const rate = ls.find((l) => /관람가|이상관람|관람|^2D/.test(l.t));
     if (!rate) return '';
     const after = ls.filter((l) => l.b.y0 > rate.b.y1 - 2);
     const stop = after.find((l) => /^20\d{2}[.\-/]/.test(l.t) || /열\d/.test(l.t) || /^\d{1,2}관/.test(l.t));
