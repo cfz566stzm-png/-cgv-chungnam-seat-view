@@ -4603,7 +4603,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         ${stepLine(p)}
         <div>최근 갱신 <b>${esc(DATA.meta.surveyedAt || '2026-11-17')}</b> 조회</div>
       </div>
-      ${(p.conf === 'B' || p.calib) ? '' : '<p class="ana-note">이 상영관은 실제 좌석에서 잰 값이 없어 스크린 거리·시야각은 유형 표준값으로 계산한 <b>추정치</b>예요. 이 자리의 실사 사진이 등록되면 실측으로 바뀝니다.</p>'}
+      ${(p.conf === 'B' || p.calib) ? '' : '<p class="ana-note">이 상영관은 실제 좌석에서 잰 값이 없어 스크린 거리·시야각은 유형 표준값으로 계산한 <b>추정치</b>예요. 이 자리의 실제 사진이 등록되면 실측으로 바뀝니다.</p>'}
     </section>`;
   }
 
@@ -4644,7 +4644,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         </section>
         ${hasReal ? '' : `<section class="dsec">
           <div class="dsec-head"><h4>블로그에 올라온 시야</h4><span>${linkCount(arr) ? '원문 링크 ' + linkCount(arr) : '없음'}</span></div>
-          ${arr.length ? photoTabHtml(seat, arr, idx) : '<p class="sub dsec-empty">아직 이 자리 실사 사진이 없어요. 아래에서 티켓·사진을 올리면 이 자리에 바로 붙어요. 지금 보이는 것은 <b>3D 시뮬레이션</b>이에요.</p>'}
+          ${arr.length ? photoTabHtml(seat, arr, idx) : '<p class="sub dsec-empty">아직 이 자리 사진이 없어요. 아래에서 티켓·사진을 올리면 이 자리에 바로 붙어요. 지금 보이는 것은 <b>3D 시뮬레이션</b>이에요.</p>'}
         </section>`}
         ${analysisHtml(h, seat, m)}
         ${seatActionsHtml(h, seat)}
