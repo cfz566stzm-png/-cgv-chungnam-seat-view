@@ -3177,7 +3177,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (!box || !wr) return;
     const max = Math.max(0, box.scrollWidth - box.clientWidth);
     const overflow = max > 2;
-    const atEnd = max <= 2 || box.scrollLeft >= max - 3;
+    /* 힌트가 보이는 동안에는 마지막 탭 오른쪽에 항상 힌트 폭 이상의 여유가 남도록,
+       끝에서 (힌트 폭+3) 남은 지점에 닿으면 힌트를 감춘다 — 그래야 글자와 절대 겹치지 않는다 */
+    const atEnd = max <= 2 || box.scrollLeft >= max - (RTAB_HINT_W + 3);
     wr.classList.toggle('overflowing', overflow);   /* 오른쪽 여백(힌트 폭) 유지 */
     wr.classList.toggle('scrollable', overflow && !atEnd);  /* 화살표 표시 */
     wr.classList.toggle('at-end', atEnd);
