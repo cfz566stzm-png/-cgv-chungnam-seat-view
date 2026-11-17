@@ -2092,13 +2092,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         }
       });
       bindUgc(h, seat);
-      /* 좌석이 새로 선택됐을 때만 시트를 연다 (비교 모드·재렌더링 때 다시 열리지 않게) */
-      if (window.innerWidth <= 900 && !state.cmpMode && state._sheetSeat !== seat.key) {
-        state._sheetSeat = seat.key;
-        const sh = $('#sheet');
-        if (sh) sh.scrollTop = 0;
-        openSheet(true);
-      }
     }
     bindSheetGestures();
   }
@@ -2859,6 +2852,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       if (hh) { state.aspect = String(hh.params.aspect); if (seatV && !(hh._byKey && hh._byKey[seatV])) state.seatKey = null; }
       syncHash(true);
       render();
+      if (seatV && window.innerWidth <= 900) {
+        const sh2 = $('#sheet');
+        if (sh2) sh2.scrollTop = 0;
+        openSheet(true);
+      }
       toast(seatV ? seatV + ' 자리로 열었어요' : '지점·상영관을 열었어요');
     };
     document.querySelectorAll('#tocClose').forEach((b) => { b.onclick = closeOcr; });
@@ -3105,7 +3103,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       state.seatKey = s.dataset.seat; state.photoIdx = 0;
       state.tab = s.dataset.tabto || 'sim';
       syncHash(true);
-      paintSeatMap(); paintSeatPanel(); return;
+      paintSeatMap(); paintSeatPanel();
+      if (window.innerWidth <= 900 && !state.cmpMode) {
+        const sh = $('#sheet');
+        if (sh) sh.scrollTop = 0;
+        openSheet(true);
+      }
+      return;
     }
     const tabb = e.target.closest('[data-ptab]');
     if (tabb) { state.tab = tabb.dataset.ptab; paintSeatPanel(); return; }
