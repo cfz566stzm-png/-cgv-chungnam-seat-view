@@ -2993,7 +2993,22 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       }
       /* 마지막 줄이 원제(영문)만 있으면 뺀다 — '와일드 호스 나인 / Wild Horse Nine' */
       while (buf.length > 1 && /^[A-Za-z0-9\s:!?'&\-.,]+$/.test(buf[buf.length - 1])) buf.pop();
-      out.movie = buf.join(' ').replace(/\s{2,}/g, ' ').replace(/^[\[\]()\s]+|[\[\]()\s]+$/g, '').trim();
+      const joined = buf.join(' ').replace(/\s{2,}/g, ' ').replace(/^[\[\]()\s]+|[\[\]()\s]+$/g, '').trim();
+      const han = (joined.match(/[가-힣]/g) || []).length;
+      const solidChars = joined.replace(/\s/g, '').length || 1;
+      if (han >= 2 && han / solidChars >= 0.5) {
+        out.movie = joined;
+      } else {
+        /* OCR이 제목 줄을 통째로 놓쳤을 때는 한글 음절이 가장 많은 줄 하나만 (아니면 비워 둔다) */
+        let pk = '';
+        buf.forEach((v) => {
+          const clean = v.replace(/[^가-힣0-9A-Za-z\s:!?'()\[\]]/g, ' ').replace(/\s{2,}/g, ' ').trim();
+          const h2 = (clean.match(/[가-힣]/g) || []).length;
+          const s2 = clean.replace(/\s/g, '').length || 1;
+          if (h2 >= 2 && h2 / s2 >= 0.5 && h2 > (pk.match(/[가-힣]/g) || []).length) pk = clean;
+        });
+        out.movie = pk;
+      }
     }
 
     /* 5-b) 상영작 목록 우선, 없으면 라벨이 아닌 가장 긴 줄 */
@@ -3016,6 +3031,40 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
   /* QA용: OCR 원문을 그대로 넣어 파싱 결과를 확인할 수 있게 열어 둔다 */
   try { window.__parseTicket = parseTicket; } catch (e) {}
+
+  /* 제목 띠 영역만 잘라 다시 읽기 — '15세이상관람가' 줄 다음부터
+     상영일시(날짜)·좌석 줄 전까지. 제목은 티켓에서 가장 큰 글씨다. */
+  function titleBand(data, cv) {
+    if (!data || !data.lines || !cv) return '';
+    const ls = data.lines.map((l) => ({ t: String(l.text || '').replace(/\s+/g, ''), b: l.bbox })).filter((l) => l.b);
+    const rate = ls.find((l) => /관람가/.test(l.t));
+    if (!rate) return '';
+    const after = ls.filter((l) => l.b.y0 > rate.b.y1 - 2);
+    const stop = after.find((l) => /^20\d{2}[.\-/]/.test(l.t) || /열\d/.test(l.t) || /^\d{1,2}관/.test(l.t));
+    const top = Math.max(0, rate.b.y1 - 4);
+    const bottom = stop ? stop.b.y0 : Math.min(cv.height, rate.b.y1 + Math.round(cv.height * 0.22));
+    const h = bottom - top;
+    if (h < 24 || h > cv.height * 0.6) return '';
+    const c2 = document.createElement('canvas');
+    c2.width = cv.width; c2.height = h;
+    c2.getContext('2d').drawImage(cv, 0, top, cv.width, h, 0, 0, cv.width, h);
+    const c3 = document.createElement('canvas');
+    c3.width = Math.round(cv.width * 1.8); c3.height = Math.round(h * 1.8);
+    c3.getContext('2d').drawImage(c2, 0, 0, c3.width, c3.height);
+    return c3.toDataURL('image/jpeg', 0.95);
+  }
+
+  function pickTitleLine(t) {
+    const ls = String(t || '').split(/\n+/).map((v) => v.trim()).filter(Boolean)
+      .filter((v) => !/관람가|^20\d{2}|^\d{1,2}\s*관|열\s*\d/.test(v));
+    let best = '';
+    ls.forEach((v) => {
+      const han = (v.match(/[가-힣]/g) || []).length;
+      const solid = v.replace(/\s/g, '').length || 1;
+      if (han >= 2 && han / solid >= 0.55 && han > (best.match(/[가-힣]/g) || []).length) best = v;
+    });
+    return best.replace(/[|©®★☆_]/g, '').replace(/\s{2,}/g, ' ').trim();
+  }
 
   /* 인식 결과 → 좌석 후보 찾기 */
   function resolveTicket(info) {
@@ -3086,7 +3135,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const prep = await prepImage(file);
     if (!prep) { ocrOverlay(`<div class="toc-card"><h3>사진을 열지 못했어요</h3><p>다른 사진으로 다시 시도해 주세요.</p><button class="btn" id="tocClose" style="width:100%;margin-top:12px">닫기</button></div>`); return; }
 
-    let text = '';
+    let text = '', bandTitle = '';
     /* 진행 바는 실제 다운로드처럼 0→100 한 방향으로만 차오릅니다.
        (회차마다 0으로 되돌아가거나 좌우로 왔다갔다하지 않게 최대값만 올린다) */
     let maxPct = 4, attempt = 0;
@@ -3115,19 +3164,31 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
       const read = async (url) => {
         const o = await worker.recognize(url);
-        return (o && o.data && o.data.text) || '';
+        return (o && o.data) || null;
       };
 
-      let best = { sc: -1, t: '' };
+      let best = { sc: -1, t: '', info: null, res: null, data: null };
       const texts = [];
+      /* 어떤 각도·설정으로 읽은 글이 가장 쓸모 있는지 — 글자 점수만 보지 않고
+         지점·관·좌석이 실제로 풀렸는지까지 계산해 고른다. */
       const tryRead = async (url) => {
         attempt += 1;
-        const tx = await read(url);
+        const d = await read(url);
+        const tx = (d && d.text) || '';
         texts.push(tx);
-        const sc = scoreOcr(tx);
-        if (sc > best.sc) best = { sc: sc, t: tx };
+        if (!tx) return -1;
+        const info = parseTicket(tx);
+        const res = resolveTicket(info);
+        let sc = scoreOcr(tx);
+        if (res.theater) sc += 6;
+        if (res.hall) sc += 4;
+        if (res.seat) sc += 6;
+        if (info.date) sc += 2;
+        if (info.movie && (info.movie.match(/[가-힣]/g) || []).length >= 2) sc += 3;
+        if (sc > best.sc) best = { sc: sc, t: tx, info: info, res: res, data: d };
         return sc;
       };
+      const solved = () => !!(best.res && best.res.theater && best.res.seat);
 
       await tryRead(prep.levels);
       /* 영수증은 글자가 한 덩어리로 빽빽해 자동 분할(PSM 3)이 줄을 놓치는 경우가 있다.
@@ -3137,12 +3198,26 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         await tryRead(prep.levels);
         try { await worker.setParameters({ tessedit_pageseg_mode: '3' }); } catch (e) {}
       }
-      if (best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, 18));
-      if (best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, -18));
-      if (best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, 12));
-      if (best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, -12));
-      if (best.sc < 12) await tryRead(prep.bin);
-      try { window.__OCR_LAST__ = { best: best.sc, texts: texts }; } catch (e) {}
+      /* 지점·좌석이 이미 잡혔으면 기울여 다시 읽지 않는다(시간만 든다) */
+      if (!solved() && best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, 18));
+      if (!solved() && best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, -18));
+      if (!solved() && best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, 12));
+      if (!solved() && best.sc < 12) await tryRead(rotateDataUrl(prep.canvas, -12));
+      if (!solved() && best.sc < 12) await tryRead(prep.bin);
+      /* 제목이 비었거나 깨졌으면: '15세이상관람가' 줄과 그 다음 줄 사이 영역만
+         잘라 2배로 키워 한 번 더 읽는다 — 제목은 큰 글씨라 이렇게 읽으면 잘 읽힌다. */
+      let bandTitle = '';
+      if ((!best.info || !best.info.movie) && best.data) {
+        try {
+          const crop = titleBand(best.data, prep.canvas);
+          if (crop) {
+            attempt += 1;
+            const d2 = await read(crop);
+            if (d2 && d2.text) bandTitle = pickTitleLine(d2.text);
+          }
+        } catch (e) {}
+      }
+      try { window.__OCR_LAST__ = { best: best.sc, texts: texts, band: bandTitle }; } catch (e) {}
       setPct(100);
       text = best.t;
       try { await worker.terminate(); } catch (e) {}
@@ -3161,6 +3236,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }
 
     const info = parseTicket(text);
+    if (bandTitle && (!info.movie || info.movie.length < 2)) info.movie = bandTitle;
     const res = resolveTicket(info);
     /* 사진에서 지점을 못 읽었으면 지금 보고 있는 지점·관·좌석을 기본값으로 채워 둔다 */
     if (!res.theater && state.theaterId) {
