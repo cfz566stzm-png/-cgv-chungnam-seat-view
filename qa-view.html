@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>뷰포트 QA</title>
+<style>
+  html,body{margin:0;padding:0;background:#C9CFD6;font:12px/1.4 -apple-system,BlinkMacSystemFont,sans-serif}
+  #frame{display:block;border:0;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.28)}
+  #tag{position:fixed;right:8px;top:8px;background:#111;color:#fff;font-weight:700;padding:4px 9px;border-radius:6px;z-index:9}
+</style>
+</head>
+<body>
+<div id="tag"></div>
+<iframe id="frame" title="view"></iframe>
+<script>
+  var q = new URLSearchParams(location.search);
+  var w = +(q.get('w') || 1280), h = +(q.get('h') || 800);
+  var map = {
+    home: ['#/', '홈'],
+    theater: ['#/t/0013', '용산아이파크몰 지점'],
+    hall: ['#/t/0013/h/0013-n14', '용산 IMAX관'],
+    hall14: ['#/t/0013/h/0013-n9', '용산 14관'],
+    cheonan: ['#/t/cheonan-pentaport/h/cheonan-pentaport-n9', '천안펜타포트 IMAX관'],
+    screenx: ['#/t/0059/h/0059-n1', '영등포 SCREENX관'],
+    seat: ['#/t/0013/h/0013-n14/s/G25', 'G25 상세 · 3D 시야'],
+    seatche: ['#/t/cheonan-pentaport/h/cheonan-pentaport-n9/s/F11', 'F11 상세 · 실사'],
+    my: ['#/my', '내 기록']
+  };
+  var v = q.get('v') || 'home';
+  var pick = map[v] || map.home;
+  var f = document.getElementById('frame');
+  f.style.width = w + 'px';
+  f.style.height = h + 'px';
+  f.src = './index.html?qa=' + Date.now() + pick[0];
+  document.getElementById('tag').textContent = w + '×' + h + ' · ' + pick[1];
+  var taps = (q.get('tap') || '').split('|').filter(Boolean);
+  f.addEventListener('load', function () {
+    var doc = f.contentDocument, i = 0;
+    (function step() {
+      if (i >= taps.length) return;
+      var el = doc.querySelector(taps[i++]);
+      if (el) el.click();
+      setTimeout(step, 400);
+    })();
+  });
+</script>
+</body>
+</html>

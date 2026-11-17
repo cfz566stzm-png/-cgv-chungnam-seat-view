@@ -362,8 +362,8 @@ img,canvas,svg,video{max-width:100%}
 .canvas-card canvas,.profile-card canvas{display:block;width:100%;height:auto}
 .seatmap-scroll{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
 .seatmap{width:max-content;min-width:0;margin:0 auto;--seat-w:26px;--aisle-w:18px;--lab-w:16px}
-.srow{display:flex;align-items:center;width:max-content}
-.rcells{display:grid;gap:3px}
+.srow{display:flex;align-items:center;width:max-content;gap:0}
+.rcells{display:grid;gap:3px;flex:0 0 auto}
 /* 행 라벨: 가로 스크롤해도 왼쪽에 상주하고, 뒤로 좌석이 지나갈 때 비치지 않게 불투명하게 */
 .rlab{position:sticky;left:0;z-index:6;flex:0 0 auto;align-self:stretch;display:grid;place-items:center;
   width:var(--lab-w);background:#fff;box-shadow:0 0 0 3px #fff;margin-right:2px}
