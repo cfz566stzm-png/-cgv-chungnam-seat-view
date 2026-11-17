@@ -28,7 +28,7 @@
     my:   ['./index.html#/my', '내 기록']
   };
   var pick = map[v] || map.hall;
-  document.getElementById('f').src = pick[0];
+  document.getElementById('f').src = pick[0].replace('./index.html', './index.html?cb=' + Date.now());
   document.getElementById('tag').textContent = '390×844 · ' + pick[1];
 </script>
 </body>
