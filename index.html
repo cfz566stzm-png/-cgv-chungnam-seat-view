@@ -887,6 +887,26 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .v3d-recline[aria-pressed="true"]{background:#FDB44B;color:#3A2100}
 @media (min-width:960px){ .v3d-recline{height:34px;padding:0 12px;font-size:11.5px} }
 
+/* PC: 상영관 화면을 더 넓게 (1440px · 오른쪽 패널 확대) */
+@media (min-width:960px){
+  body.view-hall .wrap{max-width:min(1440px, 95vw)}
+  .layout.hallsplit{grid-template-columns:minmax(0,1fr) minmax(540px,1.25fr)}
+  .hallsplit .v3d-canvas{aspect-ratio:16/9;height:auto;max-height:440px;min-height:300px;object-fit:contain}
+  .hallsplit .panel{max-height:calc(100vh - 28px)}
+}
+/* 3D '크게' 버튼 + 라이트박스 */
+.v3d-big{height:30px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:11px;font-weight:850;white-space:nowrap;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+@media (min-width:960px){ .v3d-big{height:34px;padding:0 12px;font-size:11.5px} }
+.bigmodal{position:fixed;inset:0;z-index:120;background:rgba(6,10,9,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px}
+.big-inner{width:90vw;max-width:1120px;background:#0B1210;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:12px 12px 14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:auto;max-height:94vh}
+.big-top{display:flex;align-items:center;gap:10px;color:#E5E8EB;font-size:13px;font-weight:800;margin-bottom:8px}
+.big-top span{color:#8B95A1;font-weight:700}
+.big-x{margin-left:auto;width:34px;height:34px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:15px;font-weight:800}
+.big-inner .v3d{margin-top:0}
+.big-inner .v3d-canvas{width:100%;aspect-ratio:16/9;height:auto;max-height:none;min-height:0}
+.big-inner .feel{color:#C9D1D9}
+.big-inner [data-big]{display:none}
+
 </style>
 </head>
 <body>
@@ -2234,6 +2254,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
   /* 화면을 떠날 때 3D 영상 재생을 확실히 끝낸다 (뒤로가기·홈 이동·시트 닫기) */
   function stopMedia() {
+    try { closeBigView(); } catch (e) {}
     try { if (window.Viewer3D && window.Viewer3D.stopAll) window.Viewer3D.stopAll(); } catch (e) {}
     document.querySelectorAll('video').forEach((v) => { try { v.pause(); v.currentTime = 0; } catch (e) {} });
   }
@@ -3000,6 +3021,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           ${isReclinerHall(h) ? `<button class="v3d-recline" data-recline="1" aria-pressed="false" title="등받이 110°">🪑 젖히기 <b class="v3d-ang">110°</b></button>` : ''}
           <button class="v3d-vid" data-vid="1" aria-pressed="false" title="샘플 영상을 스크린에 재생">▶ 영상</button>
           <button class="v3d-mute" data-mute="1" aria-pressed="true" style="display:none" title="소리 켜기/끄기">🔇</button>
+          <button class="v3d-big" data-big="1" title="3D 시야를 크게 보기">⛶ 크게</button>
           <button class="v3d-reset" data-reset="1">정면 리셋</button>
         </span>
       </div>
@@ -3162,6 +3184,39 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         </dl>
         ${cur.ticket ? `<div class="ticketmini"><img src="${esc(cur.ticket)}" alt="티켓 사진"><div style="font-size:12px;font-weight:700;color:var(--sub)">티켓으로 좌석 확인<br><span style="color:var(--mute);font-weight:600">${esc(cur.ticketNote || '발권 내역 캡처')}</span></div></div>` : ''}
       </div>`;
+  }
+
+  /* 3D 시야를 화면 가로 90% 라이트박스로 크게 보기 */
+  function openBigView() {
+    const h = findHall(state.theaterId, state.hallId);
+    const seat = h && state.seatKey && h._byKey ? h._byKey[state.seatKey] : null;
+    if (!h || !seat) { toast('먼저 좌석을 하나 골라주세요'); return; }
+    if (document.getElementById('bigModal')) return;
+    const p = h.params, m = metrics(p, seat);
+    const wrap = document.createElement('div');
+    wrap.id = 'bigModal';
+    wrap.className = 'bigmodal';
+    wrap.innerHTML = `<div class="big-inner">
+      <div class="big-top"><b>${esc(seat.key)} · ${esc(h.name)}</b><span>${esc(p.screenW && fmt(p.screenW, 1))} × ${fmt(p.screenH, 1)} m · ${TYPES[seat.t] || '일반석'}</span>
+        <button class="big-x" id="bigClose" aria-label="닫기">✕</button></div>
+      ${simHtml(h, seat, m)}
+    </div>`;
+    document.body.appendChild(wrap);
+    document.body.style.overflow = 'hidden';
+    const opts = { p: p, seat: seat, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || p.aspect, mode: state.mode, hallKey: h.id, fourSide: isFourSide(h) };
+    if (window.Viewer3D) { try { window.Viewer3D.mount(wrap, opts); } catch (e) {} }
+    document.getElementById('bigClose').onclick = closeBigView;
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) closeBigView(); });
+    document.addEventListener('keydown', function esc2(ev) {
+      if (ev.key === 'Escape') { closeBigView(); document.removeEventListener('keydown', esc2); }
+    });
+  }
+  function closeBigView() {
+    const w = document.getElementById('bigModal');
+    if (!w) return;
+    if (window.Viewer3D) { try { window.Viewer3D.dispose(w); } catch (e) {} }
+    w.remove();
+    document.body.style.overflow = '';
   }
 
   function paintSeatPanel() {
@@ -4173,6 +4228,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }
     const soon = e.target.closest('[data-soon]');
     if (soon) { toast('이 상영관은 좌석표를 아직 확인하지 못했어요'); return; }
+    if (e.target.closest('[data-big]')) { openBigView(); return; }
+    if (e.target.closest('#bigClose')) { closeBigView(); return; }
     if (e.target.closest('#editNick')) { nicknameModal(true); return; }
     if (e.target.closest('#myAvatar') || e.target.closest('#avatarChange')) {
       const fi = document.getElementById('avatarFile');
