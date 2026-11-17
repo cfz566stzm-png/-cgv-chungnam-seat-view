@@ -3087,7 +3087,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (SB.busy) return Promise.resolve(false);
     if (!force && Date.now() - SB.at < SB_TTL) return Promise.resolve(false);
     SB.busy = true;
-    const tm = sbTimer(9000);
+    const tm = sbTimer(15000);
     const url = SB_URL + '/rest/v1/seat_reviews?select=id,hall_key,seat_id,nickname,movie,comment,photo_url,verified,created_at'
       + '&order=created_at.desc&limit=500';
     return fetch(url, { headers: sbHeaders(), signal: tm.signal, cache: 'no-store' })
@@ -5931,7 +5931,19 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
      네트워크·CORS가 막혀도 로컬 기록과 마지막으로 받아 둔 목록으로 화면은 그대로 보인다. */
   sbRestore();
   sbFetch(true).then((ok) => {
-    if (!ok) return;
+    if (!ok) {
+      /* 첫 로드 직후는 페이지 준비로 네트워크가 밀릴 수 있어 한 번만 다시 시도한다 */
+      setTimeout(() => {
+        sbFetch(true).then((ok2) => {
+          if (!ok2) return;
+          try {
+            if (state.view === 'home' || state.view === 'theater') render();
+            else if (state.view === 'hall') { paintSeatMap(); paintSeatPanel(); }
+          } catch (e) {}
+        });
+      }, 2500);
+      return;
+    }
     try {
       if (state.view === 'home' || state.view === 'theater') render();
       else if (state.view === 'hall') { paintSeatMap(); paintSeatPanel(); }
