@@ -1276,7 +1276,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       var p0 = [sx(pts[0]), sy(pts[0])], p1 = [sx(pts[1]), sy(pts[1])];
       var p2 = [sx(pts[2]), sy(pts[2])], p3 = [sx(pts[3]), sy(pts[3])];
       /* 이웃 타일과 2px씩 겹쳐 그린다 — 안티앨리어싱으로 생기는 세로 이음매 제거 */
-      var pad = 6;
+      var pad = 0.35;
       var sx0 = uv.sx0 - pad, sy0 = uv.sy0 - pad, sw = uv.sw + pad * 2, sh = uv.sh + pad * 2;
       var s00 = [sx0, sy0], s10 = [sx0 + sw, sy0], s11 = [sx0 + sw, sy0 + sh], s01 = [sx0, sy0 + sh];
       var rc = [sx0, sy0, sw, sh];
@@ -1373,8 +1373,8 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     var iImgW = img.width, iImgH = img.height;
     /* 화면을 잘게 나눠 그린다 — 큰 스크린(용산 22.4 m)을 가까이서 보면
        한 줄로 그릴 때 원근 때문에 세로 이음새가 생기므로 세로로도 나눈다. */
-    var NX = 12;
-    var NY = Math.max(1, Math.min(4, Math.round(ih / 6)));
+    var NX = 6;
+    var NY = Math.max(1, Math.min(3, Math.round(ih / 9)));
     var yB0 = scrB + (scrH - ih) / 2, yT0 = yB0 + ih;
     /* 화면 영역 밖으로 넘치지 않게 한 번만 클립 (타일마다 클립하면 그 경계가 격자로 보임) */
     ctx.save();
