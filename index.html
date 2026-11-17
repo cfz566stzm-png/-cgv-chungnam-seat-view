@@ -752,6 +752,9 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .rtab{flex:1 1 0;min-width:0;padding:0 4px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
 @media (max-width:420px){ .rtabs{gap:4px;padding:4px} .rtab{font-size:12px;height:38px} }
 
+/* DOLBY ATMOS 배지 색 */
+.badge.dolby{background:#EAF1FE;color:#1D4ED8}
+
 </style>
 </head>
 <body>
@@ -1750,9 +1753,17 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
   /* ---------- 렌더 ---------- */
+  /* 태그 표기 통일 — '돌비애트모스'는 배지·목록·상세 어디서든 'DOLBY ATMOS'로 */
+  const TAG_LABEL = { '돌비애트모스': 'DOLBY ATMOS', '돌비 애트모스': 'DOLBY ATMOS', '돌비애트모스관': 'DOLBY ATMOS', 'DOLBY': 'DOLBY ATMOS', 'Dolby': 'DOLBY ATMOS' };
+  function tagLabel(tag) {
+    if (TAG_LABEL[tag]) return TAG_LABEL[tag];
+    if (/돌비\s*애트모스|dolby/i.test(String(tag))) return 'DOLBY ATMOS';
+    return tag;
+  }
   function badgeHtml(tag) {
-    const map = { 'IMAX': 'imax', '4DX': 'fourdx', 'SCREENX': 'screenx', '리클라이너': 'recliner', 'Laser': 'laser', 'PRIVATE BOX': 'box', 'CGV아트하우스': 'art', '빈백': 'bean', '카바나': 'bean' };
-    return `<span class="badge ${map[tag] || 'plain'}">${esc(tag)}</span>`;
+    const map = { 'IMAX': 'imax', '4DX': 'fourdx', 'SCREENX': 'screenx', '리클라이너': 'recliner', 'Laser': 'laser', 'PRIVATE BOX': 'box', 'CGV아트하우스': 'art', '빈백': 'bean', '카바나': 'bean', '돌비애트모스': 'dolby', 'DOLBY ATMOS': 'dolby' };
+    const key = TAG_LABEL[tag] || tag;
+    return `<span class="badge ${map[tag] || map[key] || 'plain'}">${esc(tagLabel(tag))}</span>`;
   }
 
   function render() {
