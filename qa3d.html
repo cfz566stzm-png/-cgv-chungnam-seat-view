@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D 뷰어 QA — 큰 화면</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #000; }
+  #wrap { position: relative; width: 100vw; height: 100vh; }
+  .v3d { position: absolute; inset: 0; }
+  .v3d-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #tag { position: fixed; left: 8px; top: 8px; z-index: 9; background: rgba(0,0,0,.62);
+         color: #fff; font: 12px/1.5 -apple-system, system-ui, sans-serif; padding: 5px 9px; border-radius: 7px; }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas class="v3d-canvas" width="1200" height="740"></canvas></div>
+<div id="tag">불러오는 중…</div>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var siteNo = q.get('t') || '0110';
+  var hallName = q.get('h') || 'IMAX관';
+  var seatKey = q.get('s') || 'F11';
+  var mode = q.get('mode') || 'center';
+  var zoom = q.get('zoom') || '1x';
+  var wantAspect = q.get('aspect');
+
+  function buildSeats(h) {
+    var list = [];
+    h.rows.forEach(function (row, y) {
+      row.c.forEach(function (cell, x) {
+        if (cell === '.') return;
+        var m = /^(\d+)([npsrcbx])$/.exec(cell); if (!m) return;
+        list.push({ key: row.l + m[1], row: row.l, num: +m[1], x: x, y: y, t: m[2] });
+      });
+    });
+    h._cols = 0; h.rows.forEach(function (r) { h._cols = Math.max(h._cols, r.c.length); });
+    var extra = [], acc = 0;
+    h.rows.forEach(function (row, y) { if (row.gapBefore && y > 0) acc += 1.2; extra[y] = acc; });
+    h.params._extra = extra;
+    var AW = 16 / 18, w = [];
+    for (var c = 0; c < h._cols; c++) {
+      var alwaysEmpty = h.rows.every(function (r) { return (r.c[c] || '.') === '.'; });
+      w[c] = alwaysEmpty ? AW : 1;
+    }
+    h.params._w = w;
+    var total = w.reduce(function (a, b) { return a + b; }, 0);
+    list.forEach(function (st) {
+      var m = 0;
+      for (var c2 = 0; c2 < st.x && c2 < w.length; c2++) m += w[c2];
+      m += (w[st.x] || 1) / 2;
+      st.ox = (m - total / 2) * h.params.pitch;
+    });
+    return list;
+  }
+
+  fetch('./index.html?qa3d=' + Date.now()).then(function (r) { return r.text(); }).then(function (txt) {
+    var dm = txt.match(/window\.__DATA__ = (\{[\s\S]*?\});<\/script>/);
+    if (!dm) throw new Error('no data');
+    var DATA = JSON.parse(dm[1]);
+    var vm = txt.match(/\/\* ===== CGV 3D viewer ===== \*\/([\s\S]*?)<\/script>/);
+    if (!vm) throw new Error('no viewer');
+    (new Function(vm[1]))();
+
+    var th = DATA.theaters.filter(function (t) { return String(t.siteNo) === siteNo || t.id === siteNo; })[0];
+    if (!th) throw new Error('no theater ' + siteNo);
+    var hall = th.halls.filter(function (h) { return h.name === hallName; })[0] ||
+               th.halls.filter(function (h) { return h.name.indexOf(hallName) >= 0; })[0];
+    if (!hall) throw new Error('no hall ' + hallName);
+    var seats = buildSeats(hall);
+    var seat = seats.filter(function (s) { return s.key === seatKey; })[0];
+    if (!seat) { seat = seats[Math.floor(seats.length / 2)]; seatKey = seat.key; }
+
+    var root = document.getElementById('wrap');
+    var v = window.Viewer3D.mount(root, {
+      p: hall.params, seat: seat, rows: hall.rows, tags: hall.tags || [],
+      aspect: wantAspect ? Number(wantAspect) : Number(hall.params.aspect), mode: mode, name: hall.name
+    });
+    if (v) { v.zoom = zoom; v.fov1x = 76; v.reset(true); v.render(); }
+    document.getElementById('tag').textContent =
+      th.name + ' · ' + hall.name + ' · ' + seatKey + ' · 단차 ' + hall.params.riser +
+      ' m (' + (hall.params.stepType || '') + ') · ' + v.zoom;
+  }).catch(function (e) {
+    document.getElementById('tag').textContent = 'ERR ' + e.message;
+  });
+})();
+</script>
+</body>
+</html>
