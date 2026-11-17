@@ -1408,7 +1408,19 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       var mx = sx(scrMid), my = sy(scrMid);
       var halfW = Math.abs(f * (iw / 2) / scrMid[2]) + 4;
       var halfH = Math.abs(f * (ih / 2) / scrMid[2]) + 4;
+      /* 빛은 화면(그림) 안에만 앉는다 — 마스킹 띠가 회색으로 뜨지 않게 */
       ctx.save();
+      ctx.beginPath();
+      for (var bi = 0; bi <= 18; bi++) {
+        var bu = -iw / 2 + iw * bi / 18, bp = toCam(bu, yT0, scrZ(bu));
+        if (bi === 0) ctx.moveTo(sx(bp), sy(bp)); else ctx.lineTo(sx(bp), sy(bp));
+      }
+      for (var bj = 18; bj >= 0; bj--) {
+        var bu2 = -iw / 2 + iw * bj / 18, bp2 = toCam(bu2, yB0, scrZ(bu2));
+        ctx.lineTo(sx(bp2), sy(bp2));
+      }
+      ctx.closePath();
+      ctx.clip();
       ctx.globalCompositeOperation = 'lighter';
       /* 중앙 영사 핫스팟 */
       var rg = ctx.createRadialGradient(mx, my, halfW * 0.1, mx, my, Math.max(halfW, halfH) * 0.9);
@@ -1603,12 +1615,19 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         drewTop = true;
       }
       if (drewTop) { ctx.fillStyle = '#14171A'; ctx.fill(); }
-      /* 윗면 앞 모서리의 얇은 림라이트 — 스크린에 가까운 앞열이 더 밝다 */
+      /* 윗면 앞 모서리의 얇은 림라이트 — 이어진 좌석끼리 한 줄로, 앞열이 더 밝다 */
       var lit = clamp(1.15 - Math.abs(s.dCam - dc) / Math.max(6, p.rows * p.rowGap), 0.22, 1);
       var rim = 'rgba(146,156,162,' + (0.24 * lit).toFixed(3) + ')';
+      var yd = hz + (s.recliner ? 0.82 : 0.94) + 0.004;
+      var runs = [], cur = null;
       for (var t3 = 0; t3 < seatX.length; t3++) {
-        var sxd = seatX[t3].x, wd = seatW / 2, yd = hz + (s.recliner ? 0.82 : 0.94) + 0.004;
-        seg(toCam(sxd - wd, yd, zBack + 0.085), toCam(sxd + wd, yd, zBack + 0.085), rim, 1);
+        var sxv = seatX[t3].x;
+        if (cur && sxv - cur.x1 <= pitch * 1.05) cur.x1 = sxv;
+        else { if (cur) runs.push(cur); cur = { x0: sxv, x1: sxv }; }
+      }
+      if (cur) runs.push(cur);
+      for (var r3 = 0; r3 < runs.length; r3++) {
+        seg(toCam(runs[r3].x0 - seatW / 2, yd, zBack + 0.085), toCam(runs[r3].x1 + seatW / 2, yd, zBack + 0.085), rim, 1);
       }
 
       /* 통로 손잡이 — 좌우 끝 크롬 난간 (사진의 계단 손잡이) */
