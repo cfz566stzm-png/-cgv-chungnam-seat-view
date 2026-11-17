@@ -1184,10 +1184,12 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     if (this._vidRaf) return;
     var step = function () {
       self._vidRaf = 0;
-      if (!self.video || self.video.paused || self.video.readyState < 2) { self.render(); return; }
+      var v = self.video;
+      /* 일시정지했을 때만 루프를 끝낸다. (재생 중 readyState가 잠깐 떨어졌다고
+         루프를 끝내면 그 뒤로 영상이 멈춘 채 정지 화면이 남았다) */
+      if (!v || v.paused) { self.render(); return; }
       self._inVid = true;
-      self.render();
-      self._inVid = false;
+      try { self.render(); } finally { self._inVid = false; }
       self._vidRaf = requestAnimationFrame(step);
     };
     this._vidRaf = requestAnimationFrame(step);
@@ -1957,6 +1959,9 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     vg.addColorStop(0, 'rgba(0,0,0,0)');
     vg.addColorStop(1, 'rgba(0,0,0,0.55)');
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+    /* 영상이 재생 중이면 어떤 경로로 그렸든 다음 프레임 루프를 이어 붙인다 */
+    if (this.video && !this.video.paused && !this._vidRaf && !this._inVid) this._startVidLoop();
   };
 
   Viewer.prototype.destroy = function () {
