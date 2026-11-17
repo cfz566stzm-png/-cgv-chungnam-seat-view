@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supabase 연결 점검</title>
+<style>html,body{margin:0;padding:0;background:#fff;color:#111;font:13px/1.6 -apple-system,system-ui,sans-serif}
+#out{padding:12px;white-space:pre-wrap;word-break:break-all}</style>
+</head>
+<body>
+<div id="out">점검 중…</div>
+<script>
+(function () {
+  var KEY = 'sb_publishable_A3OqttteymOeLkaFS3oSTA_U288LnSc';
+  var BASE = 'https://unoeugpeoxfbvdccqwxr.supabase.co/rest/v1/seat_reviews';
+  var out = document.getElementById('out');
+  var lines = [];
+  function log(s) { lines.push(s); out.textContent = lines.join('\n'); }
+  function timed(name, init, url) {
+    var t0 = Date.now();
+    return fetch(url || (BASE + '?select=id&limit=1'), init).then(function (r) {
+      return r.text().then(function (b) {
+        log(name + ' → ' + r.status + ' · ' + (Date.now() - t0) + 'ms · ' + b.slice(0, 60));
+      });
+    }).catch(function (e) {
+      log(name + ' → ERR · ' + (Date.now() - t0) + 'ms · ' + (e && e.message));
+    });
+  }
+  /* 1) 쿼리 파라미터 키만: 단순 요청(프리플라이트 없음) */
+  timed('1 query-key', { cache: 'no-store' }, BASE + '?select=id&limit=1&apikey=' + encodeURIComponent(KEY))
+    /* 2) apikey 헤더: 프리플라이트 발생 */
+    .then(function () { return timed('2 apikey header', { cache: 'no-store', headers: { apikey: KEY } }); })
+    /* 3) apikey + Bearer: 프리플라이트 발생 */
+    .then(function () { return timed('3 apikey+bearer', { cache: 'no-store', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY } }); })
+    /* 4) 프리플라이트(OPTIONS) 자체 확인 */
+    .then(function () {
+      return timed('4 OPTIONS preflight', {
+        method: 'OPTIONS', headers: {
+          'Access-Control-Request-Method': 'GET',
+          'Access-Control-Request-Headers': 'apikey,authorization'
+        }
+      });
+    })
+    .then(function () { log('done'); });
+})();
+</script>
+</body>
+</html>
