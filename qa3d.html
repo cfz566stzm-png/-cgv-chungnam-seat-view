@@ -7,6 +7,7 @@
 <style>
   html, body { margin: 0; padding: 0; background: #000; }
   #wrap { position: relative; width: 100vw; height: 100vh; }
+  #wrap.sized { position: absolute; left: 0; top: 0; }
   .v3d { position: absolute; inset: 0; }
   .v3d-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
   #tag { position: fixed; left: 8px; top: 8px; z-index: 9; background: rgba(0,0,0,.62);
@@ -73,6 +74,8 @@
     if (!seat) { seat = seats[Math.floor(seats.length / 2)]; seatKey = seat.key; }
 
     var root = document.getElementById('wrap');
+    var cw = +(q.get('w') || 0), ch = +(q.get('hgt') || 0);
+    if (cw && ch) { root.classList.add('sized'); root.style.width = cw + 'px'; root.style.height = ch + 'px'; }
     var v = window.Viewer3D.mount(root, {
       p: hall.params, seat: seat, rows: hall.rows, tags: hall.tags || [],
       aspect: wantAspect ? Number(wantAspect) : Number(hall.params.aspect), mode: mode, name: hall.name
