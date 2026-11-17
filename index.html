@@ -1757,7 +1757,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   const TAG_LABEL = { '돌비애트모스': 'DOLBY ATMOS', '돌비 애트모스': 'DOLBY ATMOS', '돌비애트모스관': 'DOLBY ATMOS', 'DOLBY': 'DOLBY ATMOS', 'Dolby': 'DOLBY ATMOS' };
   function tagLabel(tag) {
     if (TAG_LABEL[tag]) return TAG_LABEL[tag];
-    if (/돌비\s*애트모스|dolby/i.test(String(tag))) return 'DOLBY ATMOS';
+    if (String(tag).indexOf('돌비') >= 0 || /dolby/i.test(String(tag))) return 'DOLBY ATMOS';
     return tag;
   }
   function badgeHtml(tag) {
