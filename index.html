@@ -729,6 +729,24 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
   .chip,.chip.sm{height:34px;min-height:34px;font-size:12.5px}
 }
 
+/* --- 내 좌석 기록: 프로필 사진 + 이름 중심 위계 --- */
+.myhead{align-items:center;gap:14px}
+.avatar{width:56px;height:56px;min-width:56px;border-radius:18px;overflow:hidden;display:grid;place-items:center;
+  padding:0;border:1px solid var(--green-soft);background:var(--green-l);color:var(--green-d);
+  font-size:19px;font-weight:850;letter-spacing:-.02em;line-height:1;cursor:pointer;touch-action:manipulation}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar:active{transform:scale(.97)}
+.my-name{font-size:21px;font-weight:850;letter-spacing:-.03em;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.my-sub{font-size:12.5px;font-weight:700;color:var(--mute);margin-top:3px;line-height:1.45}
+.my-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.my-actions .chip{height:30px;min-height:30px;font-size:12px;padding:0 11px}
+@media (max-width:900px){
+  .avatar{width:56px;height:56px}
+  .my-name{font-size:21px}
+  .my-sub{font-size:12.5px}
+}
+
 </style>
 </head>
 <body>
@@ -1533,16 +1551,33 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const ck = cookieGet(NK_COOKIE);
     if (ck) { nickname = ck.slice(0, 12); try { localStorage.setItem(NK_KEY, nickname); } catch (e) {} }
   }
+  /* 프로필 사진 — 이 기기(localStorage)에만, 240px JPEG로 압축해 보관 */
+  const AV_KEY = 'cgv-chn-avatar';
+  let avatarImg = '';
+  try { avatarImg = localStorage.getItem(AV_KEY) || ''; } catch (e) { avatarImg = ''; }
+  const AV_ICON = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.6" stroke="currentColor" stroke-width="1.8"/><path d="M4.8 20c.7-3.6 3.6-5.6 7.2-5.6s6.5 2 7.2 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  function avatarHtml() {
+    if (avatarImg) return `<img src="${esc(avatarImg)}" alt="프로필 사진">`;
+    if (nickname) return esc(nickname.slice(0, 2));
+    return AV_ICON;
+  }
+  function paintAvatar() {
+    const av = document.getElementById('myAvatar');
+    if (av) av.innerHTML = avatarHtml();
+    const nm = document.getElementById('myName');
+    if (nm) nm.textContent = nickname || '내 좌석 기록';
+    const sb = document.getElementById('mySub');
+    if (sb) sb.textContent = nickname ? '내 좌석 기록 · 이 기기에만 저장돼요' : '닉네임을 정하면 여기에 표시돼요 · 이 기기에만 저장돼요';
+    const cl = document.getElementById('avatarClear');
+    if (cl) cl.style.display = avatarImg ? '' : 'none';
+  }
   function setNickname(v) {
     nickname = (v || '').trim().slice(0, 12);
     try { localStorage.setItem(NK_KEY, nickname); } catch (e) {}
     cookieSet(NK_COOKIE, nickname, 365);
     cookieSet(NK_ASKED, '1', 365);
     try { localStorage.setItem('cgv-chn-nick-asked', '1'); } catch (e) {}
-    const av = document.getElementById('myAvatar');
-    if (av) av.textContent = nickname ? nickname.slice(0, 1) : '🙂';
-    const nm = document.getElementById('myNick');
-    if (nm) nm.textContent = nickname || '닉네임 없음';
+    paintAvatar();
   }
   function nicknameModal(force) {
     if (document.getElementById('nickModal')) return;
@@ -3203,12 +3238,17 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return `
     <div class="card card-pad">
       <div class="myhead">
-        <div class="avatar" id="myAvatar">${nickname ? esc(nickname.slice(0, 1)) : '🙂'}</div>
-        <div style="flex:1">
-          <div style="font-size:19px;font-weight:850;letter-spacing:-.03em">내 좌석 기록</div>
-          <div class="seat-sub"><span id="myNick">${esc(nickname || '닉네임 없음')}</span> · 이 기기에만 저장돼요</div>
+        <button class="avatar" id="myAvatar" type="button" aria-label="프로필 사진 변경">${avatarHtml()}</button>
+        <div style="flex:1;min-width:0">
+          <div class="my-name" id="myName">${esc(nickname || '내 좌석 기록')}</div>
+          <div class="my-sub" id="mySub">${nickname ? '내 좌석 기록 · 이 기기에만 저장돼요' : '닉네임을 정하면 여기에 표시돼요 · 이 기기에만 저장돼요'}</div>
+          <div class="my-actions">
+            <button class="chip sm" id="avatarChange" type="button">프로필 사진 변경</button>
+            <button class="chip sm" id="avatarClear" type="button" style="${avatarImg ? '' : 'display:none'}">사진 지우기</button>
+          </div>
         </div>
       </div>
+      <input type="file" id="avatarFile" accept="image/*" hidden>
       <div class="metrics" style="margin-top:18px">
         <div class="metric"><span>남긴 좌석 후기</span><b class="num">${c.seats}</b></div>
         <div class="metric"><span>작성한 글</span><b class="num">${c.reviews}</b></div>
@@ -3221,7 +3261,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       </div>
     </div>
     <div class="section-title"><h2>내가 남긴 후기</h2><span class="cap">${c.seats}석</span></div>
-    ${keys.length === 0 ? `<div class="card empty-state"><div class="empty-ic">💬</div><h3>아직 남긴 후기가 없어요</h3><p>좌석 카드에서 별점과 태그를 남기면<br>여기에 차곡차곡 쌓여요.</p><button class="btn sm" style="margin-top:14px" data-go="home">지점 둘러보기</button></div>` :
+    ${keys.length === 0 ? `<div class="card empty-state"><div class="empty-ic">💬</div><h3>아직 남긴 후기가 없어요</h3><p>좌석 화면에서 사진과 한마디를 남기면<br>여기에 차곡차곡 쌓여요.</p><button class="btn sm" style="margin-top:14px" data-go="home">지점 둘러보기</button></div>` :
         keys.map((k) => {
           const b = store[k]; const t = findTheater(k.split('/')[0]);
           const hid = k.split('/')[1];
@@ -3261,6 +3301,18 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (!box) return;
     box.innerHTML = theaterCardsHtml(homeList());
   }
+  document.addEventListener('change', async (e) => {
+    if (!e.target || e.target.id !== 'avatarFile') return;
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const d = await compressImage(f, 240, 0.7);
+    if (!d) { toast('사진을 읽지 못했어요'); return; }
+    avatarImg = d;
+    try { localStorage.setItem(AV_KEY, d); } catch (err) { toast('저장 공간이 부족해요'); }
+    paintAvatar();
+    toast('프로필 사진을 바꿨어요');
+  });
+
   document.addEventListener('input', (e) => {
     if (!e.target || e.target.id !== 'qInput') return;
     state.q = e.target.value;
@@ -3336,6 +3388,18 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const soon = e.target.closest('[data-soon]');
     if (soon) { toast('이 상영관은 좌석표를 아직 확인하지 못했어요'); return; }
     if (e.target.closest('#editNick')) { nicknameModal(true); return; }
+    if (e.target.closest('#myAvatar') || e.target.closest('#avatarChange')) {
+      const fi = document.getElementById('avatarFile');
+      if (fi) fi.click();
+      return;
+    }
+    if (e.target.closest('#avatarClear')) {
+      avatarImg = '';
+      try { localStorage.removeItem(AV_KEY); } catch (e) {}
+      paintAvatar();
+      toast('프로필 사진을 지웠어요');
+      return;
+    }
     if (e.target.closest('#sheetClose') || e.target.id === 'scrim') { state._sheetSeat = null; openSheet(false); return; }
     const nav = e.target.closest('[data-tab]');
     if (nav) { state.view = nav.dataset.tab; render(); return; }
