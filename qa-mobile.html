@@ -23,12 +23,28 @@
     home: ['./index.html#/', '홈'],
     hall: ['./index.html#/t/cheonan-pentaport/h/cheonan-pentaport-n9', 'IMAX관 좌석판'],
     seat: ['./index.html#/t/cheonan-pentaport/h/cheonan-pentaport-n9/s/F11', 'F11 상세 · 실사 탭'],
+    screenx: ['./index.html#/t/0013/h/0013-n16', '용산 SCREENX 4면'],
+    sseat: ['./index.html#/t/0013/h/0013-n16/s/E13', '용산 SCREENX E13 · 바텀시트'],
+    compare: ['./index.html#/t/0013/h/0013-n16/s/E13', '좌석 비교 모달'],
     yongsan: ['./index.html#/t/0013/h/0013-14', '용산 IMAX 624석'],
     seoul: ['./index.html#/t/0013', '용산아이파크몰 지점'],
     my:   ['./index.html#/my', '내 기록']
   };
   var pick = map[v] || map.hall;
-  document.getElementById('f').src = pick[0].replace('./index.html', './index.html?cb=' + Date.now());
+  var f = document.getElementById('f');
+  f.src = pick[0].replace('./index.html', './index.html?cb=' + Date.now());
+  if (v === 'compare') {
+    f.addEventListener('load', function () {
+      setTimeout(function () {
+        try {
+          var w = f.contentWindow;
+          w.__APP__.state.compare = ['E13', 'E15'];
+          w.__APP__.render();
+          w.__APP__.openCompare();
+        } catch (e) { document.getElementById('tag').textContent = '오류 ' + e.message; }
+      }, 900);
+    });
+  }
   document.getElementById('tag').textContent = '390×844 · ' + pick[1];
 </script>
 </body>

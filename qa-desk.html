@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PC 레이아웃 QA — 1280×800</title>
+<style>
+  html,body{margin:0;padding:0;background:#C9CFD6}
+  body{overflow:hidden}
+  .stage{width:1280px;height:800px;margin:0 auto;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25);overflow:hidden}
+  iframe{width:1280px;height:800px;border:0;display:block}
+  .tag{position:fixed;right:8px;top:8px;background:#111;color:#fff;font:600 11px -apple-system,sans-serif;padding:4px 8px;border-radius:6px;z-index:9}
+</style>
+</head>
+<body>
+<div class="tag" id="tag"></div>
+<div class="stage"><iframe id="f" title="view"></iframe></div>
+<script>
+  var q = new URLSearchParams(location.search);
+  var v = q.get('v') || 'home';
+  var seat = q.get('s') || 'E13';
+  var map = {
+    home: ['#/', '홈 · 지점 3열'],
+    hall: ['#/t/0013/h/0013-n16', '용산 SCREENX · 2단 분할'],
+    seat: ['#/t/0013/h/0013-n16/s/' + seat, '용산 SCREENX ' + seat + ' · 오른쪽 패널'],
+    compare: ['#/t/0013/h/0013-n16/s/' + seat, '좌석 비교 모달'],
+    my: ['#/my', '내 기록']
+  };
+  var pick = map[v] || map.home;
+  var f = document.getElementById('f');
+  f.src = './index.html?cb=' + Date.now() + pick[0];
+  document.getElementById('tag').textContent = '1280×800 · ' + pick[1];
+  if (v === 'compare') {
+    f.addEventListener('load', function () {
+      setTimeout(function () {
+        try {
+          var w = f.contentWindow;
+          w.__APP__.state.compare = [seat, 'E15'];
+          w.__APP__.render();
+          w.__APP__.openCompare();
+        } catch (e) { document.getElementById('tag').textContent = '오류 ' + e.message; }
+      }, 900);
+    });
+  }
+</script>
+</body>
+</html>

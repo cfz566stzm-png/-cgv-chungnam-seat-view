@@ -1717,6 +1717,41 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       });
     }
 
+    /* ---- 용산 SCREENX 4면 스크린: 앞쪽 천장에도 확장 화면이 투사된다 ----
+       (정면·좌우 윙에 이어 천장까지 이어지는 실제 4면 구조. 젖히면 시선이 위로 넘어가며 보인다) */
+    if (o.fourSide) {
+      var cw = wallX * 0.72, cz0 = -0.85, cz1 = -6.9, cyy = ceilY - 0.04;
+      ctx.save();
+      try { ctx.filter = 'blur(3px)'; } catch (e) {}
+      try {
+        for (var ck = 0; ck < 8; ck++) {
+          var za = cz0 + (cz1 - cz0) * ck / 8, zb = cz0 + (cz1 - cz0) * (ck + 1) / 8;
+          texCell({
+            pts: [toCam(-cw, cyy, za), toCam(cw, cyy, za), toCam(cw, cyy, zb), toCam(-cw, cyy, zb)],
+            sx0: 0, sy0: iImgH * ck / 8, sw: iImgW, sh: iImgH / 8
+          }, img, vplay ? 0.52 : 0.48);
+        }
+      } finally {
+        ctx.filter = 'none';
+        ctx.restore();
+      }
+      /* 천장 스크린 테두리 + 주변 천장으로 번지는 빛 */
+      face([toCam(-cw, cyy, cz0), toCam(cw, cyy, cz0), toCam(cw, cyy, cz1), toCam(-cw, cyy, cz1)],
+           null, 'rgba(220,228,232,0.10)', 1.4);
+      var ccen = toCam(0, cyy, (cz0 + cz1) / 2);
+      if (ccen[2] > NEAR) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        var cxp = sx(ccen), cyp = sy(ccen);
+        var crd = Math.max(90, f * (cw * 1.1) / ccen[2]);
+        var cg = ctx.createRadialGradient(cxp, cyp, crd * 0.2, cxp, cyp, crd);
+        cg.addColorStop(0, 'rgba(255,232,205,0.10)');
+        cg.addColorStop(1, 'rgba(255,205,165,0)');
+        ctx.fillStyle = cg; ctx.fillRect(cxp - crd, cyp - crd, crd * 2, crd * 2);
+        ctx.restore();
+      }
+    }
+
     /* ---- 스크린 아래 스피커 캐비닛 (사진처럼 스크린 양옆 어두운 박스) ---- */
     [-1, 1].forEach(function (sgn) {
       var sx0 = sgn * (scrW / 2 + 0.55), sx1 = sgn * (scrW / 2 + 1.45);
@@ -2869,6 +2904,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return !!(h.seatTypes && (h.seatTypes.r || 0) > 0);
   }
 
+  /* 용산아이파크몰 SCREENX관 = 정면+좌+우+천장 4면 스크린 */
+  function isFourSide(h) {
+    return state.theaterId === '0013' && /SCREENX/.test((h.tags || []).join(' '));
+  }
+
   function simHtml(h, seat, m) {
     const tag = feelTag(m);
     return `<div class="v3d" data-v3d>
@@ -3056,7 +3096,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (sheetHead) sheetHead.innerHTML = seat ? sheetHeadHtml(h, seat) : '';
     if (seat) {
       const p = h.params, m = metrics(p, seat);
-      const opts = { p: p, seat: seat, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || p.aspect, mode: state.mode, hallKey: h.id };
+      const opts = { p: p, seat: seat, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || p.aspect, mode: state.mode, hallKey: h.id, fourSide: isFourSide(h),
+        videoSrc: isFourSide(h) ? 'media/yongsan-screenx.mp4' : 'media/preview.mp4' };
       [panel, sheetBody].filter(Boolean).forEach((root) => {
         const pc = root.querySelector('.profile-canvas');
         if (pc) drawProfile(pc, p, m, seat);
@@ -3189,7 +3230,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (!el) return;
     document.body.appendChild(el);
     document.body.style.overflow = 'hidden';
-    const opts = { p: h.params, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || h.params.aspect, mode: 'center', hallKey: h.id };
+    const opts = { p: h.params, rows: h.rows, tags: h.tags || [], aspect: Number(state.aspect) || h.params.aspect, mode: 'center', hallKey: h.id, fourSide: isFourSide(h),
+      videoSrc: isFourSide(h) ? 'media/yongsan-screenx.mp4' : 'media/preview.mp4' };
     el.querySelectorAll('.cmp-cell').forEach((cell) => {
       const seat = h._byKey ? h._byKey[cell.dataset.cmpseat] : null;
       const cv = cell.querySelector('.v3d-canvas');
@@ -4081,7 +4123,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   applyHash();
   render();
   window.addEventListener('popstate', () => { applyHash(); render(); });
-  window.__APP__ = { state, metrics, render, setNickname, setNear, clearNear, toggleNear, toChoseong, distKm, homeList };
+  window.__APP__ = { state, metrics, render, setNickname, setNear, clearNear, toggleNear, toChoseong, distKm, homeList, openCompare, toggleCompare };
   try {
     const askedLS = localStorage.getItem('cgv-chn-nick-asked');
     const askedCK = cookieGet(NK_ASKED);
