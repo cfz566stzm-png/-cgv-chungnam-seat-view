@@ -2566,13 +2566,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openSheet(false); });
 
   /* 시작 */
-  hallSeats_init();
-  /* 공개자료로 확인된 스크린 제원 (좌석표 heuristics 값 덮어쓰기) */
   const SCREEN_FIX = {
     '0013-n14': { w: 31.0, h: 22.4, aspect: 1.43, native: 1.43, conf: 'B',
       note: 'IMAX GT Laser 스크린 31 × 22.4 m (공개자료: 극장 안내·후기 다수 일치)' }
   };
 
+  hallSeats_init();
+  /* 공개자료로 확인된 스크린 제원 (좌석표 heuristics 값 덮어쓰기) */
   function hallSeats_init() {
     DATA.theaters.forEach((t) => t.halls.forEach((h) => {
       const fx = SCREEN_FIX[h.id];
