@@ -717,7 +717,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .toc-rows{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .toc-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;background:#FAFBFC;border:1px solid var(--line-2)}
 .toc-row>span{flex:0 0 46px;font-size:11.5px;font-weight:800;color:var(--mute)}
-.toc-row select,.toc-row input{flex:1;min-width:0;height:34px;border:0;background:transparent;font-size:15px !important;font-weight:750;color:var(--ink);outline:none}
+.toc-row select,.toc-row input{flex:1;min-width:0;height:34px;border:0;background:transparent;font-size:16px !important;font-weight:750;color:var(--ink);outline:none}
 .toc-row.off{background:#FFF8EF;border-color:#FDE3C2}
 .toc-row.off>span{color:#B45309}
 .toc-row.meta b{font-size:13px;font-weight:800;color:var(--sub)}
@@ -1072,7 +1072,7 @@ body{font-size:16px}
 .nickrow{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
 .nickrow label{font-size:12px;font-weight:800;color:#4E5968}
 .nickrow input{flex:1;min-width:120px;height:38px;border-radius:10px;border:1px solid var(--line);
-  background:#FAFBFC;padding:0 11px;font-size:15px !important;font-weight:700;color:var(--ink)}
+  background:#FAFBFC;padding:0 11px;font-size:16px !important;font-weight:700;color:var(--ink)}
 .nickrow span{flex:0 0 auto;font-size:11px;font-weight:700;color:#6B7684}
 .ugc-note{margin-top:9px;font-size:11.5px;font-weight:650;color:#5C6672;line-height:1.55;word-break:keep-all}
 .ugc-note a{color:#047857;font-weight:800}
@@ -1243,6 +1243,121 @@ body{font-size:16px}
 /* 아주 좁은 화면(320~359px): HUD가 여러 줄로 접혀 '드래그해서 둘러보기' 안내와 겹치므로
    안내 문구만 감춘다(조작 버튼은 그대로) */
 @media (max-width:359px){ .v3d-hint{display:none} }
+
+/* =====================================================================
+   11-18 사용성 정리
+   (1) iOS 입력창 자동 확대 방지  (2) 보조 글씨 바닥선  (3) 좌석 강조
+   (4) 실측/공개자료/추정 배지  (5) 등록자·등록일  (6) 도움돼요·수정 요청
+   ===================================================================== */
+
+/* --- (1) iOS Safari 입력창 탭 시 자동 확대 방지: 입력 요소는 항상 16px 이상 ---
+   아이폰은 포커스된 입력 요소의 글자가 16px보다 작으면 화면을 확대하고,
+   입력을 닫아도 확대가 남는다. 어떤 매체·상태에서도 16px 밑으로 내려가지 않게 한다. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,select,textarea,
+#revNick,#nickInput,#qInput,#tocSeat,#tocMovie,
+.nickinput,.qinput,.movieinput,.nickrow input,.toc-row input,.toc-row select{
+  font-size:16px !important;line-height:1.45}
+@media (max-width:959px){
+  input,select,textarea{font-size:16px !important}
+}
+
+/* --- (2) 보조 글씨 바닥선: 10~11px 설명 글씨를 12px 이상으로 --- */
+.gal-cap .t,.review .movie,.review .ticketbadge,.gal-noimg span,.sh-cam,
+.v3d-zoom button,.v3d-reset,.v3d-hint,.feel-tag,.calcn-g span,.shotup i,
+.mvsug button i,.v3d-type,.ana-head span,.ana-foot span,.ana-src div,
+.cmpbar-list b,.cmp-top span,.ts-tx i,.toc-row>span,.imaxnote .imax-sys,.sysmini,
+.tkm,.geoline .geotag,.pe-src,.pe-reco>span,.v3d-vid,.v3d-recline,.v3d-recline-step,
+.v3d-big,.v3d-fov,.v3d-disc,.cmp-table thead th i,.mask-tools span,.toc-priv>b,
+.pcred-note,.anax,.nickrow span,.favgo span,.tdate,.tmain i,.dstat-head span,
+.dstat-grid span,.maphelp,.lg-note,.sflag,.big-tag,.badge,.cbadge,.hstat span,
+.screenbar span,.topseat b,.metric b i,.canvas-head span,.review .rts span,
+.helpful,.helpbtn,.fixbtn,.regline,.seatfun span,.rego,.fixsel,.fixdetail{
+  font-size:12px}
+.pv-bar span,.extphoto-foot,.ana-note,.ana-src>b,.dsec-head span,.ugc-note,
+.dstat-note,.v3d-fallback span,.mask-note,.cmp-line,.cmp-foot,.cmp-cap span,
+.v3d-recval,.big-inner .v3d-fov,.regline .rdate,.regline .rtag{
+  font-size:12.5px}
+.toc-note{font-size:12px !important}
+.modal-card .sub{font-size:13px}
+
+/* --- (3) 좌석판: 좌석 번호와 선택·비교 좌석을 한눈에 --- */
+.seat{border:1px solid rgba(17,24,39,.10)}
+.seat .sn{font-size:11px;font-weight:900;color:#111827;letter-spacing:-.01em}
+@media (max-width:959px){ .seat .sn{font-size:11px} }
+.seat:hover{outline:2px solid rgba(4,120,87,.45);outline-offset:0;z-index:4}
+/* 고른 좌석 — 흰 테두리를 한 겹 둘러 이웃 좌석과 확실히 갈라지게 */
+.seat.sel{background:#047857 !important;box-shadow:0 0 0 2px #fff,0 0 0 4.5px #047857,0 8px 18px rgba(4,120,87,.32);
+  transform:scale(1.1);z-index:6;border-color:#047857}
+.seat.sel .sn{color:#fff;font-weight:900;text-shadow:0 1px 1px rgba(0,0,0,.25)}
+.seat.sel .cam{background:#fff}
+/* 비교 바구니에 담은 좌석 — 붉은 테두리 */
+.seat.cmp{background:#FFE4E6 !important;border-color:#E11D48;
+  box-shadow:inset 0 0 0 2.5px #E11D48,0 0 0 2px #fff;z-index:5}
+.seat.cmp .sn{color:#9F1239;font-weight:900}
+.seat.sel.cmp{background:#047857 !important;border-color:#047857;
+  box-shadow:0 0 0 2px #fff,0 0 0 4.5px #E11D48,0 8px 18px rgba(4,120,87,.32)}
+.seat.sel.cmp .sn{color:#fff}
+.rlab{font-size:12px;font-weight:900;color:#111827}
+.cruler .cnum{font-size:11px;font-weight:800;color:#4E5968}
+
+/* --- (4) 근거 배지: 실측 / 공개자료 / 추정 / 미확인을 색과 기호로 확실히 --- */
+.cfb{font-size:11.5px;font-weight:900;padding:3px 8px;border-radius:7px;letter-spacing:-.01em;
+  display:inline-flex;align-items:center;gap:3px;vertical-align:middle}
+.cfb.m{background:#047857;color:#fff}
+.cfb.p{background:#E0E9FF;color:#1E3A8A;box-shadow:inset 0 0 0 1px #B9CCFA}
+.cfb.e{background:#FDE68A;color:#7C2D12;box-shadow:inset 0 0 0 1px #F59E0B}
+.cfb.u{background:#E5E7EB;color:#374151}
+.cfb.m::before{content:"✔"}
+.cfb.p::before{content:"📄"}
+.cfb.e::before{content:"≈"}
+.cfb.u::before{content:"–"}
+.cbadge{font-size:12px;font-weight:850;padding:3px 8px;border-radius:7px}
+.cbadge.a{background:#047857;color:#fff}
+.cbadge.c{background:#FDE68A;color:#7C2D12}
+.ana-foot span{font-weight:750;color:#374151}
+
+/* --- (5) 등록자·등록일 --- */
+.regline{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px;
+  padding:9px 12px;border-radius:12px;background:#F6FAF8;border:1px solid var(--line-2);
+  font-weight:750;color:#2F4A3E}
+.regline>b{font-weight:900;color:#065F46}
+.regline .rdate{font-variant-numeric:tabular-nums;color:#4B5563;font-weight:800}
+.regline .rtag{margin-left:auto;font-size:12.5px;font-weight:900;color:#047857;
+  background:var(--green-l);padding:3px 9px;border-radius:8px;white-space:nowrap}
+.rego{display:inline-flex;align-items:center;gap:4px;color:#4B5563;font-weight:800}
+
+/* --- (6) 도움돼요 · 정보 수정 요청 --- */
+.actionrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.helpbtn,.fixbtn{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 13px;
+  border-radius:11px;font-weight:850;white-space:nowrap;touch-action:manipulation;min-width:0}
+.helpbtn{background:#fff;border:1px solid var(--line);color:#2F4A3E}
+.helpbtn>span{font-size:12.5px}
+.helpbtn b{font-variant-numeric:tabular-nums;font-weight:900;color:#047857}
+.helpbtn[aria-pressed="true"]{background:var(--green-l);border-color:var(--green-soft);color:#065F46}
+.helpbtn[aria-pressed="true"] b{color:#065F46}
+.fixbtn{background:#FFF8EF;border:1px solid #FDE3C2;color:#B45309}
+.seatfun{margin-top:12px;padding:11px 13px;border-radius:14px;background:#F6FAF8;
+  border:1px solid var(--line-2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.seatfun>span{flex:1 1 140px;font-weight:800;color:#2F4A3E;min-width:120px}
+.fixsel{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);
+  background:#fff;padding:0 12px;font-weight:750;color:var(--ink);margin-top:14px}
+.fixdetail{width:100%;min-height:88px;border-radius:12px;border:1px solid var(--line);
+  background:#FAFBFC;padding:11px 12px;font-weight:650;color:var(--ink);margin-top:10px;
+  resize:vertical;font-family:inherit;line-height:1.5}
+.fixreason-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.fixreason-list button{height:34px;padding:0 11px;border-radius:999px;border:1px solid var(--line);
+  background:#fff;font-size:12.5px;font-weight:800;color:var(--sub)}
+.fixreason-list button[aria-pressed="true"]{background:#FFF8EF;border-color:#F59E0B;color:#B45309}
+
+/* 시야 분석 — 값의 근거를 먼저 보여 주는 안내 줄 */
+.ana-key{display:flex;flex-wrap:wrap;gap:6px 12px;padding:0 14px 10px}
+.ana-key span{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:750;color:#4B5563}
+.ana-foot span b{color:#111827;font-weight:900;margin-right:2px}
+/* 3D 화면 안 근거 표시 */
+.v3d-prov{font-size:12px;font-weight:900;padding:6px 10px;border-radius:999px;letter-spacing:-.01em;white-space:nowrap}
+.v3d-prov.real{background:#047857;color:#fff}
+.v3d-prov.est{background:#FDE68A;color:#7C2D12}
 
 </style>
 </head>
@@ -2822,16 +2937,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       builtAt, days, stale: (days != null && days > 30)
     };
   }
-  /* 지점 상태 — 확보완료 / 일부확보 / 미확보 / 업데이트필요 */
+  /* 지점 상태 — 좌석표 있음 / 일부만 있음 / 준비 중 / 확인 필요 */
   function theaterStatus(t) {
     const hs = t.halls || [];
-    if (!hs.length) return { key: 'none', label: '미확보', cls: 'soon' };
+    if (!hs.length) return { key: 'none', label: '준비 중', cls: 'soon' };
     const ok = hs.filter(hallReady).length;
-    if (!ok) return { key: 'none', label: '미확보', cls: 'soon' };
-    if (ok < hs.length) return { key: 'part', label: '일부확보', cls: 'work' };
+    if (!ok) return { key: 'none', label: '준비 중', cls: 'soon' };
+    if (ok < hs.length) return { key: 'part', label: '일부만 있음', cls: 'work' };
     const st = dataStatus();
-    if (st.stale) return { key: 'stale', label: '업데이트 필요', cls: 'soon' };
-    return { key: 'done', label: '확보완료', cls: 'ok' };
+    if (st.stale) return { key: 'stale', label: '확인 필요', cls: 'soon' };
+    return { key: 'done', label: '좌석표 있음', cls: 'ok' };
   }
 
   /* ---------- 닉네임 ---------- */
@@ -3045,7 +3160,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     });
     return res;
   }
-  const tierLabel = (t) => (t === '1x' ? '1배율' : t === 'wide' ? '광각' : '실사');
+  const tierLabel = (t) => (t === '1x' ? '1배율' : t === 'wide' ? '광각' : '사진');
 
   /* ---------- 공용 후기·실사 (Supabase) ----------
      프로젝트의 공개(publishable) 키만 쓴다. 티켓 사진은 올리지 않고 인증 여부(verified)만 보낸다. */
@@ -3136,6 +3251,148 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         if (state.view === 'hall') { paintSeatMap(); paintSeatPanel(); }
       } catch (e) {}
     });
+    try { helpFetch(false); } catch (e) {}
+  }
+
+  /* ---------- 👍 도움돼요 / ⚠️ 정보 수정 요청 ----------
+     서버 테이블(seat_review_helpful · seat_correction_requests)이 아직 없어 404가 와도
+     화면에는 아무 오류도 내지 않고 이 기기(localStorage)에만 남긴다. */
+  const DEV_KEY = 'cgv_dev_id_v1';
+  const HELP_VOTED = 'cgv_helpful_voted_v1';
+  const HELP_MINE = 'cgv_helpful_mine_v1';
+  const FIX_LOCAL = 'cgv_fix_requests_v1';
+  const HELP = { counts: Object.create(null), at: 0, busy: false, off: false };
+  const FIXQ = { off: false };
+  function lsGet(k, dflt) {
+    try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return (v && typeof v === 'object') ? v : dflt; } catch (e) { return dflt; }
+  }
+  function lsPut(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function deviceId() {
+    let id = '';
+    try { id = localStorage.getItem(DEV_KEY) || ''; } catch (e) {}
+    if (!id) {
+      id = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      try { localStorage.setItem(DEV_KEY, id); } catch (e) {}
+    }
+    return id;
+  }
+  function helpMine() { return lsGet(HELP_MINE, {}); }
+  function helpVoted() { return lsGet(HELP_VOTED, {}); }
+  function helpCount(key) { return (HELP.counts[key] || 0) + (helpMine()[key] || 0); }
+  /* 누적 카운트 받기 — 테이블이 없으면(404) 이번 화면에서는 다시 묻지 않는다 */
+  function helpFetch(force) {
+    if (HELP.off || HELP.busy) return;
+    if (!force && Date.now() - HELP.at < 120000) return;
+    HELP.busy = true;
+    const tm = sbTimer(12000);
+    const url = SB_URL + '/rest/v1/seat_review_helpful?select=target_key&limit=5000';
+    fetch(url, { headers: sbHeaders(), signal: tm.signal, cache: 'no-store' })
+      .then((r) => {
+        if (r.status === 404) { HELP.off = true; return []; }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then((rows) => {
+        const m = Object.create(null);
+        (Array.isArray(rows) ? rows : []).forEach((r) => {
+          const k = r && r.target_key; if (k) m[k] = (m[k] || 0) + 1;
+        });
+        if (Array.isArray(rows) && rows.length) HELP.counts = m;
+        HELP.at = Date.now();
+        try {
+          document.querySelectorAll('[data-helpcount]').forEach((el) => {
+            const b = el.querySelector('b');
+            if (b) b.textContent = Number(el.dataset.helpbase || 0) + helpCount(el.dataset.helpcount);
+          });
+        } catch (e) {}
+      })
+      .catch(() => {})
+      .then(() => { tm.done(); HELP.busy = false; }, () => { tm.done(); HELP.busy = false; });
+  }
+  function helpBtnHtml(key, base) {
+    const n = Number(base || 0) + helpCount(key);
+    const on = helpVoted()[key] ? 'true' : 'false';
+    return `<button class="helpbtn" data-help="${esc(key)}" data-helpcount="${esc(key)}" data-helpbase="${Number(base || 0)}" aria-pressed="${on}" type="button">👍 <span>도움돼요</span> <b>${n}</b></button>`;
+  }
+  function voteHelp(btn, key) {
+    if (!btn || !key) return;
+    const voted = helpVoted();
+    if (voted[key]) { toast('이미 도움돼요를 눌렀어요'); return; }
+    voted[key] = 1; lsPut(HELP_VOTED, voted);
+    const mine = helpMine(); mine[key] = (mine[key] || 0) + 1; lsPut(HELP_MINE, mine);
+    btn.setAttribute('aria-pressed', 'true');
+    const b = btn.querySelector('b');
+    if (b) b.textContent = Number(btn.dataset.helpbase || 0) + helpCount(key);
+    toast('도움돼요로 남겼어요');
+    if (HELP.off) return;
+    try {
+      const tm = sbTimer(12000);
+      fetch(SB_URL + '/rest/v1/seat_review_helpful', {
+        method: 'POST', signal: tm.signal,
+        headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
+        body: JSON.stringify({ target_key: String(key).slice(0, 120), voter_id: deviceId() })
+      }).then((r) => { tm.done(); if (r.status === 404) { HELP.off = true; return; } })
+        .catch(() => { tm.done(); });
+    } catch (e) {}
+  }
+
+  /* 정보 수정 요청 — 사유 선택 + 메모 */
+  const FIX_REASONS = ['좌석 번호·배치가 달라요', '리뉴얼·리클라이너로 바뀌었어요', '사진이 흐리거나 잘못됐어요', '시야·단차 설명이 실제와 달라요', '기타'];
+  function closeFix() { const m = document.getElementById('fixModal'); if (m) m.remove(); }
+  function openFix(opts) {
+    closeFix();
+    const o = opts || {};
+    const wrap = document.createElement('div');
+    wrap.id = 'fixModal';
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="modal-card">
+        <div class="modal-grab"></div>
+        <h3>⚠️ 정보 수정 요청</h3>
+        <p class="sub">${esc(o.label || '이 좌석 정보')}에서 다른 점을 알려주세요. 확인하고 반영할게요.</p>
+        <div class="fixreason-list" id="fixReasons">
+          ${FIX_REASONS.map((r, i) => `<button type="button" data-r="${i}" aria-pressed="${i === 0}">${esc(r)}</button>`).join('')}
+        </div>
+        <textarea class="fixdetail" id="fixDetail" maxlength="300" placeholder="어떤 점이 다른지 적어주세요 (선택)"></textarea>
+        <button class="btn" id="fixSend" style="width:100%;margin-top:12px">수정 요청 보내기</button>
+        <button class="btn ghost" id="fixCancel" style="width:100%;margin-top:8px;background:#F2F4F6;color:#6B7684">닫기</button>
+      </div>`;
+    document.body.appendChild(wrap);
+    let reason = FIX_REASONS[0];
+    wrap.querySelectorAll('#fixReasons button').forEach((b) => {
+      b.onclick = () => {
+        wrap.querySelectorAll('#fixReasons button').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        reason = FIX_REASONS[Number(b.dataset.r)] || FIX_REASONS[0];
+      };
+    });
+    wrap.querySelector('#fixCancel').onclick = closeFix;
+    wrap.querySelector('.modal-scrim').onclick = closeFix;
+    wrap.querySelector('#fixSend').onclick = () => {
+      const detail = (wrap.querySelector('#fixDetail').value || '').trim().slice(0, 300);
+      const body = {
+        hall_key: o.hallKey || null, seat_id: o.seatId || null,
+        target_id: o.targetId || null, reason, detail: detail || null
+      };
+      closeFix();
+      toast('수정 요청이 접수되었어요. 고마워요!');
+      if (FIXQ.off) { fixStore(body); return; }
+      try {
+        const tm = sbTimer(12000);
+        fetch(SB_URL + '/rest/v1/seat_correction_requests', {
+          method: 'POST', signal: tm.signal,
+          headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
+          body: JSON.stringify({ ...body, created_at: new Date().toISOString() })
+        }).then((r) => { tm.done(); if (!r.ok) { FIXQ.off = (r.status === 404); fixStore(body); } })
+          .catch(() => { tm.done(); fixStore(body); });
+      } catch (e) { fixStore(body); }
+    };
+  }
+  function fixStore(body) {
+    const arr = (() => { try { const v = JSON.parse(localStorage.getItem(FIX_LOCAL) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } })();
+    arr.unshift({ ...body, created_at: new Date().toISOString() });
+    try { localStorage.setItem(FIX_LOCAL, JSON.stringify(arr.slice(0, 50))); } catch (e) {}
   }
 
   /* ---------- 물리 계산 ---------- */
@@ -3442,7 +3699,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <div><b class="num">${seats.toLocaleString()}</b>좌석</div>
           <div><b class="num">${ok}</b>좌석표</div>
         </div>`}
-        ${ph ? `<div class="progress" style="background:var(--green-l)"><i style="width:100%;background:var(--green)"></i></div><div class="tregion" style="margin-top:6px;color:var(--green-d);font-weight:800">📷 실사 좌석 ${ph}석</div>` : (t.halls.length ? `<div class="tregion" style="margin-top:8px;color:#8B95A1;font-weight:700">실사 사진 없음 · 3D 시뮬레이션으로 보기</div>` : '')}
+        ${ph ? `<div class="progress" style="background:var(--green-l)"><i style="width:100%;background:var(--green)"></i></div><div class="tregion" style="margin-top:6px;color:var(--green-d);font-weight:800">📷 사진 있는 좌석 ${ph}석</div>` : (t.halls.length ? `<div class="tregion" style="margin-top:8px;color:#8B95A1;font-weight:700">아직 사진 없음 · 3D 시뮬레이션으로 보기</div>` : '')}
       </button>`;
     }).join('') + (list.length === 0 ? `<div class="card empty-state" style="grid-column:1/-1"><div class="empty-ic">🔍</div><h3>조건에 맞는 지점이 없어요</h3><p>지역 탭이나 검색어를 바꿔 보세요.</p></div>` : '');
   }
@@ -3482,15 +3739,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <span>${esc(String(st.builtAt).replace(/-/g, '.'))} 기준${st.stale ? ' · 업데이트 필요' : ''}</span>
       </div>
       <div class="dstat-grid">
-        <div><b class="num">${st.ready}/${st.halls}</b><span>좌석배치도 확보</span></div>
-        <div><b class="num">${st.typeKnown}</b><span>좌석유형 확인 관</span></div>
-        <div><b class="num">${st.photoSeats}</b><span>실사 사진(직접 촬영) 석</span></div>
-        <div><b class="num">${st.linkSeats}</b><span>원문 링크 석</span></div>
+        <div><b class="num">${st.ready}/${st.halls}</b><span>좌석표가 있는 관</span></div>
+        <div><b class="num">${st.typeKnown}</b><span>좌석 종류까지 아는 관</span></div>
+        <div><b class="num">${st.photoSeats}</b><span>직접 찍은 사진 좌석</span></div>
+        <div><b class="num">${st.linkSeats}</b><span>블로그로 연결한 좌석</span></div>
       </div>
       <div class="dstat-bar"><i style="width:${pctReady}%"></i></div>
       <div class="dstat-note">
-        좌석배치도 <b>${pctReady}%</b> 확보${st.ready < st.halls ? ' · 나머지는 좌석수만 확인된 상태라 <b>미확보</b>로 표시하고 추측으로 채우지 않아요' : ' · 모든 상영관의 좌석배치도를 확보했어요'}.
-        실사 사진이 없으면 <b>3D 시뮬레이션</b>으로 보여주고, 어느 쪽인지 화면에 늘 표시합니다. 원문 링크는 저작권 때문에 사진을 복제하지 않고 원문으로만 연결한 수치예요.
+        좌석표는 <b>${pctReady}%</b> 상영관에서 확인했어요${st.ready < st.halls ? '. 나머지는 좌석 수만 알아서 <b>준비 중</b>으로 두고, 빈 자리를 추측으로 채우지 않아요.' : '. 모든 관의 좌석표를 확인했어요.'}
+        실제 사진이 없는 자리는 <b>3D 시뮬레이션</b>으로 보여주고, 둘 중 무엇인지 화면에 항상 표시해요. 블로그 좌석은 저작권 때문에 사진을 복사하지 않고 원문으로만 연결해요.
       </div>
     </section>
 
@@ -3556,13 +3813,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     <div class="hgrid">
       ${t.halls.map((h) => {
         const ready = hallReady(h);
-        const badge = ready ? '<span class="badge ok">좌석표 확보</span>' : h._fail ? '<span class="badge soon">좌석표 준비 중</span>' : h.status === 'work' ? '<span class="badge work">리뉴얼 공사</span>' : '<span class="badge soon">미확보</span>';
+        const badge = ready ? '<span class="badge ok">좌석표 있음</span>' : h._fail ? '<span class="badge soon">좌석표 준비 중</span>' : h.status === 'work' ? '<span class="badge work">리뉴얼 공사</span>' : '<span class="badge soon">준비 중</span>';
         const pc = hallPhotoCount(h.id);
         return `<button class="hcard ${ready ? '' : 'disabled'}" ${ready ? `data-go="hall" data-tid="${t.id}" data-hid="${h.id}"` : `data-soon="${esc(h.name)}"`}>
           <div class="hcard-top"><div class="hname">${esc(h.name)}</div>${badge}</div>
-          <div class="tbadges">${h.tags.map(badgeHtml).join('')}${h.seatTypes ? `<span class="badge plain">좌석유형 ${h.seatTypes.r && isReclinerHall(h) ? '리클라이너' : h.seatTypes.r ? '릴렉스' : '확인'}</span>` : ''}</div>
+          <div class="tbadges">${h.tags.map(badgeHtml).join('')}${h.seatTypes ? `<span class="badge plain">좌석 종류 ${h.seatTypes.r && isReclinerHall(h) ? '리클라이너' : h.seatTypes.r ? '릴렉스' : '확인'}</span>` : ''}</div>
           ${h.boxOf ? `<div class="boxline">${h.boxOf.inside ? `PRIVATE BOX · ${esc(h.boxOf.name)} with PRIVATE BOX (관 뒤쪽 박스석 포함)` : `PRIVATE BOX · ${esc(h.boxOf.name)}(${h.boxOf.total}석) 안 2층 박스`}</div>` : ''}
-          <div class="hseats">${h.total ? `<b class="num">${h.total}</b>석` : '좌석수 미확인'}${pc.seats ? `<span style="float:right;color:var(--green-d);font-size:12px;font-weight:800">📷 ${pc.seats}</span>` : '<span style="float:right;color:#8B95A1;font-size:11.5px;font-weight:700">실사 없음</span>'}</div>
+          <div class="hseats">${h.total ? `<b class="num">${h.total}</b>석` : '좌석수 미확인'}${pc.seats ? `<span style="float:right;color:var(--green-d);font-size:12px;font-weight:800">📷 ${pc.seats}</span>` : '<span style="float:right;color:#8B95A1;font-size:12px;font-weight:700">사진 없음</span>'}</div>
         </button>`;
       }).join('')}
     </div>
@@ -3625,7 +3882,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (!t || !h) return '';
     const p = h.params;
     if (state.aspect === null) state.aspect = String(p.aspect);
-    const conf = p.conf === 'B' ? '<span class="cbadge a">스크린 제원 B · 공개자료</span>' : '<span class="cbadge c">스크린 제원 C · 유형 추정</span>';
+    const conf = p.conf === 'B' ? '<span class="cbadge a">스크린 크기 · 공개자료</span>' : '<span class="cbadge c">스크린 크기 · 추정</span>';
     const as = aspectOptions(h);
     const pc = hallPhotoCount(h.id);
     const seat = state.seatKey && h._byKey ? h._byKey[state.seatKey] : null;
@@ -3644,8 +3901,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
             ${h.boxOf && h.boxOf.inside ? `<div class="boxline" style="margin-top:5px">PRIVATE BOX · <b>${esc(h.boxOf.name)}</b> with PRIVATE BOX — 관 뒤쪽 2~4인 박스석이 이 관 좌석수에 포함</div>` : ''}
             ${h.mapSeats && h.total && h.mapSeats !== h.total ? `<div class="boxline" style="margin-top:5px;color:#6B7684">예매 화면에 표시된 좌석 <b>${h.mapSeats.toLocaleString()}</b>석 · 관 전체 ${h.total.toLocaleString()}석 — 표시되지 않은 자리는 그 회차에 판매하지 않는 좌석이에요.</div>` : ''}
             <div class="conf"><span class="cbadge a">좌석배치 A · 예매 좌석표 실측</span>${conf}
-              <span class="cbadge ${Object.keys(typeCnt).length ? 'a' : 'c'}">좌석유형 ${Object.keys(typeCnt).length ? '확인' : '미확인'}</span>
-              <span class="cbadge ${pc.seats ? 'a' : ''}">${pc.seats ? '실사 ' + pc.shots + '컷' : '실사 없음'}</span>
+              <span class="cbadge ${Object.keys(typeCnt).length ? 'a' : 'c'}">좌석 종류 ${Object.keys(typeCnt).length ? '확인' : '미확인'}</span>
+              <span class="cbadge ${pc.seats ? 'a' : ''}">${pc.seats ? '사진 ' + pc.shots + '컷' : '사진 없음'}</span>
               ${st.key === 'done' ? '' : `<span class="cbadge c">${st.label}</span>`}
             </div>
           </div>
@@ -3665,8 +3922,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <div class="screenbar"><span>SCREEN ${fmt(p.screenW, 1)} × ${fmt(p.screenH, 1)} m${p.native ? ` · ${Number(p.native).toFixed(2)} : 1 상영` : ''}</span></div>
           <div class="maptools">
             <div class="chip-row">
-              <button class="chip sm photochip" data-photoonly="1" aria-pressed="${state.photoOnly}">📷 실사 있는 좌석만</button>
-              ${pc.seats || pc.links ? `<button class="chip sm" data-photogal="1">${pc.seats ? '실사 모아보기 ' + pc.shots + '컷' : '원문 링크 모아보기 ' + pc.links}</button>` : ''}
+              <button class="chip sm photochip" data-photoonly="1" aria-pressed="${state.photoOnly}">📷 사진 있는 좌석만</button>
+              ${pc.seats || pc.links ? `<button class="chip sm" data-photogal="1">${pc.seats ? '사진 모아보기 ' + pc.shots + '컷' : '원문 링크 모아보기 ' + pc.links}</button>` : ''}
               <button class="chip sm cmpchip" data-cmpmode="1" aria-pressed="${state.cmpMode}">⚖️ 좌석 비교${(state.compare || []).length ? ' ' + state.compare.length : ''}</button>
             </div>
             <div class="chip-row">
@@ -3732,14 +3989,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const thumb = first.src
         ? `<img src="${esc(first.src)}" alt="${esc(h.name)} ${esc(s.key)} 좌석 시야" loading="lazy">`
         : `<div class="gal-noimg">🔗<span>원문 링크</span></div>`;
+      const gDate = (String(first.date || '').match(/\d{4}-\d{2}-\d{2}/) || [''])[0];
       items.push(`<button class="gal-item" data-seat="${esc(s.key)}" data-tabto="photo">
         ${thumb}
-        <div class="gal-cap"><span>${esc(s.key)}</span><span class="t">${esc(tierLabel(first.tier))}${arr.length > 1 ? ' ' + arr.length + '컷' : ''}</span></div>
+        <div class="gal-cap"><span>${esc(s.key)}</span><span class="t">${esc(tierLabel(first.tier))}${arr.length > 1 ? ' ' + arr.length + '컷' : ''}${gDate ? ' · ' + gDate : ''}</span></div>
       </button>`);
     });
     if (!items.length) return '';
     return `<section class="gallery card card-pad" id="photoGallery">
-      <div class="section-title" style="margin:0 0 12px"><h2>이 상영관 실사 좌석</h2><span class="cap">${items.length}석 · 누르면 그 좌석으로 이동</span></div>
+      <div class="section-title" style="margin:0 0 12px"><h2>이 상영관 실제 사진 좌석</h2><span class="cap">${items.length}석 · 누르면 그 좌석으로 이동</span></div>
       <div class="gal-grid">${items.join('')}</div>
     </section>`;
   }
@@ -3877,7 +4135,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         const has = arr.some(hasImg);                       /* 이미지 파일이 있는 좌석만 '실사' */
         const linkOnly = !has && arr.length > 0;
         const dim = state.photoOnly && !has;
-        const tagTxt = has ? ' · 실사 사진 있음' : linkOnly ? ' · 원문 링크만' : '';
+        const tagTxt = has ? ' · 직접 찍은 사진 있음' : linkOnly ? ' · 원문 링크만' : '';
         const typeTxt = seatTypeLabel(m[2]);
         cells += `<button class="seat ${isSel ? 'sel' : ''} ${isCmp ? 'cmp' : ''} ${isFav ? 'fav' : ''} ${has ? 'hascam' : ''} ${linkOnly ? 'haslink' : ''} ${dim ? 'dim' : ''}" data-seat="${key}" data-t="${m[2]}" aria-label="${esc(key)} ${esc(typeTxt)}${isSel ? ' 선택됨' : ''}" aria-pressed="${isSel}" title="${esc(key)} · ${esc(typeTxt)}${tagTxt}">
           <span class="sn">${m[1]}</span>${has ? '<i class="cam"></i>' : ''}${isFav ? '<i class="favmark">★</i>' : ''}</button>`;
@@ -4064,9 +4322,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <div class="pe-rows">${stepLine(p)}</div>
           <div class="pe-src">
             <div>좌석 배치·좌석 수 <i class="cfb m">실측</i> CGV 예매 좌석표(${(DATA.meta.surveyedAtLabel || "2026-11-18")} 확인)</div>
-            <div>스크린 제원 <i class="cfb ${p.conf === 'B' ? 'p' : 'e'}">${p.conf === 'B' ? '공개자료' : '추정'}</i> ${p.src ? `<a href="${esc(p.src)}" target="_blank" rel="noopener noreferrer">원문 ↗</a>` : '유형 추정'}</div>
+            <div>스크린 크기 <i class="cfb ${p.conf === 'B' ? 'p' : 'e'}">${p.conf === 'B' ? '공개자료' : '추정'}</i> ${p.src ? `<a href="${esc(p.src)}" target="_blank" rel="noopener noreferrer">원문 ↗</a>` : '유형 추정'}</div>
             <div>상영관 등록정보 <i class="cfb p">공공데이터</i> 전국영화상영관표준데이터</div>
-            ${pc.seats ? `<div>실사 사진 <i class="cfb m">직접 제보</i> 이 관 ${pc.seats}석</div>` : ''}
+            ${pc.seats ? `<div>직접 찍은 사진 <i class="cfb m">직접 제보</i> 이 관 ${pc.seats}석</div>` : ''}
           </div>
         </div>
         ${withPhotos.length ? `<div class="pe-reco"><span>바로 볼 수 있는 자리</span><div class="reco">${withPhotos.slice(0, 8).map((s) => `<button data-seat="${esc(s.key)}">📷 ${esc(s.key)}</button>`).join('')}</div></div>` : ''}
@@ -4170,11 +4428,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function simHtml(h, seat, m) {
     const tag = feelTag(m);
     const recl = canRecline(h, seat);
+    const pp = h.params || {};
+    const prov = pp.calib ? ['실측 보정', 'real'] : (pp.conf === 'B' ? ['공개 제원', 'real'] : ['추정', 'est']);
     return `<div class="v3d" data-v3d>
       <canvas class="v3d-canvas" width="640" height="480" aria-label="${esc(seat.key)} 좌석에서 본 상영관 3D 시야"></canvas>
       <div class="v3d-fallback" hidden></div>
       <div class="v3d-hud">
         <span class="v3d-type">${esc(hallTypeLabel(h))}</span>
+        <span class="v3d-prov ${prov[1]}">${prov[0]}</span>
         <span class="v3d-fov">가로 <b>${fmt(m.hFov, 1)}°</b> · 세로 <b>${fmt(m.vFov, 1)}°</b></span>
         <span class="v3d-hudbtns">
           ${recl ? `<span class="v3d-recline-wrap"><button class="v3d-recline" data-recline="1" aria-pressed="false" title="등받이 110° / 160°">🪑 젖히기 <b class="v3d-ang">110°</b></button><button class="v3d-recline-step" data-recline-step="-1" title="등받이 10° 세우기" aria-label="등받이 10도 세우기">−10°</button><button class="v3d-recline-step" data-recline-step="1" title="등받이 10° 젖히기" aria-label="등받이 10도 젖히기">+10°</button><b class="v3d-recval" data-rec-read>눈높이 ${fmt(m.eyeY, 2)} m · 시선 ${fmt(m.neck, 1)}°</b></span>` : ''}
@@ -4266,19 +4527,26 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     ];
     return `<section class="ana">
       <div class="ana-head"><h4>시야 분석</h4><span>${esc(seat.key)} · ${esc(h.name)}</span></div>
+      <div class="ana-key">
+        <span><i class="cfb m">실측</i> 직접 확인한 값</span>
+        <span><i class="cfb p">공개자료</i> 극장·배급사 공개값</span>
+        <span><i class="cfb e">추정</i> 유형 기준으로 계산</span>
+        <span><i class="cfb u">미확인</i> 확인된 값 없음</span>
+      </div>
       <div class="ana-rows">
         ${rows.map(([k, v, lv]) => `<div class="ana-row"><span>${k}</span><span class="ana-v">${v}</span>${cfBadge(lv)}</div>`).join('')}
       </div>
       <div class="ana-foot">
+        <span><b>읽는 법</b> 값 오른쪽 배지가 그 값의 근거예요.</span>
         <span><i class="cfb m">실측</i> CGV 예매 좌석표·본인 촬영 계측</span>
-        <span><i class="cfb p">공개자료</i> 배급사·상영관 공개 제원</span>
-        <span><i class="cfb e">추정</i> 유형별 표준값(좌석 간격·단차)으로 계산</span>
-        <span><i class="cfb u">미확인</i> 측정값이 없어 평가하지 않음</span>
+        <span><i class="cfb p">공개자료</i> 배급사·상영장 공개 제원</span>
+        <span><i class="cfb e">추정</i> 유형별 표준값으로 계산 — 실제와 다를 수 있어요</span>
+        <span><i class="cfb u">미확인</i> 잰 값이 없어 평가하지 않음</span>
       </div>
       <div class="ana-src">
         <b>데이터 출처</b>
         <div>좌석 배치·좌석 수 <em>${cfBadge(pr.seatmap)}</em> CGV 예매 좌석표 · ${esc(DATA.meta.surveyedAt || "2026-11-18")} 확인</div>
-        <div>스크린 제원 <em>${cfBadge(pr.screen)}</em> ${p.conf === 'B' ? (h.tags.includes('IMAX') ? 'IMAX 공개 제원' : '극장 공개자료') : '좌석표·사진으로 유형 추정'}
+        <div>스크린 크기 <em>${cfBadge(pr.screen)}</em> ${p.conf === 'B' ? (h.tags.includes('IMAX') ? 'IMAX 공개 제원' : '극장 공개자료') : '좌석표·사진으로 유형 추정'}
           ${p.src ? `· <a href="${esc(p.src)}" target="_blank" rel="noopener noreferrer">원문 보기 ↗</a>` : ''}</div>
         ${p.basis ? `<div>제원 보정 <em class="cfb e">근거</em> ${esc(p.basis)}</div>` : ''}
         ${stepLine(p)}
@@ -4317,17 +4585,18 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (isDesk()) {
       return `
         ${seatFlagBar(h, seat)}
-        ${hasReal ? `<section class="dsec first"><div class="dsec-head"><h4>📷 실사 사진</h4><span>실제 촬영 · ${imgCount(arr)}장</span></div>${photoTabHtml(seat, arr, idx)}</section>` : ''}
+        ${hasReal ? `<section class="dsec first"><div class="dsec-head"><h4>📷 실제 사진</h4><span>직접 촬영 · ${imgCount(arr)}장</span></div>${photoTabHtml(seat, arr, idx)}</section>` : ''}
         <section class="dsec"><div class="dsec-head"><h4>3D 시야</h4><span>시뮬레이션 · 가로 ${fmt(m.hFov, 1)}°</span></div>${simHtml(h, seat, m)}</section>
         <section class="dsec">
           <div class="dsec-head"><h4>단면도</h4><span>스크린·단차를 옆에서 본 그림</span></div>
           <div class="profile-card"><canvas class="profile-canvas" width="720" height="230"></canvas></div>
         </section>
         ${hasReal ? '' : `<section class="dsec">
-          <div class="dsec-head"><h4>실사·블로그</h4><span>${linkCount(arr) ? '원문 링크 ' + linkCount(arr) : '없음'}</span></div>
+          <div class="dsec-head"><h4>블로그에 올라온 시야</h4><span>${linkCount(arr) ? '원문 링크 ' + linkCount(arr) : '없음'}</span></div>
           ${arr.length ? photoTabHtml(seat, arr, idx) : '<p class="sub dsec-empty">아직 이 자리 실사 사진이 없어요. 아래에서 티켓·사진을 올리면 이 자리에 바로 붙어요. 지금 보이는 것은 <b>3D 시뮬레이션</b>이에요.</p>'}
         </section>`}
         ${analysisHtml(h, seat, m)}
+        ${seatActionsHtml(h, seat)}
         ${ugcHtml(h, seat)}`;
     }
     /* 모바일: 실사 사진이 있는 자리는 실사 탭을 먼저 — 3D는 그 옆 탭 */
@@ -4337,7 +4606,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <button class="back mini" data-go="hallback" style="margin:0 0 10px">‹ 좌석 선택으로</button>
       ${seatFlagBar(h, seat)}
       <div class="ptabs" role="tablist">
-        <button data-ptab="photo" aria-pressed="${tab === 'photo'}" ${arr.length ? '' : 'disabled'}>${imgCount(arr) ? '📷 실사 ' + imgCount(arr) : (linkCount(arr) ? '원문 링크 ' + linkCount(arr) : '실사 사진')}</button>
+        <button data-ptab="photo" aria-pressed="${tab === 'photo'}" ${arr.length ? '' : 'disabled'}>${imgCount(arr) ? '📷 실제 사진 ' + imgCount(arr) : (linkCount(arr) ? '원문 링크 ' + linkCount(arr) : '실제 사진')}</button>
         <button data-ptab="sim" aria-pressed="${tab === 'sim'}">3D 시야</button>
         <button data-ptab="profile" aria-pressed="${tab === 'profile'}">단면도</button>
       </div>
@@ -4348,6 +4617,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <p class="sub" style="font-size:12.5px;margin-top:8px;line-height:1.55">스크린과 단차를 옆에서 본 그림이에요. 이 자리가 화면·단차와 어떤 높이 관계인지 보여요.</p>` : ''}
       </div>
       ${tab === 'sim' ? analysisHtml(h, seat, m) : ''}
+      ${seatActionsHtml(h, seat)}
       ${ugcHtml(h, seat)}`;
   }
 
@@ -4356,7 +4626,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const h = findHall(state.theaterId, state.hallId);
     const t = findTheater(state.theaterId);
     if (!arr.length) {
-      return `<div class="emptyphoto"><b>아직 실사 사진이 없어요</b>
+      return `<div class="emptyphoto"><b>아직 이 자리 사진이 없어요</b>
         <p>${esc(seat.key)} 자리에서 찍은 실제 사진을 기다리고 있어요.<br>지금 보이는 화면은 3D 시뮬레이션이고, 사진이 올라오면 이 자리에 붙습니다.</p></div>`;
     }
     const cur = arr[idx];
@@ -4368,19 +4638,31 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       : `<div class="extphoto">
            <div class="extphoto-top"><b>${esc(seat.key)} · 원문에서 보기</b><span>${esc(cur.fov || tierLabel(cur.tier))}</span></div>
            <p>${esc(cur.note || '')}</p>
-           ${cur.source ? `<a class="btn sm" style="width:100%;text-decoration:none" href="${esc(cur.source)}" target="_blank" rel="noopener noreferrer">원문 블로그에서 실사 보기 ↗</a>` : ''}
+           ${cur.source ? `<a class="btn sm" style="width:100%;text-decoration:none" href="${esc(cur.source)}" target="_blank" rel="noopener noreferrer">원문 블로그에서 보기 ↗</a>` : ''}
            <div class="extphoto-foot">사진은 저작권 보호를 위해 복제·재호스팅하지 않고 원문으로만 연결합니다. 시야 요약은 원문 표기 좌석과 글 내용을 바탕으로 정리했어요.</div>
          </div>`;
     const verifyTxt = cur.verify === 'user-verified' ? '올린 사람 티켓 인증'
       : cur.verify === 'user' ? '올린 사람 촬영(인증 없음)'
       : cur.verify === 'photo' ? '사진 직접 확인'
       : cur.verify === 'label' ? '좌석 라벨로 확인' : '출처만 확인';
+    /* 등록자·등록일 — 직접 찍은 사진, 이용자가 올린 사진, 블로그 원문을 구분해 보여 준다 */
+    const regDate = (String(cur.date || '').match(/\d{4}-\d{2}-\d{2}/) || [''])[0] || '기록 없음';
+    const regOwner = cur.shared ? (cur.author || cur.credit || '익명')
+      : cur.own ? (cur.credit || '영시미 직접 촬영')
+      : (cur.credit || '원문 작성자');
+    const regTag = cur.shared ? '이용자 등록' : cur.own ? '직접 촬영' : '블로그 원문';
+    const pkey = 'photo:' + (h ? h.id : state.hallId) + '/' + seat.key + '/' + (cur.tier || '') + '/' + regDate + '/' + (idx || 0);
     return `
       ${media}
       ${arr.length > 1 ? `<div class="pv-switch">${arr.map((a, i) => `<button data-photo="${i}" aria-pressed="${i === idx}">${esc(a.fov || tierLabel(a.tier))}</button>`).join('')}</div>` : ''}
+      <div class="regline"><span>등록자</span><b>${esc(regOwner)}</b><span class="rdate">${esc(regDate)}</span><span class="rtag">${regTag}</span></div>
+      <div class="actionrow">
+        ${helpBtnHtml(pkey, 0)}
+        <button class="fixbtn" type="button" data-fix="${esc(pkey)}" data-fixlabel="${esc(seat.key + ' 실사 사진')}" data-hall="${esc(h ? h.id : state.hallId)}" data-seat="${esc(seat.key)}">⚠️ 정보 수정 요청</button>
+      </div>
       <div class="pcred">
         <div class="row">
-          <span class="badge ok">📷 실사 사진</span>
+          <span class="badge ok">📷 직접 찍은 사진</span>
           <span class="badge plain">${cur.shared ? (cur.verify === 'user-verified' ? '티켓 인증' : '올린 사람 촬영') : (cur.verify === 'photo' ? '사진 직접 확인' : '좌석 라벨로 확인')}</span>
           <span class="badge plain">${esc(tierLabel(cur.tier))}${cur.tier === 'wide' ? ' (광각)' : cur.tier === '1x' ? ' (일반)' : ''}</span>
           ${cur.stereo ? `<span class="badge plain">${esc(cur.stereo)}</span>` : ''}
@@ -4388,8 +4670,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <dl>
           <dt>지점</dt><dd>CGV ${esc(t ? t.name : '')}</dd>
           <dt>상영관</dt><dd>${esc(h ? h.name : '')}${h && h.params && h.params.native ? ` · ${Number(h.params.native).toFixed(2)}:1` : ''}</dd>
-          <dt>좌석</dt><dd>${esc(seat.row)}열 ${esc(seat.num)}번 <b>${esc(seat.key)}</b> · ${esc(seatTypeLabel(seat.t))}</dd>
-          <dt>촬영일</dt><dd>${esc(cur.date || '기록 없음')}</dd>
+          <dt>좌석</dt><dd>${esc(seat.key)} · ${esc(seat.row)}열 ${esc(seat.num)}번 · ${esc(seatTypeLabel(seat.t))}</dd>
+          <dt>등록자</dt><dd><b>${esc(regOwner)}</b></dd>
+          <dt>등록일</dt><dd>${esc(regDate)}</dd>
+          ${cur.shared ? '' : `<dt>촬영일</dt><dd>${esc(cur.date || '기록 없음')}</dd>`}
           <dt>방향</dt><dd>${esc(cur.dir || '기록 없음')}</dd>
           <dt>화각</dt><dd>${esc(cur.fov || tierLabel(cur.tier))} <span class="pcred-note">${cur.tier === 'wide' ? '일반 화각보다 넓게 담은 사진 — 3D의 광각 0.5x와 비교해 보세요' : '일반(기준) 화각 — 3D의 기준 화각 1x와 비교해 보세요'}</span></dd>
           <dt>검증</dt><dd>${verifyTxt}</dd>
@@ -4705,6 +4989,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return store[k];
   }
 
+  /* 좌석 정보 바로 아래 — 도움돼요 / 정보 수정 요청 */
+  function seatActionsHtml(h, seat) {
+    const key = 'seat:' + h.id + '/' + seat.key;
+    return `<div class="seatfun">
+      <span>이 좌석 정보가 도움이 됐나요?</span>
+      ${helpBtnHtml(key, 0)}
+      <button class="fixbtn" type="button" data-fix="${esc(key)}" data-fixlabel="${esc(seat.key + ' 좌석 정보')}" data-hall="${esc(h.id)}" data-seat="${esc(seat.key)}">⚠️ 정보 수정 요청</button>
+    </div>`;
+  }
+
   function ugcHtml(h, seat) {
     const bucket = store[ugcKey()] || { seats: {}, list: [] };
     const mine = (bucket.seats || {})[seat.key] || null;
@@ -4766,13 +5060,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
       <div class="review-list" id="reviewList">
         ${reviews.map((r) => `<div class="review">
-          <div class="review-top"><span>${esc(r.author || '익명')}</span><span>${esc(r.date)}</span></div>
+          <div class="review-top"><span class="rego">등록 <b>${esc(r.author || '익명')}</b></span><span class="rego">${esc(r.date || '')}</span></div>
           ${r.movie ? `<span class="movie">🎬 ${esc(r.movie)}</span>` : ''}${r.ticket ? `<span class="ticketbadge">티켓 인증</span>` : ''}${r.shared ? '<span class="ticketbadge">공용</span>' : ''}
           ${r.movie && (r.mm || mvMetaOf(r.movie)) ? `<div class="mvmeta">${esc(r.mm || mvMetaOf(r.movie))}</div>` : ''}
           ${r.text ? `<p>${esc(r.text)}</p>` : ''}
           ${r.tags && r.tags.length ? `<div class="rts">${r.tags.map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
           ${(r.shots && r.shots.length) || r.ticket ? `<div class="shots">${r.ticket ? `<img src="${r.ticket}" alt="티켓">` : ''}${(r.shots || []).map((s) => `<img src="${s}" alt="시야">`).join('')}</div>` : ''}
-          <div style="margin-top:8px"><button class="helpful" data-helpful="${r.id}">👍 도움돼요 ${r.help || 0}</button>${mine && mine.id === r.id ? ` <button class="helpful del" data-delreview="1">내 후기 삭제</button>` : ''}</div>
+          <div class="actionrow">${helpBtnHtml('review:' + r.id, r.help || 0)}${mine && mine.id === r.id ? `<button class="helpful del" type="button" data-delreview="1">내 후기 삭제</button>` : ''}</div>
         </div>`).join('')}
       </div>
     </div>`;
@@ -5071,12 +5365,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         save(); paintSeatPanel(); toast('내 후기를 지웠어요');
       };
     });
-    root.querySelectorAll('[data-helpful]').forEach((b) => {
-      b.onclick = () => {
-        const bucket3 = ugcBucket();
-        const r = bucket3.list.find((x) => x.id === b.dataset.helpful);
-        if (!r) return; r.help = (r.help || 0) + 1; save(); b.textContent = '👍 도움돼요 ' + r.help;
-      };
+    root.querySelectorAll('[data-help]').forEach((b) => {
+      b.onclick = () => voteHelp(b, b.dataset.help);
+    });
+    root.querySelectorAll('[data-fix]').forEach((b) => {
+      b.onclick = () => openFix({
+        targetId: b.dataset.fix, hallKey: b.dataset.hall, seatId: b.dataset.seat, label: b.dataset.fixlabel
+      });
     });
   }
 
@@ -5930,6 +6225,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   /* 공용 후기·실사: 앱을 열 때 한 번, 이후에는 상영관에 들어갈 때 1분 스로틀로 새로 받는다.
      네트워크·CORS가 막혀도 로컬 기록과 마지막으로 받아 둔 목록으로 화면은 그대로 보인다. */
   sbRestore();
+  try { helpFetch(true); } catch (e) {}
   sbFetch(true).then((ok) => {
     if (!ok) {
       /* 첫 로드 직후는 페이지 준비로 네트워크가 밀릴 수 있어 한 번만 다시 시도한다 */
