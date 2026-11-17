@@ -2972,9 +2972,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const m2 = t.match(/\b([A-Z])[\s-]?(\d{1,2})\b/);
       if (m2) out.rows.push({ row: m2[1], num: +m2[2] });
     }
+    /* 같은 좌석을 두 규칙이 각각 잡으면 중복된다 — 순서를 유지하며 한 번만 */
+    const seenSeat = {};
+    out.rows = out.rows.filter((r) => {
+      const k = r.row + r.num;
+      if (seenSeat[k]) return false;
+      seenSeat[k] = 1; return true;
+    });
 
     /* 4) 날짜·시간 */
-    const dm = t.match(/(20\d{2})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+    const dm = t.match(/(20\d{2})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})/);
     if (dm) out.date = `${dm[1]}-${String(dm[2]).padStart(2, '0')}-${String(dm[3]).padStart(2, '0')}`;
     const tm = t.match(/(\d{1,2})\s*:\s*(\d{2})/);
     if (tm) out.time = `${String(tm[1]).padStart(2, '0')}:${tm[2]}`;
@@ -2994,7 +3001,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       }
       /* 마지막 줄이 원제(영문)만 있으면 뺀다 — '와일드 호스 나인 / Wild Horse Nine' */
       while (buf.length > 1 && /^[A-Za-z0-9\s:!?'&\-.,]+$/.test(buf[buf.length - 1])) buf.pop();
-      const joined = buf.join(' ').replace(/\s{2,}/g, ' ').replace(/^[\[\]()\s]+|[\[\]()\s]+$/g, '').trim();
+      const joinTrim = (v) => {
+        let r = v.trim();
+        const cnt = (ch) => (r.split(ch).length - 1);
+        if (r.startsWith('[') && cnt('[') > cnt(']')) r = r.slice(1).trim();
+        if (r.endsWith(']') && cnt(']') > cnt('[')) r = r.slice(0, -1).trim();
+        if (r.startsWith('(') && cnt('(') > cnt(')')) r = r.slice(1).trim();
+        if (r.endsWith(')') && cnt(')') > cnt('(')) r = r.slice(0, -1).trim();
+        return r;
+      };
+      const joined = joinTrim(buf.join(' ').replace(/\s{2,}/g, ' '));
       const han = (joined.match(/[가-힣]/g) || []).length;
       const solidChars = joined.replace(/\s/g, '').length || 1;
       if (han >= 2 && han / solidChars >= 0.5) {
