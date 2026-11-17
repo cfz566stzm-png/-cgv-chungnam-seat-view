@@ -1500,16 +1500,16 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         var lx = sgn * wallX * 0.55;
         var c0 = toCam(lx, ceilY - 0.03, z);
         if (c0[2] > NEAR) {
-          var rr = Math.max(1.2, f * 0.11 / c0[2]);
-          ctx.fillStyle = 'rgba(255,242,216,0.92)';
+          var rr = Math.max(0.9, f * 0.055 / c0[2]);
+          ctx.fillStyle = 'rgba(255,244,220,0.95)';
           ctx.beginPath(); ctx.arc(sx(c0), sy(c0), rr, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = 'rgba(255,226,180,0.20)';
-          ctx.beginPath(); ctx.arc(sx(c0), sy(c0), rr * 3.2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(255,228,184,0.11)';
+          ctx.beginPath(); ctx.arc(sx(c0), sy(c0), rr * 2.6, 0, Math.PI * 2); ctx.fill();
         }
         /* 벽면에 떨어지는 빛 웅덩이 */
-        pool(toCam(sgn * (wallX - 0.02), ceilY - 0.85, z), 2.1, '255,226,180', idx === 0 ? 0.085 : 0.06, 1.4);
+        pool(toCam(sgn * (wallX - 0.02), ceilY - 0.85, z), 2.1, '255,226,180', idx === 0 ? 0.075 : 0.05, 1.4);
         /* 천장 자체 번짐 */
-        pool(toCam(lx, ceilY - 0.02, z), 1.5, '255,224,180', 0.10, 1);
+        pool(toCam(lx, ceilY - 0.02, z), 1.1, '255,224,180', 0.08, 1);
       });
     });
 
@@ -1523,10 +1523,10 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
     /* 앞열 앞 크롬 난간 (사진의 스테이지 끝 가드레일) */
     (function () {
       var railZ = -(p.firstRow - p.rowGap * 0.55), railY = 1.0;
-      seg(toCam(-wallX * 0.92, railY, railZ), toCam(wallX * 0.92, railY, railZ), 'rgba(196,206,212,0.20)', 1.2);
-      seg(toCam(-wallX * 0.92, railY - 0.03, railZ), toCam(wallX * 0.92, railY - 0.03, railZ), 'rgba(120,132,138,0.10)', 1);
+      seg(toCam(-wallX * 0.92, railY, railZ), toCam(wallX * 0.92, railY, railZ), 'rgba(196,206,212,0.13)', 1.1);
+      seg(toCam(-wallX * 0.92, railY - 0.03, railZ), toCam(wallX * 0.92, railY - 0.03, railZ), 'rgba(120,132,138,0.07)', 1);
       for (var px2 = -wallX * 0.9; px2 <= wallX * 0.9; px2 += 3.1) {
-        seg(toCam(px2, 0.02, railZ), toCam(px2, railY, railZ), 'rgba(170,182,188,0.14)', 1);
+        seg(toCam(px2, 0.02, railZ), toCam(px2, railY, railZ), 'rgba(170,182,188,0.10)', 1);
       }
     })();
 
@@ -1558,6 +1558,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       var cells = rows[i] ? rows[i].c : null;
       if (!cells) return;
       var zBack = -(dc + 0.19), zFront = -(dc - 0.03);
+      var seatW = pitch * (s.recliner ? 0.49 : 0.47);   // 팔걸이 사이 틈만 남기고 이어지게
 
       /* 좌석 등받이 (행 전체를 한 번에) — 검은 실루엣 */
       ctx.beginPath();
@@ -1568,7 +1569,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         if (!cell || cell === '.' || !/^\d+[npsrcbx]$/.test(cell)) continue;
         var key = (rows[i].l || '') + cell.replace(/[a-z]/g, '');
         var xc0 = (cx - s.centerX) * pitch;
-        var w = pitch * (s.recliner ? 0.46 : 0.43);
+        var w = seatW / 2;
         var bTop = hz + (s.recliner ? 0.82 : 0.94), bBot = hz + (s.recliner ? 0.34 : 0.44);
         var q = [toCam(xc0 - w, bBot, zBack), toCam(xc0 + w, bBot, zBack),
                  toCam(xc0 + w, bTop, zBack), toCam(xc0 - w, bTop, zBack)];
@@ -1581,15 +1582,15 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         drewBack = true;
         seatX.push({ x: xc0, key: key, cell: cell });
       }
-      if (drewBack) { ctx.fillStyle = '#0C0E10'; ctx.fill(); }
+      if (drewBack) { ctx.fillStyle = '#0A0B0D'; ctx.fill(); }
 
-      /* 등받이 상단(스크린 빛을 받는 면) — 아주 얇은 림라이트 */
+      /* 등받이 상단 — 가죽 윗면이 스크린 빛을 아주 얇게 반사한다 */
       ctx.beginPath();
       var drewTop = false;
       for (var t2 = 0; t2 < seatX.length; t2++) {
-        var sxc = seatX[t2].x, ww = pitch * (s.recliner ? 0.46 : 0.43), ty = hz + (s.recliner ? 0.82 : 0.94);
+        var sxc = seatX[t2].x, ww = seatW / 2, ty = hz + (s.recliner ? 0.82 : 0.94);
         var q2 = [toCam(sxc - ww, ty, zBack), toCam(sxc + ww, ty, zBack),
-                  toCam(sxc + ww, ty + 0.015, zFront), toCam(sxc - ww, ty + 0.015, zFront)];
+                  toCam(sxc + ww, ty + 0.004, zBack + 0.085), toCam(sxc - ww, ty + 0.004, zBack + 0.085)];
         if (q2[0][2] < NEAR || q2[2][2] < NEAR) continue;
         ctx.moveTo(sx(q2[0]), sy(q2[0]));
         ctx.lineTo(sx(q2[1]), sy(q2[1]));
@@ -1598,7 +1599,12 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
         ctx.closePath();
         drewTop = true;
       }
-      if (drewTop) { ctx.fillStyle = 'rgba(96,106,112,0.30)'; ctx.fill(); }
+      if (drewTop) { ctx.fillStyle = '#14171A'; ctx.fill(); }
+      /* 윗면 앞 모서리의 얇은 림라이트 */
+      for (var t3 = 0; t3 < seatX.length; t3++) {
+        var sxd = seatX[t3].x, wd = seatW / 2, yd = hz + (s.recliner ? 0.82 : 0.94) + 0.004;
+        seg(toCam(sxd - wd, yd, zBack + 0.085), toCam(sxd + wd, yd, zBack + 0.085), 'rgba(146,156,162,0.22)', 1);
+      }
 
       /* 통로 손잡이 — 좌우 끝 크롬 난간 (사진의 계단 손잡이) */
       [-1, 1].forEach(function (sgn) {
