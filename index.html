@@ -755,6 +755,9 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 /* DOLBY ATMOS 배지 색 */
 .badge.dolby{background:#EAF1FE;color:#1D4ED8}
 
+/* 판매중지(px) 좌석도 물리적 일반석으로 — 일반석과 같은 색·선택 가능 */
+.seat[data-t="x"]{background:#DCEDE4;opacity:1}
+
 </style>
 </head>
 <body>
@@ -929,7 +932,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
       p: p, seat: seat, rows: rows,
       cols: cols, centerX: centerX, pitch: pitch,
       bankHalf: bankHalf, wallX: wallX, ceilY: ceilY, rearD: rearD, dCam: dCam,
-      cam: { x: (seat.x - centerX) * pitch, y: eyeY, z: -dCam },
+      cam: { x: (seat.ox != null ? seat.ox : (seat.x - centerX) * pitch), y: eyeY, z: -dCam },
       recliner: /리클라이너|PRIVATE BOX|릴렉스/.test((opts.tags || []).join(' '))
     };
   }
@@ -1521,7 +1524,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   const DATA = window.__DATA__;
   const PHOTOS = window.__PHOTOS__ || {};
   const D2R = Math.PI / 180;
-  const TYPES = { n: '일반석', p: '장애인석', r: '릴렉스시트', s: 'SWEETBOX', c: '카바나석', b: '빈백석', x: '판매중지' };
+  const TYPES = { n: '일반석', p: '장애인석', r: '릴렉스시트', s: 'SWEETBOX', c: '카바나석', b: '빈백석', x: '일반석' };
 
   const MOVIES = (window.__MOVIES__ || []);
 
@@ -1654,6 +1657,22 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       let acc = 0;
       h.rows.forEach((row, y) => { if (row.gapBefore && y > 0) acc += 1.2; extra[y] = acc; });
       h.params._extra = extra;
+      /* 좌석판에서 통로 열은 좌석보다 좁게(16px vs 18px) 그려지므로,
+         3D 좌우 위치도 같은 가중치로 계산해야 화면 중앙과 좌석 위치가 맞는다. */
+      const AW = 16 / 18;
+      const w = [];
+      for (let c = 0; c < h._cols; c++) {
+        const alwaysEmpty = h.rows.every((r) => (r.c[c] || '.') === '.');
+        w[c] = alwaysEmpty ? AW : 1;
+      }
+      h.params._w = w;
+      const total = w.reduce((a, b) => a + b, 0);
+      list.forEach((st) => {
+        let m = 0;
+        for (let c = 0; c < st.x && c < w.length; c++) m += w[c];
+        m += (w[st.x] || 1) / 2;
+        st.ox = (m - total / 2) * h.params.pitch;
+      });
       const set = {};
       list.forEach((s) => { set[s.t] = (set[s.t] || 0) + 1; });
       h._types = set;
@@ -1697,7 +1716,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   /* ---------- 물리 계산 ---------- */
   function metrics(p, seat) {
     const centerX = (p.minx + p.maxx) / 2;
-    const sx = (seat.x - centerX) * p.pitch;
+    const sx = (seat.ox != null) ? seat.ox : (seat.x - centerX) * p.pitch;
     const d0 = p.firstRow + seat.y * p.rowGap + ((p._extra && p._extra[seat.y]) || 0);
     const eyeY = p.eye + seat.y * p.riser;
     const distAt = (u) => d0 - p.curve * Math.pow((2 * u) / p.screenW, 2);
