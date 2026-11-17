@@ -111,8 +111,11 @@ function normHall(v) {
 }
 
 function normSeat(v) {
-  const s = clean(v, 60).toUpperCase();
-  if (!s) return '';
+  const s = clean(v, 60).toUpperCase()
+    .replace(/열/g, ' ')
+    .replace(/번/g, ' ')
+    .replace(/[^A-Z0-9,\-–~ ]/g, ' ');
+  if (!s.trim()) return '';
   const out = [];
   const seen = {};
   const re = /([A-Z]{1,2})\s*[-–~]?\s*(\d{1,3})/g;
