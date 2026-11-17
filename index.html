@@ -1046,19 +1046,7 @@ body{font-size:16px}
   border:1px solid var(--green-soft);border-radius:10px;padding:6px 10px;font-variant-numeric:tabular-nums}
 @media (min-width:960px){ .ctxbar{top:64px} }
 
-/* --- 앞사람 머리 가림 표시 --- */
-.occ{display:flex;align-items:center;gap:11px;margin-top:10px;padding:11px 12px;border-radius:14px;
-  background:#FFF8EE;border:1px solid #FDE3C2}
-.occ-screen{position:relative;flex:0 0 auto;width:54px;height:34px;border-radius:5px;background:#12241D;
-  border:2px solid #2E3B36;overflow:hidden}
-.occ-screen i{position:absolute;left:0;right:0;bottom:0;background:rgba(30,41,38,.94);
-  box-shadow:0 -1px 0 rgba(255,255,255,.25)}
-.occ-screen em{display:none}
-.occ-screen span{position:absolute;left:0;right:0;bottom:1px;text-align:center;font-size:8px;font-weight:800;
-  color:rgba(255,255,255,.35);pointer-events:none}
-.occ-tx{min-width:0}
-.occ-tx b{display:block;font-size:13.5px;font-weight:850;color:#8A4B08;letter-spacing:-.02em}
-.occ-tx span{display:block;margin-top:2px;font-size:11.5px;font-weight:650;color:#7A6A57;line-height:1.5;word-break:keep-all}
+/* --- 앞사람 머리 가림 막대(시야 분석 표 안) --- */
 .occmini{display:inline-block;vertical-align:middle;width:54px;height:8px;border-radius:99px;background:#EEF1F0;overflow:hidden;margin-left:6px}
 .occmini i{display:block;height:100%;background:#D97706}
 
@@ -1090,13 +1078,10 @@ body{font-size:16px}
 .ugc-note a{color:#047857;font-weight:800}
 .helpful.del{color:#B42318;border-color:#F3C6C0;background:#FFF6F5}
 
-/* --- 내 기록: 저장 안내·백업·즐겨찾기·관람 기록 --- */
+/* --- 내 기록: 저장 안내·즐겨찾기·관람 기록 --- */
 .storagenote{margin-top:14px;padding:11px 13px;border-radius:14px;background:#F0FBF5;border:1px solid var(--green-soft);
   font-size:12px;line-height:1.6;color:#2F4A3E;font-weight:650;word-break:keep-all}
 .storagenote b{color:#065F46}
-.backuprow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.importchip{cursor:pointer}
-.importchip input{display:none}
 .emptyfav{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
 .emptyfav b{font-size:13.5px;font-weight:850}
 .emptyfav span{font-size:12px;font-weight:650;color:#6B7684;line-height:1.55}
@@ -1160,10 +1145,6 @@ body{font-size:16px}
 .v3d-recval{display:block;width:100%;text-align:right;font-size:10px;font-weight:800;color:rgba(255,255,255,.66);
   font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .v3d-recline-wrap{flex-wrap:wrap;justify-content:flex-end}
-.v3d-heads{height:30px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:11px;
-  font-weight:850;white-space:nowrap}
-.v3d-heads[aria-pressed="true"]{background:rgba(251,191,36,.9);color:#3A2100}
-@media (min-width:960px){ .v3d-heads{height:34px;padding:0 12px;font-size:11.5px} }
 .v3d-disc{margin-top:8px;font-size:11px;line-height:1.6;font-weight:650;color:#5C6672;word-break:keep-all}
 .v3d-disc b{color:#2A343F}
 .v3d-hud{gap:6px;row-gap:6px}
@@ -1216,6 +1197,49 @@ body{font-size:16px}
 .chip,.chip.sm{font-size:13.5px}
 .badge{font-size:12px}
 .v3d-hint,.v3d-zoomnote{font-size:11.5px}
+
+/* =======================================================================
+   ⛶ 크게 보기: 닫기(X)는 오른쪽 위 단독, 조작 버튼은 왼쪽 아래
+   — 가로·세로 어떤 비율에서도 X와 영상·소리 버튼이 겹치지 않게
+   ======================================================================= */
+.big-inner .v3d-hud{
+  left:calc(env(safe-area-inset-left, 0px) + 12px);
+  right:auto;
+  top:auto;
+  bottom:calc(env(safe-area-inset-bottom, 0px) + 12px);
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  row-gap:6px;
+  max-width:calc(100% - 24px);
+  padding:0;
+  z-index:5;
+}
+.big-inner .v3d-hudbtns{justify-content:flex-start}
+.big-inner .v3d-fov{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.big-x{
+  position:absolute;
+  right:calc(env(safe-area-inset-right, 0px) + 12px);
+  top:calc(env(safe-area-inset-top, 0px) + 12px);
+  left:auto;
+  margin:0;
+  z-index:6;
+}
+.big-tag{
+  left:calc(env(safe-area-inset-left, 0px) + 12px);
+  top:calc(env(safe-area-inset-top, 0px) + 14px);
+  max-width:calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 84px);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+/* 높이가 매우 낮은 가로 화면: 버튼·글자를 한 단계 줄여 한 줄에 담는다 */
+@media (max-height:420px){
+  .big-inner .v3d-vid,.big-inner .v3d-mute{width:34px;height:34px}
+  .big-inner .v3d-fov{font-size:10px;padding:4px 8px}
+  .big-inner .v3d-hud{gap:5px}
+  .big-x{width:34px;height:34px;font-size:14px}
+  .big-tag{font-size:11px;top:calc(env(safe-area-inset-top, 0px) + 12px)}
+}
 
 </style>
 </head>
@@ -1538,7 +1562,6 @@ body{font-size:16px}
     this.hallKey = (opts && opts.hallKey) || null;
     this.rot = (opts && opts.rot) || 0;      /* 90이면 캔버스가 가로로 회전된 상태 */
     this.allowRecline = !(opts && opts.allowRecline === false);
-    this.heads = !(opts && opts.heads === false);   /* 앞사람 머리 실루엣 */
     this._rec = (recState.key && recState.key === this.hallKey) ? recState.v : 0;
     this._recTween = null;
     this.videoSrc = (opts && opts.videoSrc) || 'media/preview.mp4';
@@ -1843,11 +1866,13 @@ body{font-size:16px}
       ctx.strokeStyle = color; ctx.lineWidth = lw || 1; ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(sx(p1), sy(p1)); ctx.lineTo(sx(p2), sy(p2)); ctx.stroke();
     }
-    /* 벽·천장에 떨어지는 빛 번짐 — additive로 얹어 어두운 패널 위에서만 은은하게 보이게 */
-    function pool(c, radius, rgb, alpha, squash) {
+    /* 벽·천장에 떨어지는 빛 번짐 — additive로 얹어 어두운 패널 위에서만 은은하게 보이게.
+       maxPx를 주면 화면상 지름에 상한을 둔다(가까운 벽의 표시등이 시야를 덮지 않게). */
+    function pool(c, radius, rgb, alpha, squash, maxPx) {
       if (c[2] < NEAR) return;
       var px = sx(c), py = sy(c);
       var r = Math.max(4, f * radius / c[2]);
+      if (maxPx) r = Math.min(r, maxPx);
       if (r < 1) return;
       var g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
       g.addColorStop(0, 'rgba(' + rgb + ',' + alpha.toFixed(3) + ')');
@@ -2250,10 +2275,14 @@ body{font-size:16px}
     });
 
     /* ---- 앞쪽 좌우 벽 출입문 + 그 위 비상구 표시등(초록) ----
-       표시등은 허공에 띄우지 않고 출입문 사각형 바로 위에 붙인다. */
+       표시등은 허공에 띄우지 않고 출입문 사각형 바로 위에 붙인다.
+       실제 표시등은 손바닥만 하므로 판과 번짐을 그만큼 작게 잡고, 화면에서 차지하는
+       지름에 상한을 둬 앞줄에서도 초록 빛이 시야를 덮지 않게 한다. */
     [-1, 1].forEach(function (sgn) {
       var xw = sgn * (wallX - 0.06);
-      var zA = -1.05, zB = -1.72, yB = 2.12, yT = 2.38;
+      var zA = -1.05, zB = -1.72;      /* 출입문 폭 (그대로) */
+      var yB = 2.20, yT = 2.35;        /* 표시등 판 높이 */
+      var gA = -1.34, gB = -1.72;      /* 표시등 가로 폭 0.38 m */
       /* 출입문(어두운 사각형 + 옅은 문틀) */
       face([toCam(xw * 0.997, 0.02, zA), toCam(xw * 0.997, 0.02, zB),
             toCam(xw * 0.997, 2.02, zB), toCam(xw * 0.997, 2.02, zA)], 'rgba(6,7,9,0.92)');
@@ -2261,21 +2290,22 @@ body{font-size:16px}
             toCam(xw * 0.996, 2.02, zA - 0.05), toCam(xw * 0.996, 2.02, zA)], 'rgba(150,158,162,0.16)');
       face([toCam(xw * 0.996, 2.02, zA), toCam(xw * 0.996, 2.02, zB),
             toCam(xw * 0.996, 2.06, zB), toCam(xw * 0.996, 2.06, zA)], 'rgba(150,158,162,0.13)');
-      face([toCam(xw, yB, zA), toCam(xw, yB, zB), toCam(xw, yT, zB), toCam(xw, yT, zA)], 'rgba(38,214,110,0.92)');
-      /* 픽토그램: 문 + 달리는 사람 대신 흰 막대 두 개(멀리서도 초록 표시로 읽히게) */
-      face([toCam(xw * 0.995, yB + 0.05, zA - 0.10), toCam(xw * 0.995, yB + 0.05, zB + 0.10),
-            toCam(xw * 0.995, yB + 0.10, zB + 0.10), toCam(xw * 0.995, yB + 0.10, zA - 0.10)], 'rgba(255,255,255,0.85)');
-      var ec = toCam(xw, (yB + yT) / 2, (zA + zB) / 2);
-      pool(ec, 1.15, '80,235,140', 0.16);
+      face([toCam(xw, yB, gA), toCam(xw, yB, gB), toCam(xw, yT, gB), toCam(xw, yT, gA)], 'rgba(34,196,102,0.72)');
+      /* 픽토그램: 흰 막대 하나 — 멀리서도 초록 표시로 읽히게 */
+      face([toCam(xw * 0.995, yB + 0.045, gA - 0.05), toCam(xw * 0.995, yB + 0.045, gB + 0.05),
+            toCam(xw * 0.995, yB + 0.075, gB + 0.05), toCam(xw * 0.995, yB + 0.075, gA - 0.05)], 'rgba(255,255,255,0.55)');
+      /* 은은한 초록 번짐 — 거리에 따라 커지고 작아지되 화면 짧은 변의 4%까지만 */
+      var ec = toCam(xw, (yB + yT) / 2, (gA + gB) / 2);
+      pool(ec, 0.34, '80,235,140', 0.05, 0, Math.min(W, H) * 0.04);
     });
     /* 뒷벽 출입문 위 EXIT */
     (function () {
       var z = -rearD + 0.03;
-      face([toCam(-0.52, 2.48, z), toCam(0.52, 2.48, z), toCam(0.52, 2.78, z), toCam(-0.52, 2.78, z)], 'rgba(40,214,112,0.85)');
-      var ec = toCam(0, 2.63, z);
-      pool(ec, 1.0, '80,235,140', 0.14);
+      face([toCam(-0.34, 2.52, z), toCam(0.34, 2.52, z), toCam(0.34, 2.68, z), toCam(-0.34, 2.68, z)], 'rgba(36,200,104,0.70)');
+      var ec = toCam(0, 2.60, z);
+      pool(ec, 0.30, '80,235,140', 0.05, 0, Math.min(W, H) * 0.035);
       if (ec[2] > NEAR) {
-        var hgt = Math.abs(f * 0.30 / ec[2]);
+        var hgt = Math.abs(f * 0.16 / ec[2]);
         if (hgt > 7) {
           ctx.save();
           ctx.fillStyle = 'rgba(6,32,18,0.85)';
@@ -2410,51 +2440,6 @@ body{font-size:16px}
       if (cur) runs.push(cur);
       for (var r3 = 0; r3 < runs.length; r3++) {
         seg(toCam(runs[r3].x0 - seatW / 2, yd, zBack + 0.085), toCam(runs[r3].x1 + seatW / 2, yd, zBack + 0.085), rim, 1);
-      }
-
-      /* ---- 앞사람 머리·어깨 실루엣 ----
-         이 줄과 카메라 사이에 앉은 사람이 화면 아래를 얼마나 가리는지 눈으로 보이게 한다.
-         머리 꼭대기 높이 = 이 줄 바닥 + 눈높이 + 머리 두께(기본 0.28 m) —
-         시야 분석의 '앞사람 머리 가림 %'와 같은 값으로 계산한다. 앞 6~7줄만 그라도 충분하다. */
-      var gap = s.dCam - dc;
-      if (self.heads && dc < s.dCam - 0.35 && gap < 3.9) {
-        var eyeH = s.eye || 1.05, headT = eyeH + (s.headDelta || 0.28);
-        var camXh = s.cam.x;
-        var lim = 0.95 + gap * 0.16;
-        var fadeH = clamp(1 - (gap - 1.0) / 6.0, 0.30, 1);
-        for (var hi = 0; hi < seatX.length; hi++) {
-          var hxw = seatX[hi].x;
-          if (Math.abs(hxw - camXh) > lim) continue;
-          /* 어깨 (머리보다 먼저 — 머리 뒤에 깔린다) */
-          var shC = toCam(hxw, hz + eyeH * 0.70, zBack + 0.12);
-          if (shC[2] > NEAR) {
-            /* 크기는 '사람이 있다'를 알아볼 만큼만 — 위치(높이·거리)는 실제 계산을 그대로 따르고,
-               화면을 통째로 덮는 검은 판이 되지 않도록 실루엣 지름만 0.62배로 줄여 그린다.
-               가림 %는 줄이지 않은 실제 머리 크기로 계산한 값이다. */
-            var HS = 0.62;
-            var rxS = f * 0.185 * HS / shC[2], ryS = f * 0.13 * HS / shC[2];
-            ctx.fillStyle = 'rgba(4,6,7,' + (0.88 * fadeH).toFixed(3) + ')';
-            ctx.beginPath();
-            ctx.ellipse(sx(shC), sy(shC) + ryS * 0.2, rxS, ryS, 0, Math.PI, Math.PI * 2);
-            ctx.fill();
-          }
-          /* 머리 */
-          var hdC = toCam(hxw, hz + headT - 0.10, zBack + 0.10);
-          if (hdC[2] < NEAR) continue;
-          var rxH = Math.max(0.7, f * 0.080 * HS / hdC[2]);
-          var ryH = Math.max(0.8, f * 0.100 * HS / hdC[2]);
-          var hpx = sx(hdC), hpy = sy(hdC);
-          ctx.fillStyle = 'rgba(3,5,6,' + (0.96 * fadeH).toFixed(3) + ')';
-          ctx.beginPath();
-          ctx.ellipse(hpx, hpy, rxH, ryH, 0, 0, Math.PI * 2);
-          ctx.fill();
-          /* 머리 윗면에 스크린 빛이 얇게 앉는 림라이트 */
-          ctx.strokeStyle = 'rgba(158,170,178,' + (0.18 * fadeH).toFixed(3) + ')';
-          ctx.lineWidth = Math.max(0.6, rxH * 0.11);
-          ctx.beginPath();
-          ctx.ellipse(hpx, hpy, rxH, ryH, 0, Math.PI * 1.06, Math.PI * 1.94);
-          ctx.stroke();
-        }
       }
 
       /* 통로 손잡이 — 좌우 끝 크롬 난간 (사진의 계단 손잡이) */
@@ -2602,17 +2587,6 @@ body{font-size:16px}
           v.nudgeRecline(parseFloat(bind.getAttribute('data-recline-step')) || 0);
         });
       })(steps[si]);
-    }
-    /* 앞사람 머리 실루엣 켜기/끄기 — 이전에 잠시 빼달라는 요청이 있었으므로 끄는 길을 남긴다 */
-    var hb = wrap.querySelector('[data-heads]');
-    if (hb) {
-      hb.setAttribute('aria-pressed', v.heads ? 'true' : 'false');
-      hb.addEventListener('click', function (e) {
-        e.preventDefault();
-        v.heads = !v.heads;
-        hb.setAttribute('aria-pressed', v.heads ? 'true' : 'false');
-        v.render();
-      });
     }
     var mb = wrap.querySelector('[data-mute]');
     if (mb) {
@@ -4088,21 +4062,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return state.theaterId === '0013' && /SCREENX/.test((h.tags || []).join(' '));
   }
 
-  /* 앞사람 머리 가림 — 화면 아래에서부터 몇 %가 가리는지 막대와 미니 화면으로 */
-  function occHtml(h, m) {
-    const pct = clamp(m.occ || 0, 0, 100);
-    const rowL = (m.occRow != null && h.rows && h.rows[m.occRow]) ? h.rows[m.occRow].l : '';
-    return `<div class="occ">
-      <div class="occ-screen" aria-hidden="true"><i style="height:${pct.toFixed(1)}%"></i><span>화면</span></div>
-      <div class="occ-tx">
-        <b>앞사람 머리 가림 ${pct < 0.5 ? '없음' : fmt(pct, 0) + '%'}</b>
-        <span>${pct < 0.5
-          ? '앞열 사람 머리가 화면 아래를 가리지 않는 높이예요.'
-          : '화면 아래에서부터 약 ' + fmt(pct, 0) + '%가 가려질 높이예요.' + (rowL ? ' (가장 많이 가리는 줄: ' + esc(rowL) + '열)' : '')}</span>
-      </div>
-    </div>`;
-  }
-
   function simHtml(h, seat, m) {
     const tag = feelTag(m);
     const recl = canRecline(h, seat);
@@ -4114,7 +4073,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <span class="v3d-fov">가로 <b>${fmt(m.hFov, 1)}°</b> · 세로 <b>${fmt(m.vFov, 1)}°</b></span>
         <span class="v3d-hudbtns">
           ${recl ? `<span class="v3d-recline-wrap"><button class="v3d-recline" data-recline="1" aria-pressed="false" title="등받이 110° / 160°">🪑 젖히기 <b class="v3d-ang">110°</b></button><button class="v3d-recline-step" data-recline-step="-1" title="등받이 10° 세우기" aria-label="등받이 10도 세우기">−10°</button><button class="v3d-recline-step" data-recline-step="1" title="등받이 10° 젖히기" aria-label="등받이 10도 젖히기">+10°</button><b class="v3d-recval" data-rec-read>눈높이 ${fmt(m.eyeY, 2)} m · 시선 ${fmt(m.neck, 1)}°</b></span>` : ''}
-          <button class="v3d-heads" data-heads="1" aria-pressed="true" title="앞사람 머리·어꺠 실루엣 보기/끄기">👤 앞사람</button>
           <button class="v3d-vid" data-vid="1" aria-pressed="false" title="샘플 영상을 스크린에 재생">▶ 영상</button>
           <button class="v3d-mute" data-mute="1" aria-pressed="true" style="display:none" title="소리 켜기/끄기">🔇</button>
           <button class="v3d-big" data-big="1" title="3D 시야를 크게 보기">⛶ 크게</button>
@@ -4130,7 +4088,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <div class="v3d-hint">드래그해서 둘러보기</div>
       <div class="v3d-zoomnote">기준 화각 76° · 실제로 보이는 크기에 가깝게</div>
     </div>
-    ${occHtml(h, m)}
     <div class="feel">
       <span class="feel-tag ${tag[1]}">${esc(tag[0])}</span>
       <p>${esc(feelLine(m))}</p>
@@ -4693,7 +4650,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <div class="mvmeta" id="movieMeta"></div>
 
       <button class="btn" id="saveReview" style="width:100%;margin-top:16px">${mine ? '내 한마디 수정' : '한마디 남기기'}</button>
-      <p class="ugc-note">후기·사진은 <b>이 브라우저에만</b> 저장되고 서버로 보내지 않아요. 다른 기기로 옮기려면 <a href="#/my" data-go="my">내 기록</a>에서 내보내기 하세요.</p>
+      <p class="ugc-note">후기·사진은 <b>이 브라우저에만</b> 저장되고 서버로 보내지 않아요.</p>
 
       <div class="review-list" id="reviewList">
         ${reviews.map((r) => `<div class="review">
@@ -5581,11 +5538,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <div class="metric"><span>즐겨찾는 좌석</span><b class="num">${favList.length}</b></div>
       </div>
       <div class="storagenote">
-        <b>이 브라우저에만 저장돼요.</b> 후기·사진·즐겨찾기는 서버로 보내지 않고 이 기기 저장소에만 남아요. 브라우저 데이터를 지우거나 다른 기기로 바꾸면 사라지니, 아래에서 <b>파일로 내보내</b> 두면 다른 기기에서 되살릴 수 있어요.
-      </div>
-      <div class="backuprow">
-        <button class="chip sm" id="exportData" type="button">⬇ 내 기록 내보내기(JSON)</button>
-        <label class="chip sm importchip" for="importData">⬆ 다른 기기 기록 가져오기<input type="file" id="importData" accept="application/json,.json"></label>
+        <b>이 브라우저에만 저장돼요.</b> 후기·사진·즐겨찾기는 서버로 보내지 않고 이 기기 저장소에만 남아요. 브라우저 데이터를 지우거나 다른 기기로 바꾸면 함께 사라져요.
       </div>
     </div>
 
@@ -5626,87 +5579,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
             ${(r.shots && r.shots.length) || r.ticket ? `<div class="shots">${r.ticket ? `<img src="${r.ticket}" alt="티켓">` : ''}${(r.shots || []).map((s) => `<img src="${s}" alt="시야">`).join('')}</div>` : ''}
             ${r.tags && r.tags.length ? `<div class="rts" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">${r.tags.map((x) => `<span class="badge ok">${esc(x)}</span>`).join('')}</div>` : ''}
           </div>`).join('');
-        }).join('')}
-    <div class="foot">기록은 브라우저 저장소(localStorage)에만 보관되며 외부로 전송되지 않습니다. 브라우저 데이터를 지우면 함께 사라지니, 위의 '내보내기'로 백업해 두세요.</div>`;
-  }
-
-  /* ---------- 백업 내보내기 / 다른 기기에서 가져오기 ---------- */
-  function exportBackup() {
-    const payload = {
-      app: '영시미', v: 1, at: new Date().toISOString(),
-      nickname: nickname || '', avatar: avatarImg || '',
-      reviews: store, favs: favs
-    };
-    try {
-      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '영시미-내기록-' + new Date().toISOString().slice(0, 10) + '.json';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 900);
-      toast('내 기록 파일을 내려받았어요');
-    } catch (e) { toast('내보내지 못했어요 — 브라우저 저장 공간을 확인해 주세요'); }
-  }
-  function importBackup(file) {
-    const fr = new FileReader();
-    fr.onload = () => {
-      let j = null;
-      try { j = JSON.parse(fr.result); } catch (e) { toast('JSON 파일이 아니에요 — 영시미에서 내보낸 파일인지 확인해 주세요'); return; }
-      if (!j || typeof j !== 'object') { toast('파일 형식이 맞지 않아요'); return; }
-      const src = j.reviews || j.store || {};
-      const nRev = Object.keys(src).filter((k) => k.indexOf('/') > 0).length;
-      const nFav = j.favs ? Object.keys(j.favs).length : 0;
-      if (!nRev && !nFav && !j.nickname) { toast('가져올 기록이 없어요'); return; }
-      const wrap = document.createElement('div');
-      wrap.innerHTML = `<div class="modal" id="impModal">
-        <div class="modal-scrim"></div>
-        <div class="modal-card">
-          <div class="modal-grab"></div>
-          <h3>이 기록을 가져올까요?</h3>
-          <p class="sub">후기 <b>${nRev}곳</b> · 즐겨찾기 <b>${nFav}석</b>${j.nickname ? ' · 닉네임 <b>' + esc(j.nickname) + '</b>' : ''}<br>지금 이 브라우저에 있는 기록은 지우지 않고 합칩니다.</p>
-          <button class="btn" id="impGo" style="width:100%;margin-top:14px">가져오기</button>
-          <button class="btn ghost" id="impNo" style="width:100%;margin-top:8px;background:#F2F4F6;color:#4E5968">취소</button>
-        </div>
-      </div>`;
-      const el = wrap.firstElementChild;
-      document.body.appendChild(el);
-      const close = () => el.remove();
-      el.querySelector('.modal-scrim').onclick = close;
-      el.querySelector('#impNo').onclick = close;
-      el.querySelector('#impGo').onclick = () => { mergeBackup(j); close(); };
-    };
-    fr.onerror = () => toast('파일을 읽지 못했어요');
-    fr.readAsText(file);
-  }
-  function mergeBackup(j) {
-    try {
-      if (j.nickname && !nickname) setNickname(String(j.nickname).slice(0, 12));
-      if (j.avatar && !avatarImg) { avatarImg = j.avatar; try { localStorage.setItem(AV_KEY, avatarImg); } catch (e) {} paintAvatar(); }
-      const src = j.reviews || j.store || {};
-      Object.keys(src).forEach((k) => {
-        if (k.indexOf('/') < 0) return;
-        const b = src[k] || {};
-        if (!store[k]) store[k] = { seats: {}, list: [] };
-        const cur = store[k];
-        cur.seats = cur.seats || {}; cur.list = cur.list || [];
-        Object.keys(b.seats || {}).forEach((sk) => {
-          const rec = b.seats[sk]; if (!rec) return;
-          const old = cur.seats[sk];
-          if (!old || String(rec.date || '') >= String(old.date || '')) cur.seats[sk] = rec;
-        });
-        (b.list || []).forEach((rec) => {
-          if (rec && rec.id && !cur.list.some((x) => x.id === rec.id)) cur.list.push(rec);
-        });
-        cur.list = cur.list.slice(0, 80);
-      });
-      Object.keys(j.favs || {}).forEach((k) => {
-        const f = j.favs[k];
-        if (f && f.seat) favs[k] = Object.assign({}, f, { at: f.at || Date.now() });
-      });
-      save(); saveFavs(); render(); toast('기록을 가져왔어요');
-    } catch (e) { toast('가져오다 문제가 생겼어요 — 파일을 확인해 주세요'); }
+        }).join('')}`;
   }
 
   /* ---------- 이벤트 ---------- */
@@ -5724,12 +5597,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (!box) return;
     box.innerHTML = theaterCardsHtml(homeList());
   }
-  document.addEventListener('change', (e) => {
-    if (!e.target || e.target.id !== 'importData') return;
-    const f = e.target.files && e.target.files[0];
-    if (f) importBackup(f);
-    e.target.value = '';
-  });
   document.addEventListener('change', async (e) => {
     if (!e.target || e.target.id !== 'avatarFile') return;
     const f = e.target.files && e.target.files[0];
@@ -5845,7 +5712,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (e.target.closest('[data-big]')) { openBigView(); return; }
     if (e.target.closest('#bigClose')) { closeBigView(); return; }
     if (e.target.closest('#editNick')) { nicknameModal(true); return; }
-    if (e.target.closest('#exportData')) { exportBackup(); return; }
     const uf = e.target.closest('[data-unfav]');
     if (uf) {
       const k = uf.dataset.unfav;
@@ -5913,7 +5779,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }, 140);
   });
   window.addEventListener('orientationchange', () => setTimeout(() => window.dispatchEvent(new Event('resize')), 260));
-  window.__APP__ = { state, metrics, render, setNickname, setNear, clearNear, toggleNear, toChoseong, distKm, homeList, openCompare, toggleCompare, mapZoomBy, dataStatus, exportBackup, openMask, favToggle };
+  window.__APP__ = { state, metrics, render, setNickname, setNear, clearNear, toggleNear, toChoseong, distKm, homeList, openCompare, toggleCompare, mapZoomBy, dataStatus, openMask, favToggle };
   /* 첫 방문 때 닉네임을 묻는 팝업은 두지 않는다 — 처음엔 그냥 좌석을 보러 온 사람이 대부분이다.
      닉네임은 후기를 남길 때 입력란에서만 받는다. */
   if (nickname) {
