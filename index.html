@@ -3015,8 +3015,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   /* ---------- 실사 사진 ---------- */
   function photosFor(hallId, seatKey) {
     const b = PHOTOS[hallId];
-    if (!b || !b.seats) return [];
-    return b.seats[seatKey] || [];
+    const base = (b && b.seats && b.seats[seatKey]) || [];
+    /* 공용으로 올라온 실사도 같은 목록에 합쳐 보여준다 */
+    const extra = sbPhotos(hallId, seatKey);
+    return extra.length ? base.concat(extra) : base;
   }
   /* '실사'는 실제 이미지 파일(src)이 있는 사진만 센다 — 블로그 원문 링크만 있는 항목은
      사진이 아니라 링크로 따로 센다(좌석판 초록 점·실사 필터에 섞이지 않게). */
@@ -3025,16 +3027,116 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   const linkCount = (arr) => (arr || []).filter((p) => p && !p.src && p.source).length;
   function hallPhotoCount(hallId) {
     const b = PHOTOS[hallId];
-    if (!b || !b.seats) return { seats: 0, shots: 0, links: 0 };
-    const keys = Object.keys(b.seats);
-    const withImg = keys.filter((k) => (b.seats[k] || []).some(hasImg));
-    return {
+    const seats = (b && b.seats) || {};
+    const keys = Object.keys(seats);
+    const withImg = keys.filter((k) => (seats[k] || []).some(hasImg));
+    const res = {
       seats: withImg.length,
-      shots: keys.reduce((a, k) => a + imgCount(b.seats[k]), 0),
-      links: keys.reduce((a, k) => a + linkCount(b.seats[k]), 0)
+      shots: keys.reduce((a, k) => a + imgCount(seats[k]), 0),
+      links: keys.reduce((a, k) => a + linkCount(seats[k]), 0)
     };
+    /* 공용 실사도 같은 수치에 합산한다(이미 사진이 있는 좌석은 좌석 수를 두 번 세지 않는다) */
+    const seen = Object.create(null);
+    withImg.forEach((k) => { seen[k] = 1; });
+    SB.rows.forEach((r) => {
+      if (!r || r.hall_key !== hallId || !r.photo_url || !r.seat_id) return;
+      if (!seen[r.seat_id]) { seen[r.seat_id] = 1; res.seats += 1; }
+      res.shots += 1;
+    });
+    return res;
   }
   const tierLabel = (t) => (t === '1x' ? '1배율' : t === 'wide' ? '광각' : '실사');
+
+  /* ---------- 공용 후기·실사 (Supabase) ----------
+     프로젝트의 공개(publishable) 키만 쓴다. 티켓 사진은 올리지 않고 인증 여부(verified)만 보낸다. */
+  const SB_URL = 'https://unoeugpeoxfbvdccqwxr.supabase.co';
+  const SB_KEY = 'sb_publishable_A3OqttteymOeLkaFS3oSTA_U288LnSc';
+  const SB_CACHE = 'cgv_shared_reviews_v1';
+  const SB_TTL = 60000;            /* 같은 화면에서 1분에 한 번만 새로 받는다 */
+  const SB = { rows: [], idx: Object.create(null), at: 0, busy: false, err: '' };
+
+  function sbHeaders(extra) {
+    const h = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+    return extra ? Object.assign(h, extra) : h;
+  }
+  function sbIndex() {
+    const m = Object.create(null);
+    SB.rows.forEach((r) => {
+      if (!r || !r.hall_key || !r.seat_id) return;
+      const k = r.hall_key + '/' + r.seat_id;
+      (m[k] || (m[k] = [])).push(r);
+    });
+    SB.idx = m;
+  }
+  function sbRestore() {
+    try {
+      const j = JSON.parse(localStorage.getItem(SB_CACHE) || '[]');
+      if (Array.isArray(j) && j.length) { SB.rows = j; sbIndex(); }
+    } catch (e) {}
+  }
+  function sbStore() {
+    try { localStorage.setItem(SB_CACHE, JSON.stringify(SB.rows.slice(0, 400))); } catch (e) {}
+  }
+  function sbTimer(ms) {
+    const c = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const t = setTimeout(() => { if (c) try { c.abort(); } catch (e) {} }, ms);
+    return { signal: c ? c.signal : undefined, done: () => clearTimeout(t) };
+  }
+  /* 공용 목록 받기 — 실패해도 화면은 로컬 기록·저장된 캐시로 그대로 돈다 */
+  function sbFetch(force) {
+    if (SB.busy) return Promise.resolve(false);
+    if (!force && Date.now() - SB.at < SB_TTL) return Promise.resolve(false);
+    SB.busy = true;
+    const tm = sbTimer(9000);
+    const url = SB_URL + '/rest/v1/seat_reviews?select=id,hall_key,seat_id,nickname,movie,comment,photo_url,verified,created_at'
+      + '&order=created_at.desc&limit=500';
+    return fetch(url, { headers: sbHeaders(), signal: tm.signal, cache: 'no-store' })
+      .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then((rows) => {
+        SB.rows = Array.isArray(rows) ? rows : [];
+        SB.at = Date.now(); SB.err = ''; sbIndex(); sbStore();
+        return true;
+      })
+      .catch((e) => {
+        SB.err = (e && e.name === 'AbortError') ? 'timeout' : String((e && e.message) || e);
+        return false;
+      })
+      .then((ok) => { tm.done(); SB.busy = false; return ok; }, () => { tm.done(); SB.busy = false; return false; });
+  }
+  function sbRowsFor(hallId, seatKey) {
+    if (!hallId || !seatKey) return [];
+    return SB.idx[hallId + '/' + seatKey] || [];
+  }
+  /* 공용 실사를 실사 탭·사진 배지·홈 '실사 사진 석' 수치에 쓰는 사진 객체 모양으로 */
+  function sbPhotos(hallId, seatKey) {
+    return sbRowsFor(hallId, seatKey).filter((r) => r.photo_url).map((r) => ({
+      src: r.photo_url, tier: '', fov: '올린 사람 촬영', seat: seatKey,
+      author: r.nickname || '익명', credit: r.nickname || '익명',
+      date: String(r.created_at || '').slice(0, 10),
+      verify: r.verified ? 'user-verified' : 'user', shared: true, rid: r.id
+    }));
+  }
+  /* 공용 후기 목록 — 내가 이 기기에서 올려 이미 아는 항목(rid)은 빼고 */
+  function sbReviews(hallId, seatKey) {
+    const mineIds = Object.create(null);
+    Object.values(store).forEach((b) => {
+      Object.values((b && b.seats) || {}).forEach((r) => { if (r && r.rid) mineIds[r.rid] = 1; });
+    });
+    return sbRowsFor(hallId, seatKey).filter((r) => !mineIds[r.id]).map((r) => ({
+      id: 'sb:' + r.id, author: r.nickname || '익명',
+      date: String(r.created_at || '').slice(0, 10), text: r.comment || '',
+      movie: r.movie || '', ticket: !!r.verified, shared: true,
+      shots: r.photo_url ? [r.photo_url] : []
+    }));
+  }
+  function refreshShared() {
+    sbFetch(false).then((ok) => {
+      if (!ok) return;
+      try {
+        if (state.view === 'hall') { paintSeatMap(); paintSeatPanel(); }
+      } catch (e) {}
+    });
+  }
 
   /* ---------- 물리 계산 ---------- */
   function metrics(p, seat) {
@@ -3142,6 +3244,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }
     else { const b = document.getElementById('cmpBar'); if (b) b.remove(); }
     if (state.view === 'home') { paintRegionHint(); regionTabIntoView(); paintRegionHint(); }
+    /* 상영관에 들어올 때마다 공용 실사·후기를 한 번씩 새로 받아온다(1분 스로틀) */
+    if (state.view === 'hall') refreshShared();
   }
   /* 지역 탭 스크롤 힌트(›)
      IMG_7249: 오른쪽 끝까지 스크롤한 상태에서 힌트가 마지막 탭 '광주·전라·제주'의 '주'를 덮었다.
@@ -3620,11 +3724,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
   function galleryHtml(h) {
-    const b = PHOTOS[h.id];
-    if (!b || !b.seats) return '';
     const items = [];
     hSeatsRows(h).forEach((s) => {
-      const arr = b.seats[s.key];
+      const arr = photosFor(h.id, s.key);
       if (!arr || !arr.length) return;
       const first = arr[0];
       const thumb = first.src
@@ -4269,14 +4371,17 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
            ${cur.source ? `<a class="btn sm" style="width:100%;text-decoration:none" href="${esc(cur.source)}" target="_blank" rel="noopener noreferrer">원문 블로그에서 실사 보기 ↗</a>` : ''}
            <div class="extphoto-foot">사진은 저작권 보호를 위해 복제·재호스팅하지 않고 원문으로만 연결합니다. 시야 요약은 원문 표기 좌석과 글 내용을 바탕으로 정리했어요.</div>
          </div>`;
-    const verifyTxt = cur.verify === 'photo' ? '사진 직접 확인' : cur.verify === 'label' ? '좌석 라벨로 확인' : '출처만 확인';
+    const verifyTxt = cur.verify === 'user-verified' ? '올린 사람 티켓 인증'
+      : cur.verify === 'user' ? '올린 사람 촬영(인증 없음)'
+      : cur.verify === 'photo' ? '사진 직접 확인'
+      : cur.verify === 'label' ? '좌석 라벨로 확인' : '출처만 확인';
     return `
       ${media}
       ${arr.length > 1 ? `<div class="pv-switch">${arr.map((a, i) => `<button data-photo="${i}" aria-pressed="${i === idx}">${esc(a.fov || tierLabel(a.tier))}</button>`).join('')}</div>` : ''}
       <div class="pcred">
         <div class="row">
           <span class="badge ok">📷 실사 사진</span>
-          <span class="badge plain">${cur.verify === 'photo' ? '사진 직접 확인' : '좌석 라벨로 확인'}</span>
+          <span class="badge plain">${cur.shared ? (cur.verify === 'user-verified' ? '티켓 인증' : '올린 사람 촬영') : (cur.verify === 'photo' ? '사진 직접 확인' : '좌석 라벨로 확인')}</span>
           <span class="badge plain">${esc(tierLabel(cur.tier))}${cur.tier === 'wide' ? ' (광각)' : cur.tier === '1x' ? ' (일반)' : ''}</span>
           ${cur.stereo ? `<span class="badge plain">${esc(cur.stereo)}</span>` : ''}
         </div>
@@ -4290,7 +4395,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <dt>검증</dt><dd>${verifyTxt}</dd>
           <dt>출처</dt><dd>${cur.source ? `<a href="${esc(cur.source)}" target="_blank" rel="noopener noreferrer">${esc(cur.credit || '원문 보기')} ↗</a>` : esc(cur.credit || '-')}</dd>
         </dl>
-        ${!cur.dir ? `<div class="pcred-note" style="margin-top:8px">방향(정면 여부·촬영 위치)은 원문에 적혀 있지 않아 비워 뒀어요. 추측해 적지 않습니다.</div>` : ''}
+        ${!cur.dir ? (cur.shared
+          ? `<div class="pcred-note" style="margin-top:8px">사용자가 직접 올린 사진이에요. 촬영 위치·화각은 따로 기록되지 않아요.</div>`
+          : `<div class="pcred-note" style="margin-top:8px">방향(정면 여부·촬영 위치)은 원문에 적혀 있지 않아 비워 뒀어요. 추측해 적지 않습니다.</div>`) : ''}
         ${cur.note ? `<div class="pcred-note" style="margin-top:6px">${esc(cur.note)}</div>` : ''}
         ${cur.ticket ? `<div class="ticketmini"><img src="${esc(cur.ticket)}" alt="티켓 사진"><div style="font-size:12px;font-weight:700;color:var(--sub)">티켓으로 좌석 확인<br><span style="color:var(--mute);font-weight:600">${esc(cur.ticketNote || '발권 내역 캡처')}</span></div></div>` : ''}
       </div>`;
@@ -4601,7 +4708,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function ugcHtml(h, seat) {
     const bucket = store[ugcKey()] || { seats: {}, list: [] };
     const mine = (bucket.seats || {})[seat.key] || null;
-    const reviews = (bucket.list || []).filter((r) => r.seat === seat.key);
+    const localReviews = (bucket.list || []).filter((r) => r.seat === seat.key);
+    /* 공용 후기(Supabase)도 같은 목록에 이어 붙인다 — 내가 이미 올린 건 빼고 */
+    const reviews = localReviews.concat(sbReviews(h.id, seat.key));
     const tags = ['명당', '몰입 잘 됨', '앞사람 안 가림', '자막 잘 보임', '사운드 좋음'];
     const shots = (mine && mine.shots) || [];
     const movie = mine && mine.movie ? mine.movie : '';
@@ -4653,12 +4762,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <div class="mvmeta" id="movieMeta"></div>
 
       <button class="btn" id="saveReview" style="width:100%;margin-top:16px">${mine ? '내 한마디 수정' : '한마디 남기기'}</button>
-      <p class="ugc-note">후기·사진은 <b>이 브라우저에만</b> 저장되고 서버로 보내지 않아요.</p>
+      <p class="ugc-note">후기·사진은 <b>모든 사용자에게 공개</b>되고, 티켓 사진은 올리지 않고 인증 표시만 공유해요.</p>
 
       <div class="review-list" id="reviewList">
         ${reviews.map((r) => `<div class="review">
           <div class="review-top"><span>${esc(r.author || '익명')}</span><span>${esc(r.date)}</span></div>
-          ${r.movie ? `<span class="movie">🎬 ${esc(r.movie)}</span>` : ''}${r.ticket ? `<span class="ticketbadge">티켓 인증</span>` : ''}
+          ${r.movie ? `<span class="movie">🎬 ${esc(r.movie)}</span>` : ''}${r.ticket ? `<span class="ticketbadge">티켓 인증</span>` : ''}${r.shared ? '<span class="ticketbadge">공용</span>' : ''}
           ${r.movie && (r.mm || mvMetaOf(r.movie)) ? `<div class="mvmeta">${esc(r.mm || mvMetaOf(r.movie))}</div>` : ''}
           ${r.text ? `<p>${esc(r.text)}</p>` : ''}
           ${r.tags && r.tags.length ? `<div class="rts">${r.tags.map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
@@ -4669,7 +4778,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     </div>`;
   }
 
-  let draft = { rating: 0, tags: [], ticket: null, shots: [] };
+  let draft = { rating: 0, tags: [], ticket: null, shots: [], shotFiles: [] };
 
   function compressImage(file, maxW, q) {
     return new Promise((resolve) => {
@@ -4730,7 +4839,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <li>사진은 글자를 읽기 위해 <b>외부 OCR 서버로 1회 전송</b>되고, 서버에는 저장하지 않아요.</li>
       <li>서버가 응답하지 않으면 <b>사진은 전송되지 않고</b> 직접 입력으로 넘어갑니다.</li>
       <li><b>가린 결과만 전송</b>돼요. 원본 사진은 보내지도, 저장하지도 않습니다.</li>
-      <li>읽은 값과 첨부 사진은 이 브라우저에만 남고, '내 기록'에서 언제든 지울 수 있어요.</li>
+      <li>티켓 사진과 읽은 값은 이 브라우저에만 남고(공유되지 않아요), '내 기록'에서 언제든 지울 수 있어요.</li>
     </ul>`;
 
   function openMask(file, mode, maxW) {
@@ -4848,7 +4957,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function bindUgc(h, seat) {
     const bucket = ugcBucket();
     const mine = bucket.seats[seat.key] || null;
-    draft = { tags: mine ? [...(mine.tags || [])] : [], ticket: mine ? mine.ticket || null : null, shots: mine ? [...(mine.shots || [])] : [] };
+    draft = { tags: mine ? [...(mine.tags || [])] : [], ticket: mine ? mine.ticket || null : null, shots: mine ? [...(mine.shots || [])] : [], shotFiles: [] };
     const root = (document.getElementById('sheetBody') && window.innerWidth <= 900) ? document.getElementById('sheetBody') : document.getElementById('seatPanel');
     if (!root) return;
 
@@ -4928,7 +5037,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const f = sf.files && sf.files[0]; if (!f) return;
       const d = await compressImage(f, 560, 0.62);
       if (d) {
-        draft.shots.push(d); toast('시야 사진을 첨부했어요');
+        draft.shots.push(d); draft.shotFiles.push(f);
+        toast('시야 사진을 첨부했어요');
         const th = root.querySelector('#thumbs'); if (th) th.insertAdjacentHTML('beforeend', `<figure><img src="${d}" alt="시야"><figcaption>시야</figcaption></figure>`);
         const st = root.querySelector('#shotState'); if (st) st.textContent = draft.shots.length + '장 첨부됨';
       }
@@ -4950,6 +5060,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       bucket2.list.unshift({ ...rec, help: prev ? prev.help || 0 : 0 });
       bucket2.list = bucket2.list.slice(0, 60);
       save(); paintSeatPanel(); toast('남겼어요. 고마워요!');
+      /* 공용 저장(Supabase) — 실패해도 이 기기 기록은 그대로 남는다 */
+      submitShared(h, seat, rec, draft.shotFiles && draft.shotFiles[0]);
     };
     root.querySelectorAll('[data-delreview]').forEach((b) => {
       b.onclick = () => {
@@ -4968,6 +5080,63 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     });
   }
 
+
+  /* 실사 사진 → 최대 1400px JPEG(0.82) → seat-photos 버킷 업로드 → 공개 URL */
+  function sbUpload(file, hallKey, seatId) {
+    return compressImage(file, 1400, 0.82).then((dataUrl) => {
+      if (!dataUrl) return null;
+      return fetch(dataUrl).then((r) => r.blob()).then((blob) => {
+        const name = encodeURIComponent(hallKey) + '/' + encodeURIComponent(seatId) + '-' + Date.now()
+          + '-' + Math.random().toString(36).slice(2, 8) + '.jpg';
+        const tm = sbTimer(20000);
+        return fetch(SB_URL + '/storage/v1/object/seat-photos/' + name, {
+          method: 'POST', signal: tm.signal,
+          headers: sbHeaders({ 'Content-Type': 'image/jpeg', 'cache-control': '3600', 'x-upsert': 'false' }),
+          body: blob
+        }).then((r) => {
+          tm.done();
+          if (!r.ok) throw new Error('upload HTTP ' + r.status);
+          return SB_URL + '/storage/v1/object/public/seat-photos/' + name;
+        }, (e) => { tm.done(); throw e; });
+      });
+    });
+  }
+
+  /* 이 기기에 저장한 뒤 공용으로도 올린다. 티켓 사진은 올리지 않고 verified만 보낸다. */
+  function submitShared(h, seat, rec, file) {
+    const go = async () => {
+      let photoUrl = null;
+      if (file) { try { photoUrl = await sbUpload(file, h.id, seat.key); } catch (e) { photoUrl = null; } }
+      const body = {
+        hall_key: h.id, seat_id: seat.key,
+        nickname: String(rec.author || '익명').slice(0, 12),
+        movie: rec.movie || null,
+        comment: rec.text || null,
+        photo_url: photoUrl,
+        verified: !!rec.ticket
+      };
+      const tm = sbTimer(15000);
+      let row = null;
+      try {
+        const r = await fetch(SB_URL + '/rest/v1/seat_reviews', {
+          method: 'POST', signal: tm.signal,
+          headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=representation' }),
+          body: JSON.stringify(body)
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const rows = await r.json().catch(() => []);
+        row = (Array.isArray(rows) && rows[0]) || null;
+      } finally { tm.done(); }
+      const cur = (ugcBucket().seats || {})[seat.key];
+      if (row) {
+        if (cur) { cur.rid = row.id; save(); }
+        SB.rows.unshift(row); sbIndex(); sbStore();
+        if (state.view === 'hall') paintSeatPanel();
+        toast('모두에게 공유했어요');
+      }
+    };
+    go().catch(() => toast('공유 저장은 실패했어요 — 이 기기에는 남아 있어요'));
+  }
 
   /* ---------- 티켓 OCR — Gemini Flash 서버리스(api/ocr.js) ----------
      사진을 브라우저에서 가볍게 줄여 서버로 한 번 보내고, 읽은 결과는 이 기기에 캐시한다.
@@ -5288,7 +5457,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <li>티켓 사진은 글자 인식을 위해 <b>외부 OCR 서버로 1회 전송</b>되고, 서버에는 저장하지 않아요.</li>
           <li>전송에 실패하면 사진은 서버로 가지 않고 <b>이 기기에서만</b> 처리돼요.</li>
           <li>바코드·예매번호는 올리기 전에 검게 가릴 수 있어요.</li>
-          <li>읽은 값·사진은 이 브라우저에만 남고, '내 기록'에서 언제든 지울 수 있어요.</li>
+          <li>티켓 사진과 읽은 값은 이 브라우저에만 남고(공유되지 않아요), '내 기록'에서 언제든 지울 수 있어요.</li>
         </ul>
       </div>
     </div>`);
@@ -5525,7 +5694,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <button class="avatar" id="myAvatar" type="button" aria-label="프로필 사진 변경">${avatarHtml()}</button>
         <div style="flex:1;min-width:0">
           <div class="my-name" id="myName">${esc(nickname || '내 좌석 기록')}</div>
-          <div class="my-sub" id="mySub">${nickname ? '내 좌석 기록' : '닉네임은 후기를 남길 때 정해요'} · 이 브라우저에만 저장</div>
+          <div class="my-sub" id="mySub">${nickname ? '내 좌석 기록' : '닉네임은 후기를 남길 때 정해요'} · 이 기기 기록 + 공유한 후기</div>
           <div class="my-actions">
             <button class="chip sm" id="avatarChange" type="button">프로필 사진 변경</button>
             <button class="chip sm" id="avatarClear" type="button" style="${avatarImg ? '' : 'display:none'}">사진 지우기</button>
@@ -5541,7 +5710,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <div class="metric"><span>즐겨찾는 좌석</span><b class="num">${favList.length}</b></div>
       </div>
       <div class="storagenote">
-        <b>이 브라우저에만 저장돼요.</b> 후기·사진·즐겨찾기는 서버로 보내지 않고 이 기기 저장소에만 남아요. 브라우저 데이터를 지우거나 다른 기기로 바꾸면 함께 사라져요.
+        <b>이 기기에도 저장돼요.</b> 후기·사진은 모두에게 공유되고, 이 기기 저장소에도 함께 남아요. 티켓 사진은 기기에만 보관되고 공유되지 않아요.
       </div>
     </div>
 
@@ -5758,6 +5927,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
   applyHash();
   render();
+  /* 공용 후기·실사: 앱을 열 때 한 번, 이후에는 상영관에 들어갈 때 1분 스로틀로 새로 받는다.
+     네트워크·CORS가 막혀도 로컬 기록과 마지막으로 받아 둔 목록으로 화면은 그대로 보인다. */
+  sbRestore();
+  sbFetch(true).then((ok) => {
+    if (!ok) return;
+    try {
+      if (state.view === 'home' || state.view === 'theater') render();
+      else if (state.view === 'hall') { paintSeatMap(); paintSeatPanel(); }
+    } catch (e) {}
+  });
   window.addEventListener('popstate', () => { applyHash(); render(); });
   window.addEventListener('hashchange', () => { applyHash(); render(); });
   /* 지역 탭 줄을 좌우로 스크롤할 때 힌트 표시/숨김을 바로 반영 (scroll은 버블하지 않아 capture로 받는다) */
