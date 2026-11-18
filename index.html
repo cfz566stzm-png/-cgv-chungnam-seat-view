@@ -1445,6 +1445,54 @@ input,select,textarea,
 .ugc-sub,.dstat-note,.ana-note,.v3d-disc{line-height:1.62}
 .card-pad{box-sizing:border-box}
 
+/* =====================================================================
+   11-18 오전 — 모바일 상단 잘림 · 크게 보기 버튼 겹침 최종 정리
+   ===================================================================== */
+
+/* ── 좌석 비교 창: 위(제목·닫기)가 잘리지 않게 ──
+   아이폰 사파리의 vh는 주소창이 접힌 '큰' 높이라, 92vh 상자 + 가운데 정렬이면
+   위아래로 삐져나가 제목 줄이 화면 밖으로 잘렸다. 부모 높이에 맞춰 제한한다. */
+.cmpmodal{
+  align-items:center;justify-content:center;height:100dvh;max-height:100dvh;
+  padding:calc(env(safe-area-inset-top, 0px) + 8px) 8px calc(env(safe-area-inset-bottom, 0px) + 8px);
+  overflow:hidden;
+}
+.cmp-inner{max-height:100%;max-width:100%;min-height:0;overflow:hidden}
+.cmp-top{flex:0 0 auto}
+.cmp-grid{min-height:0;overscroll-behavior:contain}
+.cmp-tablewrap{flex:0 0 auto;max-height:min(38vh, 40dvh)}
+.cmp-foot{flex:0 0 auto;margin:0}
+@media (min-width:760px){
+  .cmpmodal{padding:14px}
+}
+
+/* ── 크게 보기 HUD: 영상 · 소리 · 화각을 한 줄에, 겹침 없이 ──
+   영상 버튼이 38×38 원으로 줄어들면서 글자가 삐져나와 '화각 1x'를 덮고 있었다.
+   글자 버튼(.v3d-vid)은 원래 크기대로 두고, 소리는 아이콘 원형으로 맞춘다. */
+.big-inner .v3d-bar{
+  position:absolute;left:calc(env(safe-area-inset-left, 0px) + 12px);right:auto;
+  top:auto;bottom:calc(env(safe-area-inset-bottom, 0px) + 12px);
+  margin:0;padding:0;border:0;background:transparent;box-shadow:none;
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;row-gap:6px;
+  max-width:calc(100% - 24px);z-index:6;
+}
+.big-inner .v3d-bar .v3d-vid{
+  width:auto;min-width:0;height:34px;padding:0 12px;border-radius:999px;
+  font-size:12px;font-weight:850;background:rgba(0,168,98,.88);color:#fff;
+}
+.big-inner .v3d-bar .v3d-vid::after{content:none}
+.big-inner .v3d-bar .v3d-vid[aria-pressed="true"]{background:rgba(255,255,255,.92);color:#0B1210}
+.big-inner .v3d-bar .v3d-mute{width:34px;height:34px;padding:0;border-radius:999px;font-size:13px}
+.big-inner .v3d-bar .v3d-zoom{flex:0 0 auto;gap:2px}
+.big-inner .v3d-bar .v3d-zoom button{height:30px;padding:0 10px;font-size:11.5px}
+.big-inner .v3d-bar .v3d-reset,.big-inner .v3d-bar .v3d-big{display:none!important}
+@media (max-height:420px){
+  .big-inner .v3d-bar{gap:7px}
+  .big-inner .v3d-bar .v3d-vid{height:30px;padding:0 10px;font-size:11.5px}
+  .big-inner .v3d-bar .v3d-mute{width:30px;height:30px;font-size:12px}
+  .big-inner .v3d-bar .v3d-zoom button{height:27px;padding:0 9px;font-size:11px}
+}
+
 </style>
 </head>
 <body>
@@ -1730,7 +1778,10 @@ input,select,textarea,
       vd.setAttribute('playsinline', '');
       vd.setAttribute('webkit-playsinline', '');
       vd.preload = 'metadata';
-      vd.style.cssText = 'position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none;';
+      /* iOS Safari: opacity:0 이거나 display:none 이면 디코딩을 멈추는 경우가 있어
+         화면 밖으로 밀지 않고 1px·거의 투명으로 화면 안에 둔다. */
+      vd.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:.01;pointer-events:none;z-index:-1;';
+      vd.setAttribute('disablepictureinpicture', '');
       vd.addEventListener('error', function () {
         global.__VIDEO_ERROR__ = (vd.error && vd.error.code) || -1;
         var btn = document.querySelector('[data-vid]');
@@ -1776,13 +1827,31 @@ input,select,textarea,
     this.render();
   }
 
+  /* 조작 버튼의 탐색 범위 — 캔버스를 감싸는 .v3d 와, 그 바로 뒤에 붙는 .v3d-bar 를
+     함께 본다. 예전에는 .v3d 안에서만 찾아서 '화면 아래 컨트롤 바'의 버튼이
+     전부 이벤트를 받지 못했다(영상·화각·리셋·젖히기 모두 무반응). */
+  Viewer.prototype._sel = function (sel) {
+    var sc = this.scopes || (this.root ? [this.root] : []);
+    var out = [];
+    for (var i = 0; i < sc.length; i++) {
+      if (!sc[i]) continue;
+      var list = sc[i].querySelectorAll(sel);
+      for (var j = 0; j < list.length; j++) if (out.indexOf(list[j]) < 0) out.push(list[j]);
+    }
+    return out;
+  };
+  Viewer.prototype._one = function (sel) {
+    var a = this._sel(sel);
+    return a.length ? a[0] : null;
+  };
+
   Viewer.prototype._vidButton = function (on) {
-    var btn = this.root && this.root.querySelector('[data-vid]');
+    var btn = this._one('[data-vid]');
     if (btn) {
       btn.setAttribute('aria-pressed', on ? 'true' : 'false');
       btn.textContent = on ? '⏸ 영상' : '▶ 영상';
     }
-    var mb = this.root && this.root.querySelector('[data-mute]');
+    var mb = this._one('[data-mute]');
     if (mb) {
       mb.style.display = on ? '' : 'none';
       mb.textContent = this.video && this.video.muted ? '🔇' : '🔊';
@@ -1790,8 +1859,8 @@ input,select,textarea,
   };
 
   Viewer.prototype._paintRecBtn = function () {
-    var btn = this.root && this.root.querySelector('[data-recline]');
-    var rd = this.root && this.root.querySelector('[data-rec-read]');
+    var btn = this._one('[data-recline]');
+    var rd = this._one('[data-rec-read]');
     var rec = this._rec || 0;
     if (rd) {
       /* 젖힐수록 눈높이 −12 cm · 시선 +15° — 숫자로도 같이 보여 준다 */
@@ -1833,14 +1902,19 @@ input,select,textarea,
   };
 
   Viewer.prototype.toggleVideo = function () {
-    var v = this.video;
+    var self = this, v = this.video;
     if (!v) return;
     if (v.paused) {
       try { v.muted = true; } catch (e) {}
+      /* 메타데이터만 받아 둔 상태에서 재생을 누르면 iOS는 한 번 더 load()가 필요하다 */
+      if (v.readyState === 0) { try { v.load(); } catch (e) {} }
       var pr = v.play();
-      if (pr && pr.catch) pr.catch(function () {});
       this._vidButton(true);
       this._loop();
+      if (pr && pr.then) {
+        pr.then(function () { self._vidButton(true); self._loop(); })
+          .catch(function () { self._vidButton(false); self.render(); });
+      }
     } else {
       try { v.pause(); } catch (e) {}
       this._vidButton(false);
@@ -1852,7 +1926,7 @@ input,select,textarea,
     var v = this.video;
     if (!v) return;
     v.muted = !v.muted;
-    var mb = this.root && this.root.querySelector('[data-mute]');
+    var mb = this._one('[data-mute]');
     if (mb) { mb.textContent = v.muted ? '🔇' : '🔊'; mb.setAttribute('aria-pressed', v.muted ? 'true' : 'false'); }
   };
 
@@ -2322,10 +2396,6 @@ input,select,textarea,
         tex = vb; tX = 0; tY = 0; tW = VID_W; tH = VID_H;
       } catch (e) { tex = img; }
     }
-    /* 화면을 잘게 나눠 그린다 — 큰 스크린(용산 22.4 m)을 가까이서 보면
-       한 줄로 그릴 때 원근 때문에 세로 이음새가 생기므로 세로로도 나눈다. */
-    var NX = 24;
-    var NY = Math.max(1, Math.min(4, Math.round(ih / 6)));
     var yB0 = scrB + (scrH - ih) / 2, yT0 = yB0 + ih;
     /* 화면 영역 밖으로 넘치지 않게 한 번만 클립 (타일마다 클립하면 그 경계가 격자로 보임) */
     ctx.save();
@@ -2349,16 +2419,84 @@ input,select,textarea,
       ctx.closePath();
       ctx.clip();
     }
-    for (var k2 = 0; k2 < NY; k2++) {
-      var yy0b = yB0 + ih * k2 / NY, yy1b = yB0 + ih * (k2 + 1) / NY;
-      for (var j = 0; j < NX; j++) {
-        var a0 = -iw / 2 + iw * j / NX, a1 = -iw / 2 + iw * (j + 1) / NX;
-        texCell({
-          pts: [toCam(a0, yy1b, scrZ(a0)), toCam(a1, yy1b, scrZ(a1)), toCam(a1, yy0b, scrZ(a1)), toCam(a0, yy0b, scrZ(a0))],
-          sx0: tX + tW * j / NX, sy0: tY + tH * (NY - 1 - k2) / NY, sw: tW / NX, sh: tH / NY
-        }, tex, null);
+    /* ---- 스크린 원근 메쉬(삼각분할) ----
+       예전에는 세로 스트립(24열 × 1~4행)만 나눠 그려서, 앞줄·측면(B14 등)처럼 대각선
+       원근이 큰 자리에서 지평선이 계단처럼 어긋나고 세로 줄무늬가 보였다.
+       지금은 칸 가장자리·중심의 실제 투영 위치와 아핀 근사의 차이를 px로 재어
+       오차 0.6px 이하가 될 때까지 칸을 재귀적으로 쪼갠 뒤, 칸마다 클립한
+       아핀 삼각형 2개로 그린다. 칸 경계는 0.6px 겹쳐 이음매를 지운다. */
+    var MESH_MAX = 720, meshCells = 0;
+    function drawScreenCell(s0, s1, t0, t1, A, B, C, D) {
+      var tx0 = tX + tW * s0, tx1 = tX + tW * s1;
+      var ty0 = tY + tH * (1 - t1), ty1 = tY + tH * (1 - t0);
+      var rw = Math.max(0.001, tx1 - tx0), rh = Math.max(0.001, ty1 - ty0);
+      var rc = [tx0, ty0, rw, rh];
+      var SA = [tx0, ty1], SB = [tx1, ty1], SC = [tx1, ty0], SD = [tx0, ty0];
+      if (!(A[2] >= NEAR_C && B[2] >= NEAR_C && C[2] >= NEAR_C && D[2] >= NEAR_C)) {
+        /* 근평면을 걸치는 칸(카메라 바로 옆 판)은 근평면 클립 경로로 그린다 */
+        quadTex([A, B, C, D], [SA, SB, SC, SD], tex, null, rc);
+        return;
       }
+      var pA = [sx(A), sy(A)], pB = [sx(B), sy(B)], pC = [sx(C), sy(C)], pD = [sx(D), sy(D)];
+      var cx = (pA[0] + pB[0] + pC[0] + pD[0]) / 4, cy = (pA[1] + pB[1] + pC[1] + pD[1]) / 4;
+      function grow(p) {
+        var dx = p[0] - cx, dy = p[1] - cy, d = Math.sqrt(dx * dx + dy * dy) || 1;
+        return [p[0] + dx / d * 0.6, p[1] + dy / d * 0.6];
+      }
+      var eA = grow(pA), eB = grow(pB), eC = grow(pC), eD = grow(pD);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(eA[0], eA[1]); ctx.lineTo(eB[0], eB[1]);
+      ctx.lineTo(eC[0], eC[1]); ctx.lineTo(eD[0], eD[1]);
+      ctx.closePath(); ctx.clip();
+      ctx.imageSmoothingEnabled = true;
+      var M1 = affTri(pA, pB, pC, SA, SB, SC);
+      if (M1) {
+        ctx.setTransform(M1[0], M1[1], M1[2], M1[3], M1[4], M1[5]);
+        ctx.drawImage(tex, rc[0], rc[1], rc[2], rc[3], rc[0], rc[1], rc[2], rc[3]);
+      }
+      var M2 = affTri(pA, pC, pD, SA, SC, SD);
+      if (M2) {
+        ctx.setTransform(M2[0], M2[1], M2[2], M2[3], M2[4], M2[5]);
+        ctx.drawImage(tex, rc[0], rc[1], rc[2], rc[3], rc[0], rc[1], rc[2], rc[3]);
+      }
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.restore();
     }
+    function meshCell(s0, s1, t0, t1, depth) {
+      if (meshCells > MESH_MAX) return;
+      var uA = -iw / 2 + iw * s0, uB = -iw / 2 + iw * s1;
+      var yA = yB0 + ih * t0, yBt = yB0 + ih * t1;
+      var A = toCam(uA, yA, scrZ(uA)), B = toCam(uB, yA, scrZ(uB));
+      var C = toCam(uB, yBt, scrZ(uB)), D = toCam(uA, yBt, scrZ(uA));
+      var front = (A[2] >= NEAR_C && B[2] >= NEAR_C && C[2] >= NEAR_C && D[2] >= NEAR_C);
+      if (depth < 7) {
+        var sm = (s0 + s1) / 2, tm = (t0 + t1) / 2;
+        var split = !front;
+        if (front) {
+          var um = (uA + uB) / 2, ym = (yA + yBt) / 2;
+          var mid = toCam(um, ym, scrZ(um));
+          if (mid[2] < NEAR_C) {
+            split = true;
+          } else {
+            var ex = sx(mid) - (sx(A) + sx(B) + sx(C) + sx(D)) / 4;
+            var ey = sy(mid) - (sy(A) + sy(B) + sy(C) + sy(D)) / 4;
+            var err = Math.sqrt(ex * ex + ey * ey);
+            var wpx = Math.max(Math.abs(sx(B) - sx(A)), Math.abs(sx(D) - sx(C)));
+            var hpx = Math.max(Math.abs(sy(C) - sy(B)), Math.abs(sy(D) - sy(A)));
+            if (err > 0.6 || wpx > 240 || hpx > 240) split = true;
+          }
+        }
+        if (split) {
+          meshCell(s0, sm, t0, tm, depth + 1); meshCell(sm, s1, t0, tm, depth + 1);
+          meshCell(s0, sm, tm, t1, depth + 1); meshCell(sm, s1, tm, t1, depth + 1);
+          return;
+        }
+      }
+      meshCells++;
+      drawScreenCell(s0, s1, t0, t1, A, B, C, D);
+    }
+    meshCell(0, 1, 0, 1, 0);
     ctx.restore();
 
     /* 영사된 빛의 느낌 — 화면 위에 아주 옅게만 얹어 그림은 그대로 선명하게 둔다 */
@@ -2787,36 +2925,36 @@ input,select,textarea,
      --------------------------------------------------------------- */
   var byCanvas = new WeakMap();
 
-  function bindHud(v, wrap) {
-    if (!wrap.querySelector('[data-zoom]')) return;
-    var zs = wrap.querySelectorAll('[data-zoom]');
+  function bindHud(v) {
+    if (!v._sel('[data-zoom]').length) return;
+    var zs = v._sel('[data-zoom]');
     for (var k = 0; k < zs.length; k++) {
       zs[k].addEventListener('click', function (e) {
         var z = e.currentTarget.getAttribute('data-zoom');
         v.zoom = z;
         v.fov1x = 76;   // 기준 1x 화각 유지, wide는 렌더에서 2배
-        var all = wrap.querySelectorAll('[data-zoom]');
+        var all = v._sel('[data-zoom]');
         for (var m = 0; m < all.length; m++) {
           all[m].setAttribute('aria-pressed', all[m].getAttribute('data-zoom') === z ? 'true' : 'false');
         }
-        var note = wrap.querySelector('.v3d-zoomnote');
+        var note = v._one('.v3d-zoomnote');
         if (note) note.textContent = z === 'wide' ? '광각 0.5x · 실제 눈보다 넓게 보입니다' : '사람 눈 1배율 · 실제로 보이는 크기';
         v.render();
       });
     }
-    var rb = wrap.querySelector('[data-reset]');
+    var rb = v._one('[data-reset]');
     if (rb) rb.addEventListener('click', function () { v.reset(false); });
-    var vb = wrap.querySelector('[data-vid]');
+    var vb = v._one('[data-vid]');
     if (vb) {
       v._vidButton(!!(v.video && !v.video.paused));
       vb.addEventListener('click', function (e) { e.preventDefault(); v.toggleVideo(); });
     }
-    var rcb = wrap.querySelector('[data-recline]');
+    var rcb = v._one('[data-recline]');
     if (rcb) {
       v._paintRecBtn();
       rcb.addEventListener('click', function (e) { e.preventDefault(); v.toggleRecline(); });
     }
-    var steps = wrap.querySelectorAll('[data-recline-step]');
+    var steps = v._sel('[data-recline-step]');
     for (var si = 0; si < steps.length; si++) {
       (function (bind) {
         bind.addEventListener('click', function (e) {
@@ -2825,7 +2963,7 @@ input,select,textarea,
         });
       })(steps[si]);
     }
-    var mb = wrap.querySelector('[data-mute]');
+    var mb = v._one('[data-mute]');
     if (mb) {
       if (!v.video || v.video.paused) mb.style.display = 'none';
       mb.addEventListener('click', function (e) { e.preventDefault(); v.toggleMute(); });
@@ -2838,8 +2976,12 @@ input,select,textarea,
     var wrap = cv.parentNode;
     var v = new Viewer(cv, opts);
     v.root = wrap;
+    /* 바인딩 범위: .v3d(캔버스·HUD) + 바로 뒤의 .v3d-bar(화면 아래 컨트롤 바) */
+    v.scopes = [wrap];
+    var sib = wrap && wrap.nextElementSibling;
+    if (sib && /(^|\s)v3d-bar(\s|$)/.test(sib.className || '')) v.scopes.push(sib);
     byCanvas.set(cv, v);
-    bindHud(v, wrap);
+    bindHud(v);
     if (global.ResizeObserver) {
       var lastW = 0;
       v._ro = new ResizeObserver(function () {
@@ -4559,7 +4701,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const sys = h.params.system ? ' ' + h.params.system.replace(/^IMAX /, ' ') : '';
       return `IMAX${sys} · ${Number(h.params.native || h.params.aspect).toFixed(2)}:1 · ${fmt(h.params.screenW, 1)}×${fmt(h.params.screenH, 1)} m`;
     }
-    if (/SCREENX/.test(t)) return 'SCREENX · 좌우 윙';
+    if (/SCREENX/.test(t)) return isFourSide(h) ? 'SCREENX · 4면(천장)' : 'SCREENX · 3면(좌우 윙)';
     if (/4DX/.test(t)) return '4DX';
     if (/리클라이너/.test(t) || /PRIVATE BOX/.test(t)) return '리클라이너';
     if (/씨네앤포레/.test(t)) return '씨네앤포레';
@@ -4579,9 +4721,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return !!(h && seat && isReclinerHall(h) && seat.t !== 'p');
   }
 
-  /* 용산아이파크몰 SCREENX관 = 정면+좌+우+천장 4면 스크린 */
+  /* 용산아이파크몰 SCREENX관(4면) = 정면+좌+우+천장.
+     같은 지점의 14관(3면 SCREENX)은 이름이 번호라 4면이 아니다.
+     예전에는 지점 id만 보고 판단해 14관에도 천장 스크린이 붙었다.
+     다른 지점의 SCREENX관은 3면이므로 지점(0013)과 관 이름을 함께 본다. */
   function isFourSide(h) {
-    return state.theaterId === '0013' && /SCREENX/.test((h.tags || []).join(' '));
+    if (!h) return false;
+    if (!/SCREENX/.test((h.tags || []).join(' '))) return false;
+    return state.theaterId === '0013' && /SCREENX/i.test(h.name || '');
   }
 
   function simHtml(h, seat, m) {
