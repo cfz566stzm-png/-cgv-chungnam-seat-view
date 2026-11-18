@@ -2932,7 +2932,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
     var isUltra = /ULTRA 4DX/i.test(tagsStr);
     var wingLc = null, wingRc = null;
     if (/SCREENX/i.test(tagsStr) || isUltra || o.fourSide) {
-      var edgeFrac = 0.22;
+      var edgeFrac = 0.30;
       try {
         if (tW && tH) {
           [[-1, tX], [1, tX + tW * (1 - edgeFrac)]].forEach(function (cfg) {
@@ -2963,7 +2963,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
         var u = (wz0 - z) / (wz0 - wz1);
         return halfW2 + 0.32 + flare * Math.max(0, u);
       };
-      var wingAlpha = vplay ? 0.52 : 0.47;
+      var wingAlpha = vplay ? 0.58 : 0.52;
       var WSEG = 5;
       [-1, 1].forEach(function (sgn) {
         var img = sgn < 0 ? wingLc : wingRc;
@@ -2973,28 +2973,35 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
           var yt0 = wyT0 + (wyT1 - wyT0) * t0, yt1 = wyT0 + (wyT1 - wyT0) * t1;
           var yb0 = wyB0 + (wyB1 - wyB0) * t0, yb1 = wyB0 + (wyB1 - wyB0) * t1;
           var x0 = sgn * wingX(z0), x1 = sgn * wingX(z1);
-          /* 뒤로 갈수록 서서히 사라져 벽면에 자연스럽게 스며든다 */
-          var fade = 1 - 0.55 * t1;
+          /* 조각마다 투명도를 달리하면 경계가 띠로 보인다 — 모든 조각을 같은 밝기로 깔고
+             사라짐은 아래 그라데이션 한 장으로 준다. */
           /* 왼쪽 윙은 화면 가장자리(오른쪽 끝)에서 시작하므로 텍스처를 좌우 반전해 잇는다 */
           var u0 = sgn < 0 ? WING_W * (1 - t0) : WING_W * t0;
           var u1 = sgn < 0 ? WING_W * (1 - t1) : WING_W * t1;
           quadTex(
             [toCam(x0, yt0, z0), toCam(x1, yt1, z1), toCam(x1, yb1, z1), toCam(x0, yb0, z0)],
             [[u0, 0], [u1, 0], [u1, WING_H], [u0, WING_H]],
-            img, wingAlpha * fade, [0, 0, WING_W, WING_H]);
+            img, wingAlpha, [0, 0, WING_W, WING_H]);
         }
       });
       [-1, 1].forEach(function (sgn) {
         var xa = sgn * wingX(wz0), xb = sgn * wingX(wz1);
-        /* 윙 스크린 안쪽으로 떨어지는 어두운 그라데이션 — 벽에 투사된 느낌 */
-        var wg = ctx.createLinearGradient(W / 2, 0, sgn > 0 ? W : 0, 0);
-        wg.addColorStop(0, 'rgba(4,6,7,0.10)');
-        wg.addColorStop(1, 'rgba(4,6,7,0.50)');
+        /* 벽으로 스며들며 어두워지는 한 장의 그라데이션 */
         if (path([toCam(xa, wyB0, wz0), toCam(xb, wyB1, wz1), toCam(xb, wyT1, wz1), toCam(xa, wyT0, wz0)])) {
+          var cA = toCam(xa, (wyT0 + wyB0) / 2, wz0), cB = toCam(xb, (wyT1 + wyB1) / 2, wz1);
+          var wg;
+          if (cA[2] > NEAR && cB[2] > NEAR) {
+            wg = ctx.createLinearGradient(sx(cA), sy(cA), sx(cB), sy(cB));
+          } else {
+            wg = ctx.createLinearGradient(W / 2, H / 2, sgn > 0 ? W : 0, H / 2);
+          }
+          wg.addColorStop(0, 'rgba(4,6,7,0.04)');
+          wg.addColorStop(0.55, 'rgba(4,6,7,0.22)');
+          wg.addColorStop(1, 'rgba(4,6,7,0.46)');
           ctx.fillStyle = wg; ctx.fill();
         }
         face([toCam(xa, wyB0, wz0), toCam(xb, wyB1, wz1), toCam(xb, wyT1, wz1), toCam(xa, wyT0, wz0)],
-             null, 'rgba(255,255,255,0.07)', 2);
+             null, 'rgba(255,255,255,0.10)', 2);
       });
     }
 
