@@ -1750,7 +1750,7 @@ input,select,textarea,
   /* 아이폰 Safari에서는 <video>를 drawImage로 그릴 때마다 텍스처 업로드가 일어난다.
      24개 타일마다 비디오를 직접 그리면 프레임이 끊기므로, 프레임당 딱 한 번만
      640×360 버퍼에 복사하고 타일은 그 버퍼에서 잘라 쓴다. */
-  var VID_W = 640, VID_H = 360, vidBuf = null;
+  var VID_W = 512, VID_H = 288, vidBuf = null;
 
   function videoBuffer() {
     if (!vidBuf) {
@@ -2251,7 +2251,7 @@ input,select,textarea,
     function triClip(P0, P1, P2, S0, S1, S2, img, alpha, rect) {
       var M = affTri(P0, P1, P2, S0, S1, S2);
       if (!M) return;
-      var e = offsetPoly([P0, P1, P2], 1.2);
+      var e = offsetPoly([P0, P1, P2], 2.0);
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(e[0][0], e[0][1]); ctx.lineTo(e[1][0], e[1][1]); ctx.lineTo(e[2][0], e[2][1]);
@@ -2460,7 +2460,7 @@ input,select,textarea,
        지금은 칸 가장자리·중심의 실제 투영 위치와 아핀 근사의 차이를 px로 재어
        오차 0.6px 이하가 될 때까지 칸을 재귀적으로 쪼갠 뒤, 칸마다 클립한
        아핀 삼각형 2개로 그린다. 칸 경계는 0.6px 겹쳐 이음매를 지운다. */
-    var MESH_MAX = 720, meshCells = 0;
+    var MESH_MAX = 28, meshCells = 0;
     function drawScreenCell(s0, s1, t0, t1, A, B, C, D) {
       var tx0 = tX + tW * s0, tx1 = tX + tW * s1;
       var ty0 = tY + tH * (1 - t1), ty1 = tY + tH * (1 - t0);
@@ -2485,8 +2485,9 @@ input,select,textarea,
       var A = toCam(uA, yA, scrZ(uA)), B = toCam(uB, yA, scrZ(uB));
       var C = toCam(uB, yBt, scrZ(uB)), D = toCam(uA, yBt, scrZ(uA));
       var front = (A[2] >= NEAR_C && B[2] >= NEAR_C && C[2] >= NEAR_C && D[2] >= NEAR_C);
-      if (depth < 7) {
-        var sm = (s0 + s1) / 2, tm = (t0 + t1) / 2;
+      /* 칸을 더 쪼갭니다. 다만 아이폰 사파리에서 프레임이 끓지 않도록
+         칸 수 상한(MESH_MAX)과 깊이 2까지만 — 대부분 4~8열 × 2행에서 끝난다. */
+      if (depth < 2 && meshCells + 4 <= MESH_MAX) {
         var split = !front;
         if (front) {
           var um = (uA + uB) / 2, ym = (yA + yBt) / 2;
@@ -2497,12 +2498,11 @@ input,select,textarea,
             var ex = sx(mid) - (sx(A) + sx(B) + sx(C) + sx(D)) / 4;
             var ey = sy(mid) - (sy(A) + sy(B) + sy(C) + sy(D)) / 4;
             var err = Math.sqrt(ex * ex + ey * ey);
-            var wpx = Math.max(Math.abs(sx(B) - sx(A)), Math.abs(sx(D) - sx(C)));
-            var hpx = Math.max(Math.abs(sy(C) - sy(B)), Math.abs(sy(D) - sy(A)));
-            if (err > 0.6 || wpx > 240 || hpx > 240) split = true;
+            if (err > 1.6) split = true;
           }
         }
         if (split) {
+          var sm = (s0 + s1) / 2, tm = (t0 + t1) / 2;
           meshCell(s0, sm, t0, tm, depth + 1); meshCell(sm, s1, t0, tm, depth + 1);
           meshCell(s0, sm, tm, t1, depth + 1); meshCell(sm, s1, tm, t1, depth + 1);
           return;
@@ -2511,7 +2511,13 @@ input,select,textarea,
       meshCells++;
       drawScreenCell(s0, s1, t0, t1, A, B, C, D);
     }
-    meshCell(0, 1, 0, 1, 0);
+    /* 기본 격자: 평면 4×2, 곡면(IMAX·SCREENX) 6×2 — 곡률이 있을 때만 열을 늘린다 */
+    var NX0 = Math.abs(curve) > 0.08 ? 6 : 4, NY0 = 2;
+    for (var mi = 0; mi < NX0; mi++) {
+      for (var mj = 0; mj < NY0; mj++) {
+        meshCell(mi / NX0, (mi + 1) / NX0, mj / NY0, (mj + 1) / NY0, 0);
+      }
+    }
     ctx.restore();
 
     /* 영사된 빛의 느낌 — 화면 위에 아주 옅게만 얹어 그림은 그대로 선명하게 둔다 */
@@ -2589,7 +2595,7 @@ input,select,textarea,
       };
       var wingAlpha = vplay ? 0.5 : 0.46;
       var wing2 = wingTex;
-      var WSEG = 10;
+      var WSEG = 4;      /* 윙도 4조각이면 충분 — 프레임 비용을 줄인다 */
       [-1, 1].forEach(function (sgn) {
         for (var k = 0; k < WSEG; k++) {
           var z0 = wz0 + (wz1 - wz0) * k / WSEG, z1 = wz0 + (wz1 - wz0) * (k + 1) / WSEG;
@@ -2625,7 +2631,7 @@ input,select,textarea,
       var cyFront = ceilY - 1.55, cyBack = ceilY - 0.06;
       function cyAt(zz) { var kk = (zz - cz0) / (cz1 - cz0); return cyFront + (cyBack - cyFront) * kk; }
       var ceilTex = wingTex || img;
-      var CSEG = 8;
+      var CSEG = 4;
       for (var ck = 0; ck < CSEG; ck++) {
         var za = cz0 + (cz1 - cz0) * ck / CSEG, zb = cz0 + (cz1 - cz0) * (ck + 1) / CSEG;
         var ya = cyAt(za), yb = cyAt(zb);
