@@ -5724,7 +5724,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       ['스크린 크기', `<b>${fmt(p.screenW, 1)} × ${fmt(p.screenH, 1)} m</b>`, pr.screen],
       ['화면비', `<b>${Number(p.native || p.aspect).toFixed(2)} : 1</b>${p.system ? ` <span class="sysmini">${esc(p.system)}</span>` : ''}`, pr.screen],
       ['편안함', `<b class="anax">평가 불가</b> <span class="anax">좌석 쿠션·등받이 측정값 없음</span>`, 'U']
-    ];
+    ]
+    /* 고개(시선) 각도 행도 단면도와 같은 기준 — 등받이를 젖히는 리클라이너석에서만 보여 준다.
+       일반석·특별석은 등받이가 고정이라 고개 각도를 따로 띄우지 않는다(나머지 행·레이아웃은 그대로). */
+      .filter((r) => r[0] !== '고개 각도' || recl);
     return `<section class="ana">
       <div class="ana-head"><h4>시야 분석</h4><span>${esc(seat.key)} · ${esc(h.name)}</span></div>
       <div class="ana-key">
@@ -7318,9 +7321,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     });
     ctx.setLineDash([]);
 
+    /* 상단 지표 — 고개(시선) 각도는 등받이를 젖히면 머리와 함께 움직이는 리클라이너석에서만 보여 준다.
+       일반석·특별석은 단차·거리만 (사용자 요청: "리클라이너석만 그 고개각도가 보이게"). */
     ctx.fillStyle = '#6B7684'; ctx.font = '11px Pretendard, sans-serif'; ctx.textAlign = 'left';
-    const recTxt = canRecline(findHall(state.theaterId, state.hallId), seat) ? `  ·  등받이 ${Math.round(deg)}°` : '';
-    ctx.fillText(`고개 +${fmt(m.neck, 1)}°  ·  단차 ${fmt(m.steps, 1)}m  ·  거리 ${fmt(m.dist, 1)}m${recTxt}`, padL, 14);
+    const recl = canRecline(findHall(state.theaterId, state.hallId), seat);
+    const neckTxt = `${m.neck >= 0 ? '+' : '−'}${fmt(Math.abs(m.neck), 1)}°`;
+    const headTxt = recl
+      ? `고개 ${neckTxt}  ·  등받이 ${Math.round(deg)}°  ·  단차 ${fmt(m.steps, 1)}m  ·  거리 ${fmt(m.dist, 1)}m`
+      : `단차 ${fmt(m.steps, 1)}m  ·  거리 ${fmt(m.dist, 1)}m`;
+    ctx.fillText(headTxt, padL, 14);
   }
 
   /* ---------- MY ---------- */
