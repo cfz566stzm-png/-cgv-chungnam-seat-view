@@ -2465,7 +2465,10 @@ input,select,textarea,
       var tx0 = tX + tW * s0, tx1 = tX + tW * s1;
       var ty0 = tY + tH * (1 - t1), ty1 = tY + tH * (1 - t0);
       var rw = Math.max(0.001, tx1 - tx0), rh = Math.max(0.001, ty1 - ty0);
-      var rc = [tx0, ty0, rw, rh];
+      /* 칸 둘레로 텍스처를 1.5px 더 떠서 그린다 — drawImage가 칸 경계에서 텍셀을
+         클램프해 이웃 칸과 색이 어긋나던 1px 이음매를 없앤다. */
+      var pt = 1.5;
+      var rc = [tx0 - pt, ty0 - pt, rw + pt * 2, rh + pt * 2];
       var SA = [tx0, ty1], SB = [tx1, ty1], SC = [tx1, ty0], SD = [tx0, ty0];
       if (!(A[2] >= NEAR_C && B[2] >= NEAR_C && C[2] >= NEAR_C && D[2] >= NEAR_C)) {
         /* 근평면을 걸치는 칸(카메라 바로 옆 판)은 근평면 클립 경로로 그린다 */
