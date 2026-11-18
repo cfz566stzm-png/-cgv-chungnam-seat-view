@@ -683,6 +683,21 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .ana-src>b{font-size:11.5px;font-weight:850;color:var(--sub)}
 .ana-src div{font-size:11px;font-weight:600;color:var(--mute);line-height:1.5;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .ana-note{margin:0 14px 13px;font-size:11.5px;line-height:1.55;color:var(--mute);font-weight:600;word-break:keep-all}
+/* 입력한 앉은 눈높이와 A열 기준 단차의 계산 관계 — 두 숫자가 모순처럼 보이지 않게 */
+.ana-eye-note{margin:2px 14px 12px;padding:9px 11px;border-radius:10px;background:#F4F8F5;font-size:11.5px;line-height:1.6;font-weight:650;color:#4E5968;word-break:keep-all}
+.ana-eye-note b{font-weight:850;color:var(--ink);font-variant-numeric:tabular-nums}
+/* 모바일 시트 맨 위에 놓인 후기 폼 — 3D·시야 분석과 구분되는 카드 */
+.ugc-top{margin:12px 0 16px;padding:14px 13px 6px;border:1px solid var(--line-2);border-radius:16px;background:#fff}
+.ugc-top .ugc-sub{margin-bottom:2px}
+.ugc-more{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:#FAFBFC;padding:0 12px}
+.ugc-more>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;padding:11px 0;font-size:12.5px;font-weight:800;color:#4E5968}
+.ugc-more>summary::-webkit-details-marker{display:none}
+.ugc-more>summary::before{content:'▸';font-size:10px;color:var(--mute)}
+.ugc-more[open]>summary::before{content:'▾'}
+.ugc-more>summary i{font-style:normal;font-size:11px;font-weight:700;color:var(--mute)}
+.ugc-more .nickrow{margin-top:0}
+.ugc-more .mvwrap{margin-top:12px}
+.ugc-more .mvmeta{margin-bottom:12px}
 
 /* --- 좌석 비교 --- */
 .cmpchip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
@@ -4493,7 +4508,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <button type="button" class="eyectl-step" data-eye="-5" aria-label="키 5cm 줄이기">−</button>
         <b class="eyectl-h">${viewerSize.h} cm</b>
         <button type="button" class="eyectl-step" data-eye="5" aria-label="키 5cm 늘리기">+</button>
-        <span class="eyectl-eye">눈높이 <b>${(eyeCm / 100).toFixed(2)} m</b>${viewerSize.eye ? ' · 직접 입력' : ''}</span>
+        <span class="eyectl-eye">앉은 눈높이 <b>${(eyeCm / 100).toFixed(2)} m</b>${viewerSize.eye ? ' · 직접 입력' : ''}</span>
       </div>
       <div class="eyectl-row2">
         <label for="eyeSeat">앉은 눈높이 직접 입력</label>
@@ -6024,7 +6039,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       ['목 꺾임 (올려다보는 정도)', `<b>${neckWord(m.neck)}</b>`, 'E'],
       ['앞사람에 가리는 정도', `<b>${occWord(sPct)}</b><span class="occmini"><i style="width:${sPct.toFixed(1)}%"></i></span>`, 'E'],
       m.isBox ? ['박스 자리 높이', `<b>${fmt(m.eyeY, 2)} m</b> <span class="anax">스크린 바닥 기준 내 눈높이</span>`, 'E']
-              : ['앞줄보다 높은 정도', `<b>${fmt(m.steps, 2)} m</b> <span class="anax">내 눈높이 ${fmt(m.eyeY, 2)} m</span>`, 'E'],
+              : ['눈높이', `<b>${fmt(eyeMeters(p), 2)} m</b> <span class="anax">+ 의자 높이 ${fmt(m.steps, 2)} m</span>`, 'E'],
       ['좌석 유형', `<b>${esc(typeTxt)}</b> <span class="anax">${esc(typeNote)}</span>`, 'M'],
       ['스크린 크기', `<b>${fmt(p.screenW, 1)} × ${fmt(p.screenH, 1)} m</b>`, pr.screen],
       ['화면비', `<b>${Number(p.native || p.aspect).toFixed(2)} : 1</b>${p.system ? ` <span class="sysmini">${esc(p.system)}</span>` : ''}`, pr.screen],
@@ -6037,14 +6052,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       ['정면에서 좌우로 벗어난 각도', `${m.yaw >= 0 ? '+' : '−'}${fmt(Math.abs(m.yaw), 1)}°`],
       ['올려다보는 각도', `${m.neck >= 0 ? '+' : '−'}${fmt(Math.abs(m.neck), 1)}°`],
       ['앞사람 머리 가림 비율', sPct < 0.5 ? '없음' : fmt(sPct, 0) + '%'],
-      ['이 자리 눈높이(바닥 기준)', `${fmt(m.eyeY, 2)} m`]
+      ['이 자리 눈높이(A열 바닥 + 앉은 눈높이)', `${fmt(m.eyeY, 2)} m`]
     ];
+    const eyeNote = m.isBox ? '' : `<p class="ana-eye-note">‘의자 높이’는 맨 앞줄(A열) 바닥보다 이 자리 바닥이 얼마나 높은지예요(한 줄당 ${fmt(p.riser, 2)} m). 입력한 앉은 눈높이에 이 높이를 더해 시야를 계산해요.</p>`;
     return `<section class="ana">
       <div class="ana-head"><h4>시야 분석</h4><span>${esc(seat.key)} · ${esc(h.name)}</span></div>
       ${eyeCtlHtml(p)}
       <div class="ana-rows">
         ${rows.map(([k, v, lv]) => `<div class="ana-row"><span>${k}</span><span class="ana-v">${v}</span>${cfBadge(lv)}</div>`).join('')}
       </div>
+      ${eyeNote}
       <details class="ana-detail">
         <summary>자세한 수치 보기</summary>
         <div class="ana-rows tight">
@@ -6127,9 +6144,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     /* 모바일: 실사 사진이 있는 자리는 실사 탭을 먼저 — 3D는 그 옆 탭 */
     const wantTab = state._seatTouched ? (state.tab || 'sim') : (hasReal ? 'photo' : 'sim');
     const tab = wantTab === 'photo' && !arr.length ? 'sim' : wantTab;
+    /* 후기·사진 등록은 시트를 열자마자 보이게 맨 위에 둔다(시야 분석·3D보다 위).
+       선택 항목(닉네임·태그·본 영화)만 접어 두어 첫 화면 안에 '한마디 남기기'까지 들어온다. */
     return `
       <button class="back mini" data-go="hallback" style="margin:0 0 10px">‹ 좌석 선택으로</button>
       ${seatFlagBar(h, seat)}
+      ${ugcHtml(h, seat, true)}
       <div class="ptabs" role="tablist">
         <button data-ptab="photo" aria-pressed="${tab === 'photo'}" ${arr.length ? '' : 'disabled'}>${imgCount(arr) ? '📷 실제 사진 ' + imgCount(arr) : (linkCount(arr) ? '원문 링크 ' + linkCount(arr) : '실제 사진')}</button>
         <button data-ptab="sim" aria-pressed="${tab === 'sim'}">3D 시야</button>
@@ -6142,8 +6162,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <p class="sub" style="font-size:12.5px;margin-top:8px;line-height:1.55">스크린과 단차를 옆에서 본 그림이에요. 이 자리가 화면·단차와 어떤 높이 관계인지 보여요.</p>` : ''}
       </div>
       ${tab === 'sim' ? analysisHtml(h, seat, m) : ''}
-      ${seatActionsHtml(h, seat)}
-      ${ugcHtml(h, seat)}`;
+      ${seatActionsHtml(h, seat)}`;
   }
 
   /* 실사 사진 한 컷 — 촬영 정보(지점·관·좌석·날짜·방향·화각·검증·출처)를 함께 */
@@ -6584,7 +6603,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return '<span class="ticketbadge unverified">티켓 첨부(미검증)</span>';
   }
 
-  function ugcHtml(h, seat) {
+  function ugcHtml(h, seat, compact) {
     const bucket = store[ugcKey()] || { seats: {}, list: [] };
     const mine = (bucket.seats || {})[seat.key] || null;
     const localReviews = (bucket.list || []).filter((r) => r.seat === seat.key);
@@ -6596,7 +6615,23 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     /* 평점 — 이 자리 후기들의 평균 */
     const rated = reviews.concat(mine && mine.rating ? [mine] : []).map((r) => r.rating).filter((v) => typeof v === 'number' && v >= 1);
     const avgRating = rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : 0;
-    return `<div class="ugc">
+    /* 선택 항목 — 모바일에선 접어 두고, 꼭 쓰는 사람만 펼친다 */
+    const optional = `
+      <div class="nickrow">
+        <label for="revNick">닉네임</label>
+        <input id="revNick" maxlength="12" placeholder="비우면 익명" value="${esc(nickname)}" autocomplete="off">
+        <span>후기를 남길 때만 쓰여요</span>
+      </div>
+
+      <div class="tagpick" id="tags">${tags.map((tg) => `<button data-tag="${tg}" aria-pressed="${mine && (mine.tags || []).includes(tg)}">${tg}</button>`).join('')}</div>
+
+      <div class="mvwrap">
+        <input class="movieinput" id="movieInput" maxlength="40" placeholder="본 영화 (선택)" value="${esc(movie)}" autocomplete="off">
+        <button class="mvdrop" id="movieDrop" type="button" aria-label="지금 상영 중인 영화 목록 열기" title="지금 상영 중인 영화 목록">▾</button>
+        <div class="mvsug" id="movieSug" hidden></div>
+      </div>
+      <div class="mvmeta" id="movieMeta"></div>`;
+    return `<div class="ugc${compact ? ' ugc-top' : ''}">
       <div class="ugc-title">
         <h3>이 자리, 한마디</h3>
         <span class="badge plain">${reviews.length}개</span>
@@ -6631,20 +6666,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
       ${starPickHtml(mine)}
 
-      <div class="nickrow">
-        <label for="revNick">닉네임</label>
-        <input id="revNick" maxlength="12" placeholder="비우면 익명" value="${esc(nickname)}" autocomplete="off">
-        <span>후기를 남길 때만 쓰여요</span>
-      </div>
-
-      <div class="tagpick" id="tags">${tags.map((tg) => `<button data-tag="${tg}" aria-pressed="${mine && (mine.tags || []).includes(tg)}">${tg}</button>`).join('')}</div>
-
-      <div class="mvwrap">
-        <input class="movieinput" id="movieInput" maxlength="40" placeholder="본 영화 (선택)" value="${esc(movie)}" autocomplete="off">
-        <button class="mvdrop" id="movieDrop" type="button" aria-label="지금 상영 중인 영화 목록 열기" title="지금 상영 중인 영화 목록">▾</button>
-        <div class="mvsug" id="movieSug" hidden></div>
-      </div>
-      <div class="mvmeta" id="movieMeta"></div>
+      ${compact ? `<details class="ugc-more">
+        <summary>닉네임 · 태그 · 본 영화 <i>선택</i></summary>
+        ${optional}
+      </details>` : optional}
 
       <button class="btn" id="saveReview" style="width:100%;margin-top:16px">${mine ? '내 한마디 수정' : '한마디 남기기'}</button>
       <p class="ugc-note">후기·사진은 <b>모든 사용자에게 공개</b>돼요. 티켓은 사진을 올리지 않고, 자동 인식을 통과한 경우에만 <b>티켓 인증</b>으로 공유돼요. 그냥 붙인 티켓은 이 기기에만 <b>티켓 첨부(미검증)</b>로 남아요.</p>
