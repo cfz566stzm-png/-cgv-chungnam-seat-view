@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>영시미 QA — 상단 잘림·버튼·영상</title>
+<style>
+  html,body{margin:0;padding:0;background:#C9CFD6;font:600 12px -apple-system,system-ui,sans-serif}
+  .tag{position:fixed;right:8px;top:8px;background:#111;color:#fff;padding:5px 9px;border-radius:6px;z-index:9}
+  .phone{border:8px solid #111;border-radius:26px;overflow:hidden;background:#000;margin:16px}
+  iframe{border:0;display:block;background:#000}
+</style>
+</head>
+<body>
+<div class="tag" id="tag"></div>
+<div class="phone"><iframe id="f"></iframe></div>
+<script>
+  var q = new URLSearchParams(location.search);
+  var w = +(q.get('w') || 390), h = +(q.get('h') || 844);
+  var f = document.getElementById('f');
+  f.style.width = w + 'px'; f.style.height = h + 'px';
+  var path = q.get('p') || '#/t/cheonan-pentaport/h/cheonan-pentaport-n9/s/B14';
+  document.getElementById('tag').textContent = w + '×' + h + ' · ' + path;
+
+  window.__errs = [];
+  var hooked = false;
+  setInterval(function () {
+    if (hooked) return;
+    try {
+      var cw = f.contentWindow;
+      if (!cw || !cw.document || cw === window || cw.__qaHooked) return;
+      cw.__qaHooked = true; hooked = true;
+      cw.addEventListener('error', function (e) {
+        window.__errs.push('error: ' + (e.message || '') + ' @ ' + (e.filename || '').split('/').pop() + ':' + (e.lineno || 0));
+      }, true);
+      cw.addEventListener('unhandledrejection', function (e) {
+        window.__errs.push('rejection: ' + ((e.reason && (e.reason.message || e.reason)) || ''));
+      });
+    } catch (e) {}
+  }, 8);
+
+  f.src = './index.html' + path;
+
+  function R(el) {
+    if (!el) return null;
+    var r = el.getBoundingClientRect();
+    var cs = f.contentWindow.getComputedStyle(el);
+    return { x: +r.x.toFixed(1), y: +r.y.toFixed(1), w: +r.width.toFixed(1), h: +r.height.toFixed(1),
+             vis: cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0,
+             text: (el.textContent || '').trim().slice(0, 40) };
+  }
+
+  window.__qa = {
+    errs: function () { return window.__errs.slice(); },
+    win: function () { return { iw: f.contentWindow.innerWidth, ih: f.contentWindow.innerHeight }; },
+    one: function (sel) { return R(f.contentDocument.querySelector(sel)); },
+    all: function (sel) {
+      var out = [];
+      f.contentDocument.querySelectorAll(sel).forEach(function (el) { out.push(R(el)); });
+      return out;
+    },
+    bar: function () {
+      var out = [];
+      f.contentDocument.querySelectorAll('.v3d-bar > *, .v3d-bar .v3d-zoom button').forEach(function (el) {
+        out.push(R(el));
+      });
+      return out;
+    },
+    overlap: function (sel) {
+      var els = [];
+      f.contentDocument.querySelectorAll(sel).forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        var cs = f.contentWindow.getComputedStyle(el);
+        if (cs.display !== 'none' && r.width > 0) els.push({ el: el, r: r, t: (el.textContent || '').trim().slice(0, 18) });
+      });
+      var hits = [];
+      for (var i = 0; i < els.length; i++) for (var j = i + 1; j < els.length; j++) {
+        var a = els[i].r, b = els[j].r;
+        var ox = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        var oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (ox > 0.5 && oy > 0.5) hits.push([els[i].t, els[j].t, +ox.toFixed(1), +oy.toFixed(1)]);
+      }
+      return hits;
+    },
+    video: function () {
+      var v = f.contentDocument.querySelector('video');
+      if (!v) return { none: true };
+      return { paused: v.paused, t: +v.currentTime.toFixed(2), ready: v.readyState,
+               w: v.videoWidth, h: v.videoHeight, muted: v.muted,
+               src: (v.currentSrc || v.src || '').split('/').pop(), err: v.error && v.error.code };
+    },
+    text: function (sel) {
+      var el = f.contentDocument.querySelector(sel);
+      return el ? (el.textContent || '').trim() : null;
+    },
+    canvas: function (sel) {
+      var cv = f.contentDocument.querySelector(sel);
+      return cv ? { w: cv.width, h: cv.height, cw: cv.clientWidth, ch: cv.clientHeight } : null;
+    }
+  };
+</script>
+</body>
+</html>
