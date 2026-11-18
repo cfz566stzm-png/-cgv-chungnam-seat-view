@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cfz566stzm-png.github.io/-cgv-chungnam-seat-view/sitemap.xml
