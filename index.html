@@ -2963,12 +2963,16 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
         var u = (wz0 - z) / (wz0 - wz1);
         return halfW2 + 0.32 + flare * Math.max(0, u);
       };
-      var wingAlpha = vplay ? 0.58 : 0.52;
+      /* 조각 사이에 1px 틈이 생기면 어두운 실선으로 보인다 — 불투명하게 그리고 조각을 조금씩
+         겹쳐(0.8%) 이음매를 지운 뒤, 윙 전체에 옅은 어둠을 한 장 덮어 '벽에 투사된 화면' 톤을 준다. */
+      var wingAlpha = 1;
       var WSEG = 5;
       [-1, 1].forEach(function (sgn) {
         var img = sgn < 0 ? wingLc : wingRc;
         for (var k = 0; k < WSEG; k++) {
           var t0 = k / WSEG, t1 = (k + 1) / WSEG;
+          if (k > 0) t0 -= 0.008;
+          if (k < WSEG - 1) t1 += 0.008;
           var z0 = wz0 + (wz1 - wz0) * t0, z1 = wz0 + (wz1 - wz0) * t1;
           var yt0 = wyT0 + (wyT1 - wyT0) * t0, yt1 = wyT0 + (wyT1 - wyT0) * t1;
           var yb0 = wyB0 + (wyB1 - wyB0) * t0, yb1 = wyB0 + (wyB1 - wyB0) * t1;
@@ -2988,6 +2992,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
         var xa = sgn * wingX(wz0), xb = sgn * wingX(wz1);
         /* 벽으로 스며들며 어두워지는 한 장의 그라데이션 */
         if (path([toCam(xa, wyB0, wz0), toCam(xb, wyB1, wz1), toCam(xb, wyT1, wz1), toCam(xa, wyT0, wz0)])) {
+          ctx.fillStyle = 'rgba(4,6,7,0.24)'; ctx.fill();
           var cA = toCam(xa, (wyT0 + wyB0) / 2, wz0), cB = toCam(xb, (wyT1 + wyB1) / 2, wz1);
           var wg;
           if (cA[2] > NEAR && cB[2] > NEAR) {
