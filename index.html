@@ -6,6 +6,26 @@
 <title>영시미 — 전국 CGV 177개 지점 좌석 시야 지도</title>
 <meta name="description" content="전국 CGV 177개 지점의 실제 예매 좌석표로 좌석별 시야각·거리·가림을 계산해 미리 보는 서비스. 서울·경기·인천·강원·대전·충청·부산·울산·대구·경상·광주·전라·제주. IMAX·4DX·SCREENX·씨네드쉐프까지.">
 <meta name="theme-color" content="#F2F4F6">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-180.png" sizes="180x180" type="image/png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-title" content="영시미">
+<meta name="application-name" content="영시미">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="영시미">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="영시미 — 전국 CGV 좌석 시야 지도">
+<meta property="og:description" content="전국 CGV 실제 예매 좌석표로 좌석마다 시야·거리·단차·앞사람 가림을 3D로 미리 확인하는 서비스.">
+<meta property="og:url" content="https://cfz566stzm-png.github.io/-cgv-chungnam-seat-view/">
+<meta property="og:image" content="https://cfz566stzm-png.github.io/-cgv-chungnam-seat-view/media/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="영시미 — 좌석마다 시야를 미리 봅니다">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="영시미 — 전국 CGV 좌석 시야 지도">
+<meta name="twitter:description" content="전국 CGV 실제 예매 좌석표로 좌석마다 시야·거리·단차·앞사람 가림을 3D로 미리 확인하는 서비스.">
+<meta name="twitter:image" content="https://cfz566stzm-png.github.io/-cgv-chungnam-seat-view/media/og-image.png">
 <script>
 /* 화면에 문제가 생겼을 때 사용자에게 안내하고, 원인을 확인할 수 있도록 조용히 모아 둔다 */
 window.__ERRS__ = [];
@@ -1518,20 +1538,127 @@ button.hero-ticket{text-align:center}
 /* 서버 자동 인식을 통과하지 않은 티켓을 '티켓 인증'으로 오해하지 않게 색을 나눈다 */
 .ticketbadge.unverified,.review .ticketbadge.unverified{background:#FFF3E0;color:#B25E09}
 
+/* ================= 전용 로고 · 1020 타깃 감성 정돈 (2026-11-18) ================= */
+/* 이현구 대표님 피드백: 단순·선명한 전용 로고, 모바일 최적화, 타깃(1020 영화팬) 감성
+   · 마크 = 커브드 스크린(위로 볼록한 호) + 시야 콘 + 좌석 점 — 파비콘·앱 아이콘과 같은 도형
+   · 기능/데이터는 그대로 두고 위계·여백·밀도만 손본다 */
+
+/* -- 헤더 브랜드 -- */
+.brand{gap:11px}
+.brand-mark{width:34px;height:34px;background:none;background-image:none;box-shadow:none;border-radius:11px;padding:0;display:block;line-height:0}
+.brand-mark svg{width:34px;height:34px;display:block;border-radius:11px}
+.brand-tx{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.brand-name{font-size:17px;font-weight:850;letter-spacing:-.045em;line-height:1.15;white-space:nowrap}
+.brand-sub{display:block;font-size:10.5px;font-weight:750;color:#8B95A1;letter-spacing:-.005em;line-height:1.1;margin-top:2px;max-width:150px}
+.topbar-in{padding:11px 20px}
+.top-badge{background:#fff;border:1px solid var(--line);color:var(--ink-2);height:30px;padding:0 11px;font-size:11.5px;font-weight:750}
+.top-badge .dot{box-shadow:0 0 0 3px rgba(0,168,98,.14)}
+
+/* -- 히어로: 좌석 점 패턴 + 부드러운 빛무리 (의미 없는 원 두 개 대신) -- */
+.hero{background:linear-gradient(154deg,#065F46 0%,#059669 56%,#12B981 100%);box-shadow:0 16px 40px rgba(4,120,87,.20);isolation:isolate}
+.hero:before{content:"";position:absolute;left:0;right:0;top:0;bottom:0;width:auto;height:auto;border-radius:inherit;
+  background-image:radial-gradient(rgba(255,255,255,.34) 1.05px,transparent 1.15px);background-size:13px 13px;
+  -webkit-mask-image:radial-gradient(230px 210px at 100% 0%,#000 12%,transparent 74%);
+  mask-image:radial-gradient(230px 210px at 100% 0%,#000 12%,transparent 74%);pointer-events:none}
+.hero:after{content:"";position:absolute;width:300px;height:300px;right:-90px;bottom:-170px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(255,255,255,.16),transparent)}
+.hero h1{font-size:clamp(22px,4.6vw,30px);line-height:1.3;letter-spacing:-.045em}
+.hero p{margin-top:10px;font-size:13.5px;line-height:1.55;font-weight:600;color:rgba(255,255,255,.84);letter-spacing:-.012em;max-width:50ch}
+.hero-p-short{display:none}
+.hero-ticket{-webkit-appearance:none;appearance:none;background:#fff;color:var(--green-dd);border:0}
+
+/* -- 지점 카드: 또렷한 헤어라인 + 단정한 밀도 -- */
+.tcard{border:1px solid var(--line);box-shadow:0 1px 2px rgba(25,31,40,.03)}
+.tcard:hover{border-color:#CBE9DA}
+.tlogo{background:#F2FAF5;border-color:#DCEFE5}
+
+/* -- 하단 탭바: 아이콘 + 현재 화면 표시 -- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:45;background:rgba(255,255,255,.94);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  display:flex;padding:7px 10px calc(7px + env(safe-area-inset-bottom));gap:6px}
+.tabbar .tabbtn{flex:1;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:12.5px;font-weight:800;color:#8B95A1;letter-spacing:-.02em;
+  transition:color .15s var(--ease),background .15s var(--ease)}
+.tabbar .tabbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tabbar .tabbtn[aria-current="page"]{color:var(--green-dd);background:var(--green-l)}
+.tabbar .tabbtn:active{transform:scale(.985)}
+
+/* ================= 모바일(≤959px): 첫 화면에 '검색 + 지점 카드'가 오게 ================= */
+@media (max-width:959px){
+  .view{padding:14px 0 108px}
+
+  /* 홈 순서: 히어로 → 지점 둘러보기(탭·검색·필터) → 카드 → 데이터 현황 → 푸터 */
+  .view-home #view{display:flex;flex-direction:column}
+  .view-home #view>.hero{order:1}
+  .view-home #view>.section-title{order:2}
+  .view-home #view>.hometools{order:3}
+  .view-home #view>.tgrid{order:4}
+  .view-home #view>.dstat{order:5}
+  .view-home #view>.foot{order:6}
+
+  .hero{padding:19px 18px 18px;border-radius:22px;box-shadow:0 12px 28px rgba(4,120,87,.18)}
+  .hero h1{font-size:22px;line-height:1.32}
+  .hero p{font-size:12.8px;line-height:1.5;margin-top:8px}
+  .hero-p-full{display:none}
+  .hero-p-short{display:inline}
+  .hero-stats{margin-top:14px;gap:0;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:9px 2px}
+  .hstat{background:none;border:0;border-radius:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:0;
+    -webkit-backdrop-filter:none;backdrop-filter:none}
+  .hstat+.hstat{border-left:1px solid rgba(255,255,255,.16)}
+  .hstat b{font-size:17px;line-height:1.2;letter-spacing:-.02em}
+  .hstat span{font-size:10px;font-weight:800;color:rgba(255,255,255,.82);letter-spacing:-.01em}
+  .hero-ticket{margin-top:12px;height:40px;padding:0 14px;font-size:12.5px;align-self:flex-start}
+
+  /* 탭·검색·필터를 한 장의 도구 카드로 묶고, 중복 동선(내 좌석 기록)은 하단 탭바에 맡긴다 */
+  .hometools{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 12px 11px;box-shadow:0 1px 2px rgba(25,31,40,.03)}
+  .hometools .tabsrow{display:block}
+  .hometools .homebtns{display:none}
+  .hometools .rtabs{background:#F2F4F6;padding:3px;border-radius:12px;margin:0}
+  .hometools .rtab{height:38px;border-radius:9px;font-size:12.5px}
+  .hometools .searchrow{margin-top:9px}
+  .hometools .qinput{height:44px;border-color:var(--line)}
+  .hometools #filterRow.wrap{padding:0;max-width:none;margin:10px 0 0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;row-gap:0}
+  .hometools #filterRow.wrap::-webkit-scrollbar{display:none;height:0}
+  .hometools #filterRow .chip{flex:0 0 auto;height:32px;min-height:32px;font-size:12px;padding:0 11px}
+  .hometools #filterRow .nearchip{order:-1}
+
+  .section-title{margin:16px 2px 9px}
+  .section-title h2{font-size:17px;letter-spacing:-.035em}
+  .section-title .cap{font-size:11.5px}
+
+  /* 카드: 주소는 한 줄로 잘라 카드 높이를 고르게 → 한 화면에 더 많이 */
+  .tgrid{gap:10px;margin-top:12px}
+  .tcard{padding:14px;border-radius:18px}
+  .tcard-top{gap:10px}
+  .tlogo{width:38px;height:38px;border-radius:11px;font-size:13px}
+  .tname{font-size:15.5px;letter-spacing:-.035em}
+  .tcard .tregion{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .tbadges{margin-top:9px;gap:4px}
+  .tcard .tbadges .badge{height:22px;padding:0 8px;font-size:11px;border-radius:7px}
+  .tmeta{margin-top:10px;padding-top:10px;gap:12px}
+  .tmeta div{font-size:11.5px}
+  .tmeta b{font-size:15px}
+  .dstat{margin-top:16px}
+}
+
 </style>
 </head>
 <body>
 <header class="topbar">
   <div class="topbar-in">
     <button class="brand" data-go="home" style="text-align:left">
-      <span class="brand-mark">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="3" y="5.5" width="18" height="12" rx="2.4" stroke="#fff" stroke-width="1.8"/>
-          <path d="M8 20.5h8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M10.6 9.6l4.2 2.4-4.2 2.4z" fill="#fff"/>
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="34" height="34" focusable="false">
+          <rect width="48" height="48" rx="11" fill="#00A862"/>
+          <g transform="translate(24 24) scale(1.3585) translate(-12.00 -13.20)" fill="none">
+            <path d="M12 17.3 8.5 10.55h7z" fill="#fff" fill-opacity=".35"/>
+            <path d="M2.7 9.35Q12 4.35 21.3 9.35" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+            <circle cx="12" cy="18.8" r="2.05" fill="#fff"/>
+          </g>
         </svg>
       </span>
-      <span>
+      <span class="brand-tx">
         <span class="brand-name">영시미</span>
         <span class="brand-sub">CGV 좌석 시야 지도</span>
       </span>
@@ -1544,9 +1671,15 @@ button.hero-ticket{text-align:center}
 
 <main class="wrap"><div id="view" class="view"></div></main>
 
-<nav class="tabbar mobile-only" style="position:fixed;left:0;right:0;bottom:0;z-index:45;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;padding:8px 12px calc(8px + env(safe-area-inset-bottom));gap:8px">
-  <button data-go="home" style="flex:1;height:46px;border-radius:14px;font-weight:800;font-size:13px;color:var(--sub)">지점</button>
-  <button data-go="my" style="flex:1;height:46px;border-radius:14px;font-weight:800;font-size:13px;color:var(--sub)">내 기록</button>
+<nav class="tabbar mobile-only" aria-label="주요 화면">
+  <button class="tabbtn" data-go="home" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"/></svg>
+    <span>지점</span>
+  </button>
+  <button class="tabbtn" data-go="my">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-9.2A4 4 0 0 1 12 8a4 4 0 0 1 7 2.8C19 15.6 12 20 12 20z"/></svg>
+    <span>내 기록</span>
+  </button>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -4127,6 +4260,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     stopMedia();
     const tb = document.getElementById('topBadge');
     if (tb) tb.textContent = areaScopeLabel() + ' ' + DATA.meta.theaterCount + '개 지점';
+    /* 하단 탭바: 지금 보고 있는 화면을 표시(지점 / 내 기록) */
+    document.querySelectorAll('.tabbar .tabbtn').forEach((b) => {
+      const on = (b.getAttribute('data-go') === 'my') === (state.view === 'my');
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
     const v = $('#view');
     /* 상영관 화면은 PC에서 좌80·우45 2단 분할을 위해 컨테이너를 1200px까지 넓힌다 */
     document.body.classList.toggle('view-hall', state.view === 'hall');
@@ -4363,7 +4501,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return `
     <section class="hero">
       <h1>${areaScopeLabel()} CGV ${st.theaters}개 지점,<br>좌석마다 시야를 미리 봅니다</h1>
-      <p>실제 예매 좌석표를 그대로 옮겨, 그 자리에 앉았을 때 화면이 어떻게 보이는지 3D로 미리 확인하세요. 좌석을 고르면 시야·거리·단차·앞사람 가림을 한 화면에서 보여드려요.</p>
+      <p><span class="hero-p-full">실제 예매 좌석표를 그대로 옮겨, 그 자리에 앉았을 때 화면이 어떻게 보이는지 3D로 미리 확인하세요. 좌석을 고르면 시야·거리·단차·앞사람 가림을 한 화면에서 보여드려요.</span><span class="hero-p-short">실제 예매 좌석표 그대로, 앉은 자리에서 보이는 화면을 3D로 미리 확인하세요.</span></p>
       <div class="hero-stats">
         <div class="hstat"><b class="num">${st.theaters}</b><span>지점</span></div>
         <div class="hstat"><b class="num">${st.halls.toLocaleString()}</b><span>상영관</span></div>

@@ -1,0 +1,62 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+ *{box-sizing:border-box;margin:0;padding:0}
+ html,body{background:#E9ECEF;font-family:'Pretendard Variable',Pretendard,-apple-system,sans-serif}
+ .og{width:1200px;height:630px;padding:0 0 0 76px;display:flex;align-items:center;gap:36px;background:#F2F4F6;position:relative;overflow:hidden;letter-spacing:-.03em}
+ .og:before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(0,168,98,.10) 1.4px,transparent 1.5px);background-size:22px 22px;-webkit-mask-image:radial-gradient(560px 420px at 96% 8%,#000,transparent 70%);mask-image:radial-gradient(560px 420px at 96% 8%,#000,transparent 70%)}
+ .left{flex:0 0 640px;position:relative;z-index:2}
+ .lock{display:flex;align-items:center;gap:13px;margin-bottom:34px}
+ .lock svg{width:52px;height:52px;display:block;border-radius:12px}
+ .lock b{font-size:27px;font-weight:850;color:#0B1210;letter-spacing:-.045em}
+ .lock i{font-style:normal;font-size:15px;font-weight:700;color:#8B95A1;margin-left:2px}
+ .kicker{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 14px;border-radius:999px;background:#E7F7EF;color:#047857;font-size:15px;font-weight:800;margin-bottom:20px}
+ .kicker s{width:7px;height:7px;border-radius:50%;background:#00A862}
+ h1{font-size:58px;line-height:1.2;font-weight:850;color:#0B1210;letter-spacing:-.055em}
+ h1 em{font-style:normal;color:#00A862}
+ .sub{margin-top:22px;font-size:21px;line-height:1.55;font-weight:650;color:#4E5968;letter-spacing:-.02em}
+ .stats{display:flex;gap:30px;margin-top:36px;align-items:baseline}
+ .stats div{display:flex;align-items:baseline;gap:8px}
+ .stats b{font-size:30px;font-weight:850;color:#0B1210;font-variant-numeric:tabular-nums}
+ .stats span{font-size:16px;font-weight:700;color:#8B95A1}
+ .right{flex:1;display:flex;justify-content:flex-end;padding-right:70px;position:relative;z-index:2}
+ .screen{width:430px;height:462px;border-radius:40px;background:linear-gradient(160deg,#0B2E22 0%,#08301F 45%,#04231A 100%);box-shadow:0 30px 70px rgba(6,40,28,.28);padding:30px 26px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+ .screen .glow{position:absolute;left:50%;top:-90px;width:420px;height:210px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(0,200,120,.35),transparent)}
+ .arc{position:relative;margin:6px auto 0;width:330px;height:74px}
+ .arc svg{width:330px;height:74px}
+ .seats{position:relative;margin-top:26px;flex:1;display:flex;flex-direction:column;gap:9px;align-items:center;justify-content:center}
+ .row{display:flex;gap:9px}
+ .s{width:19px;height:15px;border-radius:4px;background:rgba(255,255,255,.13)}
+ .s.on{background:#00D084;box-shadow:0 0 0 3px rgba(0,214,132,.22)}
+ .s.you{background:#fff}
+ .lbl{position:relative;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:750;color:rgba(255,255,255,.55);letter-spacing:-.01em}
+ .lbl b{color:#7BE3B0;font-weight:850}
+</style></head><body>
+<div class="og">
+ <div class="left">
+  <div class="lock">
+   <svg viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="#00A862"/><g transform="translate(24 24) scale(1.3585) translate(-12.00 -13.20)" fill="none"><path d="M12 17.3 8.5 10.55h7z" fill="#fff" fill-opacity=".35"/><path d="M2.7 9.35Q12 4.35 21.3 9.35" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="18.8" r="2.05" fill="#fff"/></g></svg>
+   <b>영시미</b><i>CGV 좌석 시야 지도</i>
+  </div>
+  <div class="kicker"><s></s>예매 전 1분, 좌석을 미리 봅니다</div>
+  <h1>그 자리에 앉으면<br><em>화면이 어떻게</em> 보일까</h1>
+  <p class="sub">전국 CGV 실제 예매 좌석표로 좌석마다 시야·거리·<br>앞사람 가림을 3D로 미리 확인하세요.</p>
+  <div class="stats"><div><b>177</b><span>개 지점</span></div><div><b>797</b><span>개 상영관</span></div><div><b>109,453</b><span>석</span></div></div>
+ </div>
+ <div class="right"><div class="screen">
+   <div class="glow"></div>
+   <div class="arc"><svg viewBox="0 0 330 74" fill="none"><path d="M10 60Q165 2 320 60" stroke="rgba(255,255,255,.9)" stroke-width="9" stroke-linecap="round"/><path d="M10 60Q165 2 320 60" stroke="rgba(255,255,255,.10)" stroke-width="26" stroke-linecap="round"/></svg>
+   </div>
+   <div class="seats" id="seats"></div>
+   <div class="lbl"><span>좌석을 누르면</span><b>시야 미리보기 →</b></div>
+ </div></div>
+</div>
+<script>
+ var s=document.getElementById('seats');
+ for(var r=0;r<8;r++){var d=document.createElement('div');d.className='row';
+  for(var c=0;c<8;c++){var q=document.createElement('div');q.className='s';
+   if((r===4&&c===3)||(r===4&&c===4))q.className='s on';
+   if(r===3&&c===2)q.className='s you';
+   d.appendChild(q);}s.appendChild(d);}
+</script>
+</body></html>
