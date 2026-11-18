@@ -7254,7 +7254,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     ctx.fillStyle = '#FAFBFC'; ctx.fillRect(0, 0, W, H);
 
     const maxD = p.firstRow + (p.rows - 1) * p.rowGap + 2;
-    const eyeH = m.eyeY - 0.12 * rec;
     const maxY = Math.max(p.screenBottom + p.screenH, p.eye + (p.rows - 1) * p.riser + 1.2) + 0.8;
     const padL = 34, padR = 20, padT = 18, padB = 26;
     const X = (mtr) => padL + (mtr / maxD) * (W - padL - padR);
@@ -7287,37 +7286,38 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       ctx.beginPath(); ctx.arc(X(p.firstRow + i * p.rowGap), Y(p.eye + i * p.riser), 2.4, 0, Math.PI * 2); ctx.fill();
     }
 
-    /* 이 좌석의 사람 — 등받이 각도(110°→160°)에 맞춰 앉은 모습 */
+    /* 이 좌석의 사람 — 등받이 각도(110°→160°)에 맞춰 앉은 모습.
+       X()(가로)·Y()(세로)는 배율이 달라서, 미터로 방향·길이를 잡으면 젖힐 때 등받이와 머리가
+       늘어나고 찌그러져 보인다. 그래서 몸은 픽셀 좌표에서 그린다 — 등받이는 길이를 고정한 채
+       각도만 돌려 좌석이 내려가는 모습만 보이고, 머리는 늘 같은 반지름 원으로 얹는다. */
     const hz = seat.y * p.riser;
     const seatD = X(p.firstRow + seat.y * p.rowGap);
-    const deg = 110 + 50 * rec;
+    const deg = 110 + 50 * rec;              /* 등받이 각도 110°(세움)~160°(젖힘) */
     const tilt = (deg - 90) * D2R;           /* 수직에서 젖힌 각도(20°~70°) */
-    const hipM = [p.firstRow + seat.y * p.rowGap, hz + 0.42];
-    const hip = [X(hipM[0]), Y(hipM[1])];
-    /* 등받이 기울기(세로 1 m 당 가로 m) */
-    const backDx = Math.sin(tilt) * (p.rowGap - 0.14), backDy = Math.cos(tilt) * (p.rowGap - 0.14);
-    const shoulderM = [hipM[0] + backDx, hipM[1] + backDy * 0.62];
-    const headM = [hipM[0] + backDx * 1.28, hipM[1] + backDy * 0.80];
-    const shoulder = [X(shoulderM[0]), Y(shoulderM[1])];
-    const head = [X(headM[0]), Y(headM[1])];
-    /* 좌석 등받이(회색 막대)와 쿠션 */
+    const hip = [seatD, Y(hz + 0.42)];
+    /* 등받이 길이(px) — 한 칸(좌석 간격) 높이에 맞춘 고정 길이. 각도가 변해도 길이는 그대로 */
+    const backL = Math.max(14, Math.min(22, Math.abs(Y(0) - Y(p.rowGap)) * 1.2));
+    const bx = Math.sin(tilt), by = -Math.cos(tilt);   /* 젖힐수록 뒤(+x)·아래(+y)로 */
+    const backTop = [hip[0] + bx * backL, hip[1] + by * backL];
+    const shoulder = [hip[0] + bx * backL * 0.62, hip[1] + by * backL * 0.62];
+    const head = [hip[0] + bx * (backL + 5.5), hip[1] + by * (backL + 5.5)];
+    /* 좌석 등받이(회색 막대)와 쿠션 — 등받이 막대는 회전만 한다 */
     ctx.strokeStyle = '#B4BDC6'; ctx.lineWidth = 5; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(shoulder[0], shoulder[1]); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(backTop[0], backTop[1]); ctx.stroke();
     ctx.strokeStyle = '#8B95A1'; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(hip[0] - (X(0.42) - X(0)), hip[1] + 2); ctx.stroke();
-    /* 몸통·머리 */
+    /* 몸통·머리 — 머리는 늘 같은 크기(반지름 5.6px)의 원 */
     ctx.strokeStyle = '#047857'; ctx.lineWidth = 3.2;
     ctx.beginPath(); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(shoulder[0], shoulder[1]); ctx.stroke();
-    ctx.beginPath(); ctx.arc(head[0], head[1], 6.2, 0, Math.PI * 2); ctx.fillStyle = '#047857'; ctx.fill();
-    /* 눈 — 실제 시선 기준점 */
-    const eyePx = [head[0], Y(eyeH)];
+    ctx.beginPath(); ctx.arc(head[0], head[1], 5.6, 0, Math.PI * 2); ctx.fillStyle = '#047857'; ctx.fill();
+    /* 눈 — 머리 안쪽 스크린 쪽에 붙은 시선 기준점(머리와 따로 움직이지 않는다) */
+    const eyePx = [head[0] - 1.8, head[1] - 0.6];
     ctx.fillStyle = '#00A862';
-    ctx.beginPath(); ctx.arc(eyePx[0], eyePx[1], 3.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(eyePx[0], eyePx[1], 3.0, 0, Math.PI * 2); ctx.fill();
 
     ctx.strokeStyle = 'rgba(0,168,98,.75)'; ctx.lineWidth = 1.4; ctx.setLineDash([4, 3]);
-    const seatX2 = X(p.firstRow + seat.y * p.rowGap), seatY = Y(eyeH);
     [[p.screenBottom + p.screenH], [p.screenBottom], [p.screenBottom + p.screenH / 2]].forEach(([yy]) => {
-      ctx.beginPath(); ctx.moveTo(seatX2, seatY); ctx.lineTo(X(0), Y(yy)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(eyePx[0], eyePx[1]); ctx.lineTo(X(0), Y(yy)); ctx.stroke();
     });
     ctx.setLineDash([]);
 
