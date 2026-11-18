@@ -1925,8 +1925,9 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
     var bankHalf = cols * pitch / 2;
     /* SCREENX는 좌우 윙 스크린이 정면 스크린 모서리에서 뒤쪽으로 벌어지므로 관 폭이 더 넓다.
        (사용자 실사 사진 IMG_7228: 윙이 90° 직각이 아니라 108~112° 둔각으로 벌어져 있다) */
-    var isSX = /SCREENX/i.test(tags.join(' '));
-    var wingFlare = isSX ? 4.0 : 0;
+    var isUltraTag = /ULTRA 4DX/i.test(tags.join(' '));
+    var isSX = /SCREENX/i.test(tags.join(' ')) || isUltraTag;
+    var wingFlare = isSX ? (isUltraTag ? 4.6 : 4.0) : 0;
     var wallX = Math.max(bankHalf + 1.2, p.screenW / 2 + 1.6 + wingFlare);
     /* PRIVATE BOX — 상영관 맨 뒤·위쪽 2층 독립 발코니 박스 안에서 유리창 너머로 아래 객석과
        스크린을 내려다보는 구조(사진 IMG_7229~7233, CGV 압구정 IMAX·영등포/용산 SCREENX 박스).
