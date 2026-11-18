@@ -6308,8 +6308,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (window.innerWidth < 960) { panel.style.maxHeight = ''; return; }
     const cs = getComputedStyle(panel);
     const stick = parseFloat(cs.top) || 16;
-    const top = Math.max(panel.getBoundingClientRect().top, stick, 0);
-    const avail = Math.max(360, window.innerHeight - top - 14);
+    /* 문서 기준 자연 위치 — 페이지를 굴려도 변하지 않으므로 두 경우(맨 위·막대에 붙은 뒤) 모두
+       창 안에 들어오는 높이를 고른다. */
+    const sc = window.scrollY || window.pageYOffset || 0;
+    const natTop = Math.max(0, panel.getBoundingClientRect().top + sc);
+    const top = Math.max(natTop, stick);
+    const avail = Math.max(320, window.innerHeight - top - 14);
     panel.style.maxHeight = Math.round(avail) + 'px';
   }
 
