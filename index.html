@@ -2213,7 +2213,7 @@ input,select,textarea,
        윙·천장처럼 카메라 가까이/옆으로 뻗는 판은 네 꼭짓점 중 일부가 카메라 뒤로
        넘어가 투영이 폭발해 초록 조각으로 찢어졌다. 판을 세그먼트로 나누고,
        각 조각을 근평면에서 잘라낸 뒤 삼각형마다 클립해 그리면 겹침·튐이 없다. */
-    var NEAR_C = 0.4;
+    var NEAR_C = 0.15;
     /* 클립 경로를 바깥으로 d px 넉넉하게 밀어낸 다각형.
        Canvas 2D의 clip은 경계에서 안티앨리어싱으로 알파가 반쯤 깎여, 이웃한 칸/삼각형이
        딱 맞물리면 그 선이 검은 실선(hairline)으로 비쳤다. 가장자리를 d만큼 겹쳐 그리면
@@ -2460,7 +2460,7 @@ input,select,textarea,
        지금은 칸 가장자리·중심의 실제 투영 위치와 아핀 근사의 차이를 px로 재어
        오차 0.6px 이하가 될 때까지 칸을 재귀적으로 쪼갠 뒤, 칸마다 클립한
        아핀 삼각형 2개로 그린다. 칸 경계는 0.6px 겹쳐 이음매를 지운다. */
-    var MESH_MAX = 28, meshCells = 0;
+    var MESH_MAX = 40, meshCells = 0;
     function drawScreenCell(s0, s1, t0, t1, A, B, C, D) {
       var tx0 = tX + tW * s0, tx1 = tX + tW * s1;
       var ty0 = tY + tH * (1 - t1), ty1 = tY + tH * (1 - t0);
@@ -2482,15 +2482,21 @@ input,select,textarea,
       triClip(pA, pC, pD, SA, SC, SD, tex, null, rc);
     }
     function meshCell(s0, s1, t0, t1, depth) {
-      if (meshCells > MESH_MAX) return;
       var uA = -iw / 2 + iw * s0, uB = -iw / 2 + iw * s1;
       var yA = yB0 + ih * t0, yBt = yB0 + ih * t1;
       var A = toCam(uA, yA, scrZ(uA)), B = toCam(uB, yA, scrZ(uB));
       var C = toCam(uB, yBt, scrZ(uB)), D = toCam(uA, yBt, scrZ(uA));
       var front = (A[2] >= NEAR_C && B[2] >= NEAR_C && C[2] >= NEAR_C && D[2] >= NEAR_C);
+      /* 네 꼭짓점이 모두 카메라 뒤면 그릴 것이 없다 — 쪼개지 않고 바로 끝낸다
+         (반쯤 걸친 칸만 아래에서 더 쪼개 조각을 살린다) */
+      var anyFront = (A[2] >= NEAR_C || B[2] >= NEAR_C || C[2] >= NEAR_C || D[2] >= NEAR_C);
+      if (!anyFront) return;
       /* 칸을 더 쪼갭니다. 다만 아이폰 사파리에서 프레임이 끓지 않도록
          칸 수 상한(MESH_MAX)과 깊이 2까지만 — 대부분 4~8열 × 2행에서 끝난다. */
-      if (depth < 2 && meshCells + 4 <= MESH_MAX) {
+      /* 근평면을 걸친 칸(카메라 바로 옆)은 상한과 상관없이 더 쪼개 그 조각을 살린다.
+         예전에는 상한·깊이에 걸린 칸을 그냥 건너뛰어, 시야를 돌리면 화면 일부가 통째로 사라졌다. */
+      var maxDepth = front ? 2 : 5;
+      if (depth < maxDepth && (meshCells + 4 <= MESH_MAX || !front)) {
         var split = !front;
         if (front) {
           var um = (uA + uB) / 2, ym = (yA + yBt) / 2;
