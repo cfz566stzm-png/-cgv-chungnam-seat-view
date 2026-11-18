@@ -4605,7 +4605,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const url = location.pathname + q;      /* 해시 없이 — 예전 해시는 지운다 */
     if (location.pathname + location.search === url && !location.hash) return;
     try { (push ? history.pushState : history.replaceState).call(history, { q }, '', url); }
-    catch (e) { location.hash = q.replace(/^\?/, '#/'); }
+    catch (e) {}          /* pushState 를 막는 환경이면 주소는 그대로 두고 화면만 바뀐다 */
   }
   function routeFromQuery() {
     let q;
