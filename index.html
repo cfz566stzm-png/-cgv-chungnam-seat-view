@@ -2229,7 +2229,8 @@ button.hero-ticket{text-align:center}
        그래서 영상이 준비되지 않았으면 영상 대신 그라데이션 정지 화면을 쓴다. */
     var vplay = !!(this.video && !this.video.paused && this.video.readyState >= 2
       && this.video.videoWidth > 0 && !vprobe.broken);
-    var img = vplay ? this.video : movieFrame(o.aspect);
+    var still = movieFrame(o.aspect || s.p.aspect);
+    var img = vplay ? this.video : still;
     if (vplay && !this._inVid && !this.raf) this._loop();
     function affTri(P0, P1, P2, S0, S1, S2) {
       var dux = S1[0] - S0[0], duy = S1[1] - S0[1];
@@ -2466,7 +2467,6 @@ button.hero-ticket{text-align:center}
       else if (va < aa2) { srcH = iImgW / aa2; srcY = (iImgH - srcH) / 2; }
     }
     /* 스크린 타일이 그릴 텍스처 — 영상은 프레임당 한 번만 버퍼로 복사한다 */
-    var still = movieFrame(o.aspect);
     var tex = img, tX = srcX, tY = srcY, tW = srcW, tH = srcH;
     if (vplay) {
       var vb = videoBuffer();
