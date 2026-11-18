@@ -1510,6 +1510,10 @@ button.hero-ticket,button.ticketscan{font-family:inherit;-webkit-appearance:none
 button.ticketscan{width:100%;border:0}
 button.hero-ticket{text-align:center}
 
+/* ================= 티켓 배지: 인증 / 첨부(미검증) 구분 ================= */
+/* 서버 자동 인식을 통과하지 않은 티켓을 '티켓 인증'으로 오해하지 않게 색을 나눈다 */
+.ticketbadge.unverified,.review .ticketbadge.unverified{background:#FFF3E0;color:#B25E09}
+
 </style>
 </head>
 <body>
@@ -3451,11 +3455,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     document.querySelectorAll('video').forEach((v) => { try { v.pause(); v.currentTime = 0; } catch (e) {} });
   }
 
-  function toast(msg) {
+  function toast(msg, ms) {
     const t = $('#toast');
     if (!t) return;
     t.textContent = msg; t.classList.add('show');
-    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200);
+    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), ms || 2200);
   }
 
   /* ---------- 데이터 인덱스 ---------- */
@@ -3538,6 +3542,29 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   remapPhotosToHalls();
 
   /* ---------- 실사 사진 ---------- */
+  /* 후기 사진은 한 사람이 여러 장 올릴 수 있다.
+     seat_reviews.photo_url 은 text 한 칸이라 1장은 URL 문자열 그대로, 2장 이상은 JSON 배열 문자열로 담는다.
+     예전에 저장된 순수 URL 문자열도 그대로 읽어 하위 호환을 지킨다. */
+  const PHOTO_MAX = 6;
+  function parsePhotoUrls(val) {
+    if (val == null) return [];
+    if (Array.isArray(val)) return val.filter((x) => typeof x === 'string' && x).slice(0, PHOTO_MAX);
+    const s = String(val).trim();
+    if (!s) return [];
+    if (s.charAt(0) === '[') {
+      try {
+        const j = JSON.parse(s);
+        if (Array.isArray(j)) return j.filter((x) => typeof x === 'string' && x).slice(0, PHOTO_MAX);
+      } catch (e) {}
+      return [];            /* 깨진 JSON은 사진 없음으로 — 주소로 쓰면 깨진 이미지가 뜬다 */
+    }
+    return [s];
+  }
+  function joinPhotoUrls(urls) {
+    const list = (urls || []).filter((x) => typeof x === 'string' && x).slice(0, PHOTO_MAX);
+    if (!list.length) return null;
+    return list.length === 1 ? list[0] : JSON.stringify(list);
+  }
   function photosFor(hallId, seatKey) {
     const b = PHOTOS[hallId];
     const base = (b && b.seats && b.seats[seatKey]) || [];
@@ -3564,21 +3591,30 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const seen = Object.create(null);
     withImg.forEach((k) => { seen[k] = 1; });
     SB.rows.forEach((r) => {
-      if (!r || r.hall_key !== hallId || !r.photo_url || !r.seat_id) return;
+      if (!r || r.hall_key !== hallId || !r.seat_id) return;
+      const n = parsePhotoUrls(r.photo_url).length;
+      if (!n) return;
       if (!seen[r.seat_id]) { seen[r.seat_id] = 1; res.seats += 1; }
-      res.shots += 1;
+      res.shots += n;
     });
     return res;
   }
   const tierLabel = (t) => (t === '1x' ? '1배율' : t === 'wide' ? '광각' : '사진');
 
   /* ---------- 공용 후기·실사 (Supabase) ----------
-     프로젝트의 공개(publishable) 키만 쓴다. 티켓 사진은 올리지 않고 인증 여부(verified)만 보낸다. */
+     프로젝트의 공개(publishable) 키만 쓴다. 티켓 사진은 올리지 않고,
+     서버 자동 인식을 통과한 경우에만 verified:true 로 보낸다. */
   const SB_URL = 'https://unoeugpeoxfbvdccqwxr.supabase.co';
   const SB_KEY = 'sb_publishable_A3OqttteymOeLkaFS3oSTA_U288LnSc';
   const SB_CACHE = 'cgv_shared_reviews_v1';
   const SB_TTL = 60000;            /* 같은 화면에서 1분에 한 번만 새로 받는다 */
+  const SB_COLS = 'id,hall_key,seat_id,nickname,movie,comment,photo_url,verified,created_at';
+  const SB_PAGE = 1000;            /* Supabase 한 응답의 최대 행 수 */
+  const SB_MAX_PAGES = 5;          /* 최신 5,000개까지 이어 받는다 */
+  /* 공용 서버 전송이 실패해 이 기기에만 남았을 때 쓰는 안내 — 성공처럼 넘기지 않는다 */
+  const LOCAL_ONLY_MSG = '내 기기에는 저장됐지만 공용 서버 반영에 실패했어요. 네트워크 확인 후 다시 시도해 주세요.';
   const SB = { rows: [], idx: Object.create(null), at: 0, busy: false, err: '' };
+  const SB_HALL = Object.create(null);   /* hall_key → { at, busy } 상영관별 조회 기록 */
 
   function sbHeaders(extra) {
     const h = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
@@ -3600,46 +3636,113 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     } catch (e) {}
   }
   function sbStore() {
-    try { localStorage.setItem(SB_CACHE, JSON.stringify(SB.rows.slice(0, 400))); } catch (e) {}
+    try {
+      /* 캐시는 첫 화면을 빨리 그리는 용도라 최신 400개만 남긴다(지금 연 관은 따로 다시 받는다) */
+      const keep = SB.rows.slice(0, 400);
+      const hallId = state && state.hallId;
+      if (hallId) {
+        const have = Object.create(null);
+        keep.forEach((r) => { if (r && r.id != null) have[r.id] = 1; });
+        SB.rows.forEach((r) => {
+          if (r && r.hall_key === hallId && r.id != null && !have[r.id]) { have[r.id] = 1; keep.push(r); }
+        });
+      }
+      localStorage.setItem(SB_CACHE, JSON.stringify(keep.slice(0, 700)));
+    } catch (e) {}
+  }
+  /* 받아 온 행을 중복 없이 합치고 시간순으로 정렬한다 */
+  function sbMerge(rows) {
+    if (!Array.isArray(rows) || !rows.length) return 0;
+    const have = Object.create(null);
+    SB.rows.forEach((r) => { if (r && r.id != null) have[r.id] = 1; });
+    let added = 0;
+    rows.forEach((r) => {
+      if (!r || r.id == null || have[r.id]) return;
+      have[r.id] = 1; SB.rows.push(r); added += 1;
+    });
+    if (added) {
+      SB.rows.sort((a, b) => String((b && b.created_at) || '').localeCompare(String((a && a.created_at) || '')));
+      sbIndex(); sbStore();
+    }
+    return added;
   }
   function sbTimer(ms) {
     const c = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const t = setTimeout(() => { if (c) try { c.abort(); } catch (e) {} }, ms);
     return { signal: c ? c.signal : undefined, done: () => clearTimeout(t) };
   }
+  /* 1,000행씩 offset을 올려 가며 끝까지 받는다(한 응답 상한에 잘리지 않게) */
+  function sbPages(hallKey) {
+    const out = [];
+    let page = 0;
+    const next = () => {
+      const tm = sbTimer(15000);
+      const url = SB_URL + '/rest/v1/seat_reviews?select=' + SB_COLS
+        + (hallKey ? '&hall_key=eq.' + encodeURIComponent(hallKey) : '')
+        + '&order=created_at.desc&limit=' + SB_PAGE + '&offset=' + (page * SB_PAGE);
+      return fetch(url, { headers: sbHeaders(), signal: tm.signal, cache: 'no-store' })
+        .then((r) => { tm.done(); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); },
+          (e) => { tm.done(); throw e; })
+        .then((rows) => {
+          const list = Array.isArray(rows) ? rows : [];
+          out.push.apply(out, list);
+          page += 1;
+          if (list.length < SB_PAGE || page >= SB_MAX_PAGES) return out;
+          return next();
+        });
+    };
+    return next();
+  }
   /* 공용 목록 받기 — 실패해도 화면은 로컬 기록·저장된 캐시로 그대로 돈다 */
   function sbFetch(force) {
     if (SB.busy) return Promise.resolve(false);
     if (!force && Date.now() - SB.at < SB_TTL) return Promise.resolve(false);
     SB.busy = true;
-    const tm = sbTimer(15000);
-    const url = SB_URL + '/rest/v1/seat_reviews?select=id,hall_key,seat_id,nickname,movie,comment,photo_url,verified,created_at'
-      + '&order=created_at.desc&limit=500';
-    return fetch(url, { headers: sbHeaders(), signal: tm.signal, cache: 'no-store' })
-      .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    return sbPages(null)
       .then((rows) => {
-        SB.rows = Array.isArray(rows) ? rows : [];
-        SB.at = Date.now(); SB.err = ''; sbIndex(); sbStore();
+        SB.rows = [];
+        SB.at = Date.now(); SB.err = '';
+        sbMerge(rows); sbIndex(); sbStore();
         return true;
       })
       .catch((e) => {
         SB.err = (e && e.name === 'AbortError') ? 'timeout' : String((e && e.message) || e);
         return false;
       })
-      .then((ok) => { tm.done(); SB.busy = false; return ok; }, () => { tm.done(); SB.busy = false; return false; });
+      .then((ok) => { SB.busy = false; return ok; }, () => { SB.busy = false; return false; });
+  }
+  /* 상영관 하나의 후기는 전체 상한과 무관하게 따로 받아 합친다 —
+     공용 후기가 아무리 늘어도 이 관의 오래된 후기가 잘리지 않는다. */
+  function sbFetchHall(hallId, force) {
+    if (!hallId) return Promise.resolve(false);
+    const st = SB_HALL[hallId] || (SB_HALL[hallId] = { at: 0, busy: false });
+    if (st.busy) return Promise.resolve(false);
+    if (!force && Date.now() - st.at < SB_TTL) return Promise.resolve(false);
+    st.busy = true;
+    return sbPages(hallId)
+      .then((rows) => { st.at = Date.now(); sbMerge(rows); sbIndex(); return true; })
+      .catch(() => false)
+      .then((ok) => { st.busy = false; return ok; }, () => { st.busy = false; return false; });
   }
   function sbRowsFor(hallId, seatKey) {
     if (!hallId || !seatKey) return [];
     return SB.idx[hallId + '/' + seatKey] || [];
   }
-  /* 공용 실사를 실사 탭·사진 배지·홈 '실사 사진 석' 수치에 쓰는 사진 객체 모양으로 */
+  /* 공용 실사를 실사 탭·사진 배지·홈 '실사 사진 석' 수치에 쓰는 사진 객체 모양으로
+     (한 후기에 사진이 여러 장이면 장마다 따로 만든다) */
   function sbPhotos(hallId, seatKey) {
-    return sbRowsFor(hallId, seatKey).filter((r) => r.photo_url).map((r) => ({
-      src: r.photo_url, tier: '', fov: '올린 사람 촬영', seat: seatKey,
-      author: r.nickname || '익명', credit: r.nickname || '익명',
-      date: String(r.created_at || '').slice(0, 10),
-      verify: r.verified ? 'user-verified' : 'user', shared: true, rid: r.id
-    }));
+    const out = [];
+    sbRowsFor(hallId, seatKey).forEach((r) => {
+      parsePhotoUrls(r.photo_url).forEach((src, i) => {
+        out.push({
+          src, tier: '', fov: '올린 사람 촬영', seat: seatKey,
+          author: r.nickname || '익명', credit: r.nickname || '익명',
+          date: String(r.created_at || '').slice(0, 10),
+          verify: r.verified ? 'user-verified' : 'user', shared: true, rid: r.id, pi: i
+        });
+      });
+    });
+    return out;
   }
   /* 공용 후기 목록 — 내가 이 기기에서 올려 이미 아는 항목(rid)은 빼고 */
   function sbReviews(hallId, seatKey) {
@@ -3651,15 +3754,23 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       id: 'sb:' + r.id, author: r.nickname || '익명',
       date: String(r.created_at || '').slice(0, 10), text: r.comment || '',
       movie: r.movie || '', ticket: !!r.verified, shared: true,
-      shots: r.photo_url ? [r.photo_url] : []
+      shots: parsePhotoUrls(r.photo_url)
     }));
   }
   function refreshShared() {
+    const hallId = state.view === 'hall' ? state.hallId : null;
+    const repaint = () => {
+      try { if (state.view === 'hall') { paintSeatMap(); paintSeatPanel(); } } catch (e) {}
+    };
     sbFetch(false).then((ok) => {
-      if (!ok) return;
-      try {
-        if (state.view === 'hall') { paintSeatMap(); paintSeatPanel(); }
-      } catch (e) {}
+      if (!ok) {
+        /* 전체 목록을 새로 받지 못했어도(1분 스로틀·실패) 지금 연 관은 따로 맞춰 본다 */
+        if (hallId) sbFetchHall(hallId, false).then((got) => { if (got) repaint(); });
+        return;
+      }
+      repaint();
+      /* 새 전체 목록으로 갈아끼운 뒤에는 이 관의 오래된 후기를 다시 합쳐 둔다 */
+      if (hallId) sbFetchHall(hallId, true).then((got) => { if (got) repaint(); });
     });
     try { helpFetch(false); } catch (e) {}
   }
@@ -3833,7 +3944,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const b = btn.querySelector('b');
     if (b) b.textContent = Number(btn.dataset.helpbase || 0) + helpCount(key);
     toast('도움돼요로 남겼어요');
-    if (HELP.off) return;
+    if (HELP.off || sbMissing('seat_review_helpful')) { toast(LOCAL_ONLY_MSG, 4600); return; }
     try {
       const tm = sbTimer(12000);
       fetch(SB_URL + '/rest/v1/seat_review_helpful', {
@@ -3842,14 +3953,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         body: JSON.stringify({ target_key: String(key).slice(0, 120), voter_id: deviceId() })
       }).then((r) => {
         tm.done();
-        if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); return; }
+        if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); toast(LOCAL_ONLY_MSG, 4600); return; }
         if (r.ok) { /* 서버에 기록됐으니 이 기기 임시 카운트는 서버 값으로 옮긴다(두 번 세지 않게) */
           const mv = helpMine(); delete mv[key]; lsPut(HELP_MINE, mv);
           HELP.counts[key] = (HELP.counts[key] || 0) + 1;
+        } else {
+          toast(LOCAL_ONLY_MSG, 4600);
         }
       })
-        .catch(() => { tm.done(); });
-    } catch (e) {}
+        .catch(() => { tm.done(); toast(LOCAL_ONLY_MSG, 4600); });
+    } catch (e) { toast(LOCAL_ONLY_MSG, 4600); }
   }
 
   /* 정보 수정 요청 — 사유 선택 + 메모 */
@@ -3892,17 +4005,26 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         target_id: o.targetId || null, reason, detail: detail || null
       };
       closeFix();
-      toast('수정 요청이 접수되었어요. 고마워요!');
-      if (FIXQ.off || sbMissing('seat_correction_requests')) { fixStore(body); return; }
+      const localOnly = (why) => {
+        fixStore(body);
+        toast(LOCAL_ONLY_MSG, 5200);
+        try { if (why) console.warn('[영시미] 수정 요청 공용 저장 실패:', why); } catch (e) {}
+      };
+      if (FIXQ.off || sbMissing('seat_correction_requests')) { localOnly('off'); return; }
       try {
         const tm = sbTimer(12000);
         fetch(SB_URL + '/rest/v1/seat_correction_requests', {
           method: 'POST', signal: tm.signal,
           headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
           body: JSON.stringify({ ...body, created_at: new Date().toISOString() })
-        }).then((r) => { tm.done(); if (!r.ok) { FIXQ.off = (r.status === 404); if (r.status === 404) sbMarkMissing('seat_correction_requests'); fixStore(body); } })
-          .catch(() => { tm.done(); fixStore(body); });
-      } catch (e) { fixStore(body); }
+        }).then((r) => {
+          tm.done();
+          if (r.ok) { toast('수정 요청이 접수되었어요. 고마워요!'); return; }
+          if (r.status === 404) { FIXQ.off = true; sbMarkMissing('seat_correction_requests'); }
+          localOnly('HTTP ' + r.status);
+        })
+          .catch((e) => { tm.done(); localOnly(e && e.message); });
+      } catch (e) { localOnly(e && e.message); }
     };
   }
   function fixStore(body) {
@@ -5517,6 +5639,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     </div>`;
   }
 
+  /* 티켓 배지 — 서버 자동 인식을 통과한 것만 '티켓 인증', 그냥 붙이기만 한 것은 '티켓 첨부(미검증)' */
+  function ticketBadgeHtml(r) {
+    if (!r || !r.ticket) return '';
+    if (r.shared || r.ticketVerified) return '<span class="ticketbadge">티켓 인증</span>';
+    return '<span class="ticketbadge unverified">티켓 첨부(미검증)</span>';
+  }
+
   function ugcHtml(h, seat) {
     const bucket = store[ugcKey()] || { seats: {}, list: [] };
     const mine = (bucket.seats || {})[seat.key] || null;
@@ -5541,13 +5670,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <label class="shotup" for="shotFile">
           <span class="shotup-ic">📷</span>
           <b>시야 사진</b>
-          <i id="shotState">${shots.length ? shots.length + '장 첨부됨' : '눌러서 올리기'}</i>
-          <input type="file" id="shotFile" accept="image/*">
+          <i id="shotState">${shots.length ? shots.length + '/' + PHOTO_MAX + '장 첨부됨' : '눌러서 올리기(최대 ' + PHOTO_MAX + '장)'}</i>
+          <input type="file" id="shotFile" accept="image/*" multiple>
         </label>
         <label class="shotup" for="ticketFile">
           <span class="shotup-ic">🎫</span>
           <b>티켓 사진</b>
-          <i id="ticketState">${mine && mine.ticket ? '첨부됨' : '선택'}</i>
+          <i id="ticketState">${mine && mine.ticket ? (mine.ticketVerified ? '인증됨' : '첨부됨 · 미검증') : '선택'}</i>
           <input type="file" id="ticketFile" accept="image/*">
         </label>
       </div>
@@ -5574,12 +5703,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <div class="mvmeta" id="movieMeta"></div>
 
       <button class="btn" id="saveReview" style="width:100%;margin-top:16px">${mine ? '내 한마디 수정' : '한마디 남기기'}</button>
-      <p class="ugc-note">후기·사진은 <b>모든 사용자에게 공개</b>되고, 티켓 사진은 올리지 않고 인증 표시만 공유해요.</p>
+      <p class="ugc-note">후기·사진은 <b>모든 사용자에게 공개</b>되고, 티켓은 사진을 올리지 않아요. 자동 인식을 통과한 티켓만 <b>티켓 인증</b>으로 공유되고, 그냥 붙인 티켓은 이 기기에만 <b>티켓 첨부(미검증)</b>으로 남아요.</p>
 
       <div class="review-list" id="reviewList">
         ${reviews.map((r) => `<div class="review">
           <div class="review-top"><span class="rego">등록 <b>${esc(r.author || '익명')}</b></span><span class="rego">${esc(r.date || '')}</span></div>
-          ${r.movie ? `<span class="movie">🎬 ${esc(r.movie)}</span>` : ''}${r.ticket ? `<span class="ticketbadge">티켓 인증</span>` : ''}${r.shared ? '<span class="ticketbadge">공용</span>' : ''}
+          ${r.movie ? `<span class="movie">🎬 ${esc(r.movie)}</span>` : ''}${ticketBadgeHtml(r)}${r.shared ? '<span class="ticketbadge">공용</span>' : ''}
           ${r.movie && (r.mm || mvMetaOf(r.movie)) ? `<div class="mvmeta">${esc(r.mm || mvMetaOf(r.movie))}</div>` : ''}
           ${r.text ? `<p>${esc(r.text)}</p>` : ''}
           ${r.tags && r.tags.length ? `<div class="rts">${r.tags.map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
@@ -5804,7 +5933,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function bindUgc(h, seat) {
     const bucket = ugcBucket();
     const mine = bucket.seats[seat.key] || null;
-    draft = { tags: mine ? [...(mine.tags || [])] : [], ticket: mine ? mine.ticket || null : null, shots: mine ? [...(mine.shots || [])] : [], shotFiles: [] };
+    const prevShots = mine ? [...(mine.shots || [])] : [];
+    draft = {
+      tags: mine ? [...(mine.tags || [])] : [],
+      ticket: mine ? mine.ticket || null : null,
+      ticketVerified: !!(mine && mine.ticket && mine.ticketVerified),
+      shots: prevShots,
+      shotFiles: prevShots.map(() => null)   /* shots 와 같은 순서 — 새로 고른 사진만 File 이 있다 */
+    };
     const root = (document.getElementById('sheetBody') && window.innerWidth <= 900) ? document.getElementById('sheetBody') : document.getElementById('seatPanel');
     if (!root) return;
 
@@ -5868,12 +6004,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (pendingTicket && pendingTicket.url) {
       const pt = pendingTicket; pendingTicket = null;
       draft.ticket = pt.url;
+      draft.ticketVerified = !!pt.verified;
       const mv2 = root.querySelector('#movieInput');
       if (mv2 && !mv2.value && pt.movie) { mv2.value = pt.movie; mv2.dispatchEvent(new Event('input')); }
       const th2 = root.querySelector('#thumbs');
       if (th2) th2.insertAdjacentHTML('afterbegin', `<figure><img src="${pt.url}" alt="티켓"><figcaption>티켓</figcaption></figure>`);
       const st2 = root.querySelector('#ticketState');
-      if (st2) st2.textContent = '첨부됨';
+      if (st2) st2.textContent = pt.verified ? '인증됨' : '첨부됨 · 미검증';
     }
 
     const tf = root.querySelector('#ticketFile');
@@ -5881,21 +6018,29 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const f = tf.files && tf.files[0]; if (!f) return;
       const d = await askMask(f, 560);
       if (d) {
-        draft.ticket = d; toast('티켓 사진을 첨부했어요');
+        draft.ticket = d;
+        draft.ticketVerified = false;   /* 직접 붙인 티켓은 자동 인식 검증을 거치지 않았다 */
+        toast('티켓 사진을 첨부했어요 · 아직 인증 전이에요');
         const th = root.querySelector('#thumbs'); if (th) th.insertAdjacentHTML('afterbegin', `<figure><img src="${d}" alt="티켓"><figcaption>티켓</figcaption></figure>`);
-        const st = root.querySelector('#ticketState'); if (st) st.textContent = '첨부됨';
+        const st = root.querySelector('#ticketState'); if (st) st.textContent = '첨부됨 · 미검증';
       }
+      tf.value = '';
     };
     const sf = root.querySelector('#shotFile');
     if (sf) sf.onchange = async () => {
-      const f = sf.files && sf.files[0]; if (!f) return;
-      const d = await compressImage(f, 560, 0.62);
-      if (d) {
+      const fs = [...(sf.files || [])];
+      if (!fs.length) return;
+      for (const f of fs) {
+        if (draft.shots.length >= PHOTO_MAX) { toast('사진은 ' + PHOTO_MAX + '장까지 올릴 수 있어요', 3000); break; }
+        const d = await compressImage(f, 560, 0.62);
+        if (!d) continue;
         draft.shots.push(d); draft.shotFiles.push(f);
-        toast('시야 사진을 첨부했어요');
         const th = root.querySelector('#thumbs'); if (th) th.insertAdjacentHTML('beforeend', `<figure><img src="${d}" alt="시야"><figcaption>시야</figcaption></figure>`);
-        const st = root.querySelector('#shotState'); if (st) st.textContent = draft.shots.length + '장 첨부됨';
       }
+      sf.value = '';   /* 같은 사진을 다시 고를 수 있게 */
+      const st = root.querySelector('#shotState');
+      if (st) st.textContent = draft.shots.length ? draft.shots.length + '/' + PHOTO_MAX + '장 첨부됨' : '눌러서 올리기(최대 ' + PHOTO_MAX + '장)';
+      if (draft.shots.length) toast('시야 사진 ' + draft.shots.length + '장 첨부됨');
     };
 
     const saveBtn = root.querySelector('#saveReview');
@@ -5920,14 +6065,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const bucket2 = ugcBucket();
       const prev = bucket2.seats[seat.key];
       const id = prev && prev.id ? prev.id : 'r' + Date.now();
-      const rec = { id, seat: seat.key, hall: h.name, author: nv || nickname || '익명', text, tags: [...draft.tags], movie: mv, mm: mv ? mvMetaOf(mv) : '', ticket: draft.ticket || null, shots: [...draft.shots], date: new Date().toISOString().slice(0, 10) };
+      const rec = { id, seat: seat.key, hall: h.name, author: nv || nickname || '익명', text, tags: [...draft.tags], movie: mv, mm: mv ? mvMetaOf(mv) : '', ticket: draft.ticket || null, ticketVerified: !!(draft.ticket && draft.ticketVerified), shots: [...draft.shots], date: new Date().toISOString().slice(0, 10) };
       bucket2.seats[seat.key] = rec;
       bucket2.list = bucket2.list.filter((r) => !(r.seat === seat.key && r.id === id));
       bucket2.list.unshift({ ...rec, help: prev ? prev.help || 0 : 0 });
       bucket2.list = bucket2.list.slice(0, 60);
       save(); paintSeatPanel(); toast('남겼어요. 고마워요!');
       /* 공용 저장(Supabase) — 실패해도 이 기기 기록은 그대로 남는다 */
-      submitShared(h, seat, rec, draft.shotFiles && draft.shotFiles[0]);
+      submitShared(h, seat, rec, draft.shots.slice(), draft.shotFiles.slice());
     };
     root.querySelectorAll('[data-delreview]').forEach((b) => {
       b.onclick = () => {
@@ -5948,11 +6093,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
 
-  /* 실사 사진 → 최대 1400px JPEG(0.82) → seat-photos 버킷 업로드 → 공개 URL */
-  function sbUpload(file, hallKey, seatId) {
-    return compressImage(file, 1400, 0.82).then((dataUrl) => {
-      if (!dataUrl) return null;
-      return fetch(dataUrl).then((r) => r.blob()).then((blob) => {
+  /* 실사 사진 → 최대 1400px JPEG(0.82) → seat-photos 버킷 업로드 → 공개 URL
+     file 이 없고 dataUrl(이미 이 기기에 저장된 사진)이 있으면 그대로 올린다. */
+  function sbUpload(file, hallKey, seatId, dataUrl) {
+    const prep = file ? compressImage(file, 1400, 0.82) : Promise.resolve(dataUrl || null);
+    return prep.then((data) => {
+      if (!data) return null;
+      return fetch(data).then((r) => r.blob()).then((blob) => {
         const name = encodeURIComponent(hallKey) + '/' + encodeURIComponent(seatId) + '-' + Date.now()
           + '-' + Math.random().toString(36).slice(2, 8) + '.jpg';
         const tm = sbTimer(20000);
@@ -5969,21 +6116,34 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     });
   }
 
-  /* 이 기기에 저장한 뒤 공용으로도 올린다. 티켓 사진은 올리지 않고 verified만 보낸다. */
-  function submitShared(h, seat, rec, file) {
+  /* 이 기기에 저장한 뒤 공용으로도 올린다.
+     시야 사진은 첨부한 장수만큼 모두 올리고, 1장은 URL·2장 이상은 JSON 배열 문자열로 photo_url 한 칸에 담는다.
+     티켓은 사진을 올리지 않고, 서버 자동 인식을 통과한 경우에만 verified:true 로 보낸다. */
+  function submitShared(h, seat, rec, shots, files) {
     const go = async () => {
-      let photoUrl = null;
-      if (file) { try { photoUrl = await sbUpload(file, h.id, seat.key); } catch (e) { photoUrl = null; } }
+      const list = (shots || []).filter((s) => typeof s === 'string' && s);
+      const urls = [];
+      let lost = 0;
+      for (let i = 0; i < list.length; i++) {
+        const s = list[i];
+        /* 이미 공용 주소(이전에 올린 사진)는 다시 올리지 않는다 */
+        if (/^https?:/i.test(s)) { urls.push(s); continue; }
+        if (list.length > 1) toast('사진 ' + (i + 1) + '/' + list.length + '장 올리는 중이에요', 2000);
+        let u = null;
+        try { u = await sbUpload((files && files[i]) || null, h.id, seat.key, s); } catch (e) { u = null; }
+        if (u) urls.push(u); else lost += 1;
+      }
       const body = {
         hall_key: h.id, seat_id: seat.key,
         nickname: String(rec.author || '익명').slice(0, 12),
         movie: rec.movie || null,
         comment: rec.text || null,
-        photo_url: photoUrl,
-        verified: !!rec.ticket
+        photo_url: joinPhotoUrls(urls),
+        verified: !!(rec.ticketVerified && rec.ticket)
       };
-      const tm = sbTimer(15000);
+      const tm = sbTimer(20000);
       let row = null;
+      let posted = false;
       try {
         const r = await fetch(SB_URL + '/rest/v1/seat_reviews', {
           method: 'POST', signal: tm.signal,
@@ -5991,18 +6151,24 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           body: JSON.stringify(body)
         });
         if (!r.ok) throw new Error('HTTP ' + r.status);
+        posted = true;
         const rows = await r.json().catch(() => []);
         row = (Array.isArray(rows) && rows[0]) || null;
       } finally { tm.done(); }
+      if (!posted) throw new Error('not posted');
       const cur = (ugcBucket().seats || {})[seat.key];
       if (row) {
         if (cur) { cur.rid = row.id; save(); }
         SB.rows.unshift(row); sbIndex(); sbStore();
         if (state.view === 'hall') paintSeatPanel();
-        toast('모두에게 공유했어요');
       }
+      if (lost) toast('공유했어요. 다만 사진 ' + lost + '장은 올리지 못했어요 — 잠시 뒤 다시 시도해 주세요', 5000);
+      else toast('모두에게 공유했어요');
     };
-    go().catch(() => toast('공유 저장은 실패했어요 — 이 기기에는 남아 있어요'));
+    go().catch((e) => {
+      try { console.warn('[영시미] 공용 후기 저장 실패:', e && e.message); } catch (_) {}
+      toast(LOCAL_ONLY_MSG, 5600);
+    });
   }
 
   /* ---------- 티켓 OCR — Gemini Flash 서버리스(api/ocr.js) ----------
@@ -6341,7 +6507,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (only) only.onclick = async () => {
       const d = await compressImage(file, 560, 0.62);
       const movieV = (document.getElementById('tocMovie').value || '').trim();
-      pendingTicket = { url: d, movie: movieV };
+      pendingTicket = { url: d, movie: movieV, verified: false };
       closeOcr();
       paintSeatPanel();
       toast('지금 자리에 티켓 사진을 붙였어요');
@@ -6353,7 +6519,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const rawSeat = (document.getElementById('tocSeat').value || '').toUpperCase();
       const movieV = (document.getElementById('tocMovie').value || '').trim();
       const d = file ? await compressImage(file, 560, 0.62) : null;
-      pendingTicket = d ? { url: d, movie: movieV } : (movieV ? { url: null, movie: movieV } : null);
+      /* 서버 자동 인식을 통과한 경우에만 verified — 직접 입력·사진만 붙이기는 미검증 */
+      const tverified = !!(read && !failed && !manual);
+      pendingTicket = d ? { url: d, movie: movieV, verified: tverified } : (movieV ? { url: null, movie: movieV } : null);
       closeOcr();
       if (!tid) { paintSeatPanel(); toast('읽은 정보가 없어 지금 자리에 사진만 붙였어요'); return; }
       const hh0 = hid ? findHall(tid, hid) : null;
@@ -6612,7 +6780,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
               <div class="seat-sub">${esc(r.date)}${r.author ? ' · ' + esc(r.author) : ''}</div></div>
               <span class="badge ok" style="flex:0 0 auto">보기</span>
             </div>
-            ${r.movie ? `<div style="margin-top:8px"><span class="movie">🎬 ${esc(r.movie)}</span>${r.ticket ? '<span class="ticketbadge">티켓 인증</span>' : ''}</div>${r.mm || mvMetaOf(r.movie) ? `<div class="mvmeta">${esc(r.mm || mvMetaOf(r.movie))}</div>` : ''}` : (r.ticket ? `<div style="margin-top:8px"><span class="ticketbadge">티켓 인증</span></div>` : '')}
+            ${r.movie ? `<div style="margin-top:8px"><span class="movie">🎬 ${esc(r.movie)}</span>${ticketBadgeHtml(r)}</div>${r.mm || mvMetaOf(r.movie) ? `<div class="mvmeta">${esc(r.mm || mvMetaOf(r.movie))}</div>` : ''}` : (ticketBadgeHtml(r) ? `<div style="margin-top:8px">${ticketBadgeHtml(r)}</div>` : '')}
             ${r.text ? `<p class="sub" style="font-size:13px;margin-top:8px;line-height:1.55">${esc(r.text)}</p>` : ''}
             ${(r.shots && r.shots.length) || r.ticket ? `<div class="shots">${r.ticket ? `<img src="${r.ticket}" alt="티켓">` : ''}${(r.shots || []).map((s) => `<img src="${s}" alt="시야">`).join('')}</div>` : ''}
             ${r.tags && r.tags.length ? `<div class="rts" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">${r.tags.map((x) => `<span class="badge ok">${esc(x)}</span>`).join('')}</div>` : ''}
