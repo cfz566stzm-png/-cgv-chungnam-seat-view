@@ -4604,10 +4604,18 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function applyHash() {
     stopMedia();
     const clear = () => { state.theaterId = null; state.hallId = null; state.seatKey = null; resetCompare(); };
+    /* 지점 주소는 관 id(`cheonan-terminal`)도, CGV 지점번호(`0293`)도 받는다 — 밖에서 붙여 둔 주소가
+       어느 쪽이어도 열리게. state 에는 정식 id 를 넣어 이후 주소가 한 가지 모양으로 쓰인다. */
+    const resolveTid = (v) => {
+      const t = findTheater(v);
+      if (t) return t.id;
+      const byNo = (DATA.theaters || []).find((x) => x.siteNo === v);
+      return byNo ? byNo.id : v;
+    };
     const rq = routeFromQuery();
     if (rq) {
       if (rq.view === 'my') { state.view = 'my'; return; }
-      state.theaterId = rq.tid;
+      state.theaterId = resolveTid(rq.tid);
       if (rq.view === 'theater') { state.view = 'theater'; state.hallId = null; state.seatKey = null; resetCompare(); return; }
       state.hallId = rq.hid; state.view = 'hall'; state._mapHall = null; resetCompare();
       state.seatKey = rq.seat ? decodeURIComponent(rq.seat) : null;
@@ -4623,7 +4631,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (!seg.length) { state.view = 'home'; clear(); return; }
     if (seg[0] === 'my') { state.view = 'my'; return; }
     if (seg[0] === 't' && seg[1]) {
-      state.theaterId = seg[1];
+      state.theaterId = resolveTid(seg[1]);
       if (seg[2] === 'h' && seg[3]) {
         state.hallId = seg[3]; state.view = 'hall'; state._mapHall = null; resetCompare();
         state.seatKey = (seg[4] === 's' && seg[5]) ? decodeURIComponent(seg[5]) : null;
