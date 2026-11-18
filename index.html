@@ -1493,6 +1493,23 @@ input,select,textarea,
   .big-inner .v3d-bar .v3d-zoom button{height:27px;padding:0 9px;font-size:11px}
 }
 
+/* ================= 좌석판 행 라벨이 선택 좌석 위로 ================= */
+/* 가로로 스크롤하면 확대된 선택 좌석(.seat.sel, transform:scale + z-index:6)이
+   왼쪽에 붙어 있는 행 라벨(.rlab)을 덮어 알파벳이 가려졌다.
+   라벨을 좌석보다 확실히 위(z-index:9)로 올리고 바탕을 불투명하게 유지한다. */
+.seatmap .rlab{position:sticky;left:0;z-index:9;background:#fff;
+  box-shadow:0 0 0 3px #fff,2px 0 0 3px #fff}
+.seatmap .rlab *{position:relative;z-index:1}
+.seatmap .seat.sel,.seatmap .seat.cmp{z-index:6}
+.seatmap-scroll{isolation:isolate}
+
+/* ================= 준비 중 기능 안내 버튼(티켓 사진 자동 채우기) ================= */
+/* label → button 으로 바꾸면서 기본 버튼 모양이 섞이지 않게 정리 */
+button.hero-ticket,button.ticketscan{font-family:inherit;-webkit-appearance:none;appearance:none;
+  text-align:left;line-height:1.35}
+button.ticketscan{width:100%;border:0}
+button.hero-ticket{text-align:center}
+
 </style>
 </head>
 <body>
@@ -1751,6 +1768,29 @@ input,select,textarea,
      24개 타일마다 비디오를 직접 그리면 프레임이 끊기므로, 프레임당 딱 한 번만
      640×360 버퍼에 복사하고 타일은 그 버퍼에서 잘라 쓴다. */
   var VID_W = 512, VID_H = 288, vidBuf = null;
+  /* 영상 텍스처가 실제로 캔버스에 올라왔는지 확인하는 계측값.
+     iOS Safari에서는 <video>가 재생 중이어도 drawImage 결과가 완전히 비어(알파 0) 있을 때가 있다.
+     그때는 검은 화면 대신 정지 화면(그라데이션 배경)을 그대로 보여 준다. */
+  var vprobe = { at: 0, bad: 0, broken: false };
+
+  /* 버퍼에 실제 프레임이 올라왔는지 알파값으로 확인한다(0.5초에 한 번만 readback) */
+  function videoFrameReady(vb) {
+    var now = (global.performance && performance.now) ? performance.now() : Date.now();
+    if (now - vprobe.at < 500) return vprobe.bad < 2;
+    vprobe.at = now;
+    try {
+      var c = vb.getContext('2d');
+      var pts = [[VID_W * 0.5, VID_H * 0.5], [VID_W * 0.25, VID_H * 0.3], [VID_W * 0.75, VID_H * 0.7]];
+      var ok = false;
+      for (var i = 0; i < pts.length; i++) {
+        var d = c.getImageData(pts[i][0] | 0, pts[i][1] | 0, 1, 1).data;
+        if (d[3] > 8) { ok = true; break; }
+      }
+      vprobe.bad = ok ? 0 : vprobe.bad + 1;
+      if (vprobe.bad >= 2) vprobe.broken = true;
+    } catch (e) { vprobe.bad = 0; }
+    return vprobe.bad < 2;
+  }
 
   function videoBuffer() {
     if (!vidBuf) {
@@ -1904,6 +1944,8 @@ input,select,textarea,
   Viewer.prototype.toggleVideo = function () {
     var self = this, v = this.video;
     if (!v) return;
+    /* 다시 누르면 한 번 더 기회를 준다(재생 재시도 후 프레임이 올라올 수 있다) */
+    if (v.paused) { vprobe.bad = 0; vprobe.broken = false; vprobe.at = 0; }
     if (v.paused) {
       try { v.muted = true; } catch (e) {}
       /* 메타데이터만 받아 둔 상태에서 재생을 누르면 iOS는 한 번 더 load()가 필요하다 */
@@ -2183,7 +2225,10 @@ input,select,textarea,
 
     /* 이미지 셀 매핑 — 사각형을 삼각형 2개로 나눠 각각 정확한 아핀 변환으로 그린다.
        (사각형 하나를 아핀으로 그리면 네 번째 꼭짓점이 어긋나 이웃 셀 사이에 틈이 생겼음) */
-    var vplay = !!(this.video && !this.video.paused && this.video.readyState >= 2 && this.video.videoWidth > 0);
+    /* readyState 2(HAVE_CURRENT_DATA) 미만이면 첫 프레임이 아직 없어 검게 그려진다.
+       그래서 영상이 준비되지 않았으면 영상 대신 그라데이션 정지 화면을 쓴다. */
+    var vplay = !!(this.video && !this.video.paused && this.video.readyState >= 2
+      && this.video.videoWidth > 0 && !vprobe.broken);
     var img = vplay ? this.video : movieFrame(o.aspect);
     if (vplay && !this._inVid && !this.raf) this._loop();
     function affTri(P0, P1, P2, S0, S1, S2) {
@@ -2421,15 +2466,25 @@ input,select,textarea,
       else if (va < aa2) { srcH = iImgW / aa2; srcY = (iImgH - srcH) / 2; }
     }
     /* 스크린 타일이 그릴 텍스처 — 영상은 프레임당 한 번만 버퍼로 복사한다 */
+    var still = movieFrame(o.aspect);
     var tex = img, tX = srcX, tY = srcY, tW = srcW, tH = srcH;
     if (vplay) {
       var vb = videoBuffer();
       var vctx = vb.getContext('2d');
       try {
+        vctx.clearRect(0, 0, VID_W, VID_H);      /* 이전 프레임이 남아 '빈 프레임'을 가리지 않게 */
         vctx.imageSmoothingEnabled = true;
         vctx.drawImage(this.video, srcX, srcY, srcW, srcH, 0, 0, VID_W, VID_H);
         tex = vb; tX = 0; tY = 0; tW = VID_W; tH = VID_H;
       } catch (e) { tex = img; }
+      /* iOS: 재생 중인데도 캔버스로 복사된 프레임이 비어 있을 때가 있다(알파 0).
+         0.5초에 한 번만 확인해, 두 번 연속 비어 있으면 그 판에서는 영상을 포기하고
+         정지 화면을 계속 그린다(검은 스크린 방지). */
+      if (tex === vb && !videoFrameReady(vb)) {
+        tex = still; tX = 0; tY = 0; tW = still.width; tH = still.height;
+        img = still; srcX = 0; srcY = 0; srcW = still.width; srcH = still.height;
+        vplay = false;
+      }
     }
     var yB0 = scrB + (scrH - ih) / 2, yT0 = yB0 + ih;
     /* 화면 영역 밖으로 넘치지 않게 한 번만 클립 (타일마다 클립하면 그 경계가 격자로 보임) */
@@ -2447,7 +2502,23 @@ input,select,textarea,
       outline.push(toCam(cu2, yB0, scrZ(cu2)));
     }
     var vis = clipNearC(outline);
-    if (vis.length >= 3) {
+    /* 클립 경로가 만들어지지 않거나(점이 3개 미만·NaN) 넓이가 없으면 클립을 걸지 않는다.
+       빈 클립을 걸면 스크린 타일이 전부 잘려 화면이 통째로 검게 남는다. */
+    var visOk = vis.length >= 3;
+    if (visOk) {
+      var vxs = [], vys = [];
+      for (var vk = 0; vk < vis.length; vk++) {
+        var vpx = sx(vis[vk]), vpy = sy(vis[vk]);
+        if (!isFinite(vpx) || !isFinite(vpy)) { visOk = false; break; }
+        vxs.push(vpx); vys.push(vpy);
+      }
+      if (visOk) {
+        var vx0 = Math.min.apply(null, vxs), vx1 = Math.max.apply(null, vxs);
+        var vy0 = Math.min.apply(null, vys), vy1 = Math.max.apply(null, vys);
+        if (vx1 - vx0 < 1 || vy1 - vy0 < 1) visOk = false;
+      }
+    }
+    if (visOk) {
       ctx.beginPath();
       ctx.moveTo(sx(vis[0]), sy(vis[0]));
       for (var vi = 1; vi < vis.length; vi++) ctx.lineTo(sx(vis[vi]), sy(vis[vi]));
@@ -2495,8 +2566,8 @@ input,select,textarea,
          칸 수 상한(MESH_MAX)과 깊이 2까지만 — 대부분 4~8열 × 2행에서 끝난다. */
       /* 근평면을 걸친 칸(카메라 바로 옆)은 상한과 상관없이 더 쪼개 그 조각을 살린다.
          예전에는 상한·깊이에 걸린 칸을 그냥 건너뛰어, 시야를 돌리면 화면 일부가 통째로 사라졌다. */
-      var maxDepth = front ? 2 : 5;
-      if (depth < maxDepth && (meshCells + 4 <= MESH_MAX || !front)) {
+      var maxDepth = front ? 2 : 4;
+      if (depth < maxDepth && (meshCells + 4 <= MESH_MAX || !front) && meshCells < MESH_MAX * 8) {
         var split = !front;
         if (front) {
           var um = (uA + uB) / 2, ym = (yA + yBt) / 2;
@@ -2520,6 +2591,25 @@ input,select,textarea,
       meshCells++;
       drawScreenCell(s0, s1, t0, t1, A, B, C, D);
     }
+    /* ---- 바탕 정지 화면 - 영상 재생 중일 때만 화면 전체에 한 번 깔아 둔다 ----
+       iOS에서 영상 프레임이 검게/비어 들어와도 검은 스크린이 아니라 이 정지 화면이 남는다.
+       실제 그림은 아래 타일 메쉬가 덮으므로 이 바탕은 '보험'일 뿐이다. */
+    if (vplay) (function () {
+      var UX = 3, UY = 2;
+      for (var ux = 0; ux < UX; ux++) {
+        for (var uy = 0; uy < UY; uy++) {
+          var s0 = ux / UX, s1 = (ux + 1) / UX, q0 = uy / UY, q1 = (uy + 1) / UY;
+          var uA2 = -iw / 2 + iw * s0, uB2 = -iw / 2 + iw * s1;
+          var yA2 = yB0 + ih * q0, yB2 = yB0 + ih * q1;
+          quadTex(
+            [toCam(uA2, yA2, scrZ(uA2)), toCam(uB2, yA2, scrZ(uB2)),
+             toCam(uB2, yB2, scrZ(uB2)), toCam(uA2, yB2, scrZ(uA2))],
+            [[still.width * s0, still.height * (1 - q1)], [still.width * s1, still.height * (1 - q1)],
+             [still.width * s1, still.height * (1 - q0)], [still.width * s0, still.height * (1 - q0)]],
+            still, null, [0, 0, still.width, still.height]);
+        }
+      }
+    })();
     /* 기본 격자: 평면 4×2, 곡면(IMAX·SCREENX) 6×2 — 곡률이 있을 때만 열을 늘린다 */
     var NX0 = Math.abs(curve) > 0.08 ? 6 : 4, NY0 = 2;
     for (var mi = 0; mi < NX0; mi++) {
@@ -3324,7 +3414,21 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     document.body.appendChild(wrap);
     const inp = wrap.querySelector('#nickInput');
     setTimeout(() => inp && inp.focus(), 120);
-    wrap.querySelector('#nickSave').onclick = () => { setNickname(inp.value); closeNick(); toast(nickname ? '닉네임을 저장했어요' : '닉네임 없이 둘러볼게요'); render(); };
+    wrap.querySelector('#nickSave').onclick = async () => {
+      const btn = wrap.querySelector('#nickSave');
+      if (!btn || btn.disabled) return;
+      const label = nickname ? '저장' : '시작하기';
+      btn.disabled = true; btn.textContent = '확인 중…';
+      let res;
+      try { res = await nickCheck(inp.value); } catch (e) { res = { ok: true }; }
+      btn.disabled = false; btn.textContent = label;
+      if (!res.ok) {
+        toast(NICK_TAKEN);
+        if (inp) { try { inp.focus(); inp.select(); } catch (e) {} }
+        return;
+      }
+      setNickname(inp.value); closeNick(); toast(nickname ? '닉네임을 저장했어요' : '닉네임 없이 둘러볼게요'); render();
+    };
     inp.onkeydown = (e) => { if (e.key === 'Enter') wrap.querySelector('#nickSave').click(); };
     const sk = wrap.querySelector('#nickSkip');
     if (sk) sk.onclick = () => { cookieSet(NK_ASKED, '1', 365); try { localStorage.setItem('cgv-chn-nick-asked', '1'); } catch (e) {} closeNick(); };
@@ -3595,6 +3699,88 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       try { localStorage.setItem(DEV_KEY, id); } catch (e) {}
     }
     return id;
+  }
+
+  /* ---------- 닉네임 중복 확인 (Supabase public.nicknames) ----------
+     닉네임은 사람을 구분하는 이름이라 서로 겹치면 안 된다.
+     기기 고유 id(cgv_owner_id, localStorage + 쿠키 1년)를 만들어 두고,
+     nicknames(nickname text primary key, owner_id text not null) 에 선점 등록한다.
+     · 이미 있고 내 owner_id 것이 아니면 → 막고 안내
+     · 비어 있으면 → POST 로 선점
+     · 테이블이 없거나 네트워크가 실패하면 → 서비스를 막지 않고 통과(graceful) */
+  const OWN_KEY = 'cgv_owner_id';
+  const OWN_COOKIE = 'cgv_owner';
+  function ownerId() {
+    let id = '';
+    try { id = localStorage.getItem(OWN_KEY) || ''; } catch (e) { id = ''; }
+    if (!id) id = cookieGet(OWN_COOKIE);
+    if (!id) id = 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    try { localStorage.setItem(OWN_KEY, id); } catch (e) {}
+    cookieSet(OWN_COOKIE, id, 365);
+    return id;
+  }
+  const NICK_TAKEN = '이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해 주세요.';
+  function nickKey(n) { return String(n == null ? '' : n).trim().slice(0, 12); }
+  /* seat_reviews 에 다른 사람이 쓴 같은 닉네임이 있는지(보조 확인).
+     내가 올렸던 후기는 sb:<id> 형태로 이 기기에 기록돼 있어 내 것으로 가뤄낸다. */
+  function nickInShared(nick) {
+    const nm = nickKey(nick);
+    if (!nm || nm === '익명') return false;
+    try {
+      const bucket = ugcBucket();
+      const mineIds = Object.create(null);
+      (bucket.list || []).forEach((r) => { if (r && r.rid) mineIds['sb:' + r.rid] = 1; });
+      return (SB.rows || []).some((r) => r && nickKey(r.nickname) === nm && !mineIds['sb:' + r.id]);
+    } catch (e) { return false; }
+  }
+  /* 선점 등록 — 이미 있는 키면 409 가 나므로, 그때 다시 조회해 내 것인지 확인 */
+  function nickClaim(nm, me) {
+    const tm = sbTimer(8000);
+    return fetch(SB_URL + '/rest/v1/nicknames', {
+      method: 'POST', signal: tm.signal,
+      headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
+      body: JSON.stringify([{ nickname: nm, owner_id: me }])
+    }).then((r) => {
+      tm.done();
+      if (r.status === 404) { sbMarkMissing('nicknames'); return { ok: true }; }
+      if (r.ok) return { ok: true };
+      if (r.status === 409 || r.status === 400) {
+        /* 방금 다른 사람이 선점했다 — 누구 것인지 다시 본다 */
+        return nickFind(nm).then((row) => {
+          if (!row) return { ok: true };
+          return String(row.owner_id || '') === me ? { ok: true } : { ok: false, why: 'taken' };
+        });
+      }
+      throw new Error('HTTP ' + r.status);
+    }).catch(() => ({ ok: true }));      /* 등록 실패는 막지 않는다 */
+  }
+  function nickFind(nm) {
+    const tm = sbTimer(6000);
+    return fetch(SB_URL + '/rest/v1/nicknames?nickname=eq.' + encodeURIComponent(nm) + '&select=nickname,owner_id',
+      { headers: sbHeaders(), signal: tm.signal, cache: 'no-store' })
+      .then((r) => {
+        tm.done();
+        if (r.status === 404) { sbMarkMissing('nicknames'); return null; }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then((rows) => {
+        if (!Array.isArray(rows)) return null;
+        return rows.find((x) => x && nickKey(x.nickname) === nm) || null;
+      });
+  }
+  /* 결과: {ok:true} | {ok:false, why:'taken'} — 실패·예외는 통과시킨다(서비스 우선) */
+  function nickCheck(nick) {
+    const nm = nickKey(nick);
+    if (!nm || nm === '익명') return Promise.resolve({ ok: true, skip: true });
+    if (sbMissing('nicknames')) {
+      return Promise.resolve(nickInShared(nm) ? { ok: false, why: 'taken' } : { ok: true });
+    }
+    const me = ownerId();
+    return nickFind(nm).then((row) => {
+      if (row) return String(row.owner_id || '') === me ? { ok: true } : { ok: false, why: 'taken' };
+      return nickClaim(nm, me);
+    }).catch(() => (nickInShared(nm) ? { ok: false, why: 'taken' } : { ok: true }));
   }
   function helpMine() { return lsGet(HELP_MINE, {}); }
   function helpVoted() { return lsGet(HELP_VOTED, {}); }
@@ -4057,10 +4243,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <div class="hstat"><b class="num">${st.halls.toLocaleString()}</b><span>상영관</span></div>
         <div class="hstat"><b class="num">${st.seats.toLocaleString()}</b><span>총 좌석</span></div>
       </div>
-      <label class="hero-ticket" for="ticketOcrHome">
-        🎟️ 티켓 사진으로 바로 기록하기
-        <input type="file" id="ticketOcrHome" accept="image/*">
-      </label>
+      <button class="hero-ticket" type="button" data-ticket-soon="1">🎟️ 티켓 사진으로 바로 기록하기</button>
     </section>
 
     <section class="card card-pad dstat" aria-label="데이터 현황">
@@ -5350,11 +5533,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       </div>
       <p class="ugc-sub">이 자리를 고민하는 사람에게 사진 한 장이 제일 큰 도움이 돼요.</p>
 
-      <label class="ticketscan" for="ticketOcr">
+      <button class="ticketscan" type="button" data-ticket-soon="1">
         <span class="ts-ic">🎟️</span>
-        <span class="ts-tx"><b>티켓 사진으로 자동 채우기</b><i>바코드·예매번호는 가리고 올릴 수 있어요 · 외부 전송 1회</i></span>
-        <input type="file" id="ticketOcr" accept="image/*">
-      </label>
+        <span class="ts-tx"><b>티켓 사진으로 자동 채우기</b><i>준비 중인 기능이에요 · 지점·좌석을 직접 고를 수 있어요</i></span>
+      </button>
       <div class="shotrow">
         <label class="shotup" for="shotFile">
           <span class="shotup-ic">📷</span>
@@ -5433,8 +5615,43 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   document.addEventListener('change', (e) => {
     const t = e.target;
     if (!t || !/^ticketOcr/.test("" + t.id)) return;
-    const f = t.files && t.files[0];
-    if (f) openMask(f, 'ocr');
+    /* 티켓 자동 채우기(OCR)는 아직 서버가 붙지 않았다 — 파일 선택창 대신 안내만 띄운다 */
+    try { t.value = ''; } catch (err) {}
+    ticketSoon();
+  });
+
+  /* ---------- 아직 준비 중인 기능 안내 ----------
+     티켓 사진 자동 채우기(OCR)는 Vercel/Gemini 서버가 아직 연결되지 않았다.
+     버튼·라벨을 누뢀을 때 파일 선택창이나 OCR 오류 대신 이 안내를 보여 준다. */
+  function ticketSoon() {
+    soonModal('🎟️ 티켓 사진 자동 채우기',
+      '티켓 사진 자동 채우기 기능은 현재 개발 중입니다. 지점·좌석을 직접 선택해 기록할 수 있어요.');
+  }
+  function soonModal(title, body) {
+    const old = document.getElementById('soonModal');
+    if (old) old.remove();
+    const wrap = document.createElement('div');
+    wrap.id = 'soonModal';
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="modal-card">
+        <div class="modal-grab"></div>
+        <h3>${esc(title)}</h3>
+        <p class="sub">${esc(body)}</p>
+        <button class="btn" id="soonOk" type="button" style="width:100%;margin-top:12px">확인</button>
+      </div>`;
+    document.body.appendChild(wrap);
+    const close = () => { const m = document.getElementById('soonModal'); if (m) m.remove(); };
+    wrap.querySelector('#soonOk').onclick = close;
+    wrap.querySelector('.modal-scrim').onclick = close;
+  }
+  /* [data-ticket-soon] — 홈 히어로·좌석 상세의 티켓 자동 채우기 버튼(둘 다 위임으로 처리) */
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('[data-ticket-soon]');
+    if (!b) return;
+    e.preventDefault();
+    ticketSoon();
   });
 
   /* ---------- 티켓 사진 가리기(마스킹) ----------
@@ -5682,11 +5899,23 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     };
 
     const saveBtn = root.querySelector('#saveReview');
-    if (saveBtn) saveBtn.onclick = () => {
+    if (saveBtn) saveBtn.onclick = async () => {
+      if (saveBtn._busy) return;
       const text = (root.querySelector('#reviewText').value || '').trim().slice(0, 200);
       const mv = (root.querySelector('#movieInput').value || '').trim().slice(0, 40);
       const nv = ((root.querySelector('#revNick') || {}).value || '').trim().slice(0, 12);
       if (!text && !draft.shots.length && !draft.ticket) { toast('사진이나 한마디 중 하나는 남겨주세요'); return; }
+      /* 남길 이름이 이미 다른 사람 것이면 등록을 막는다(익명은 확인하지 않음) */
+      saveBtn._busy = true; saveBtn.disabled = true;
+      let nres;
+      try { nres = await nickCheck(nv || nickname); } catch (e) { nres = { ok: true }; }
+      saveBtn._busy = false; saveBtn.disabled = false;
+      if (!nres.ok) {
+        toast(NICK_TAKEN);
+        const ni = root.querySelector('#revNick');
+        if (ni) { try { ni.focus(); ni.select(); } catch (e) {} }
+        return;
+      }
       if (nv) setNickname(nv);
       const bucket2 = ugcBucket();
       const prev = bucket2.seats[seat.key];
@@ -6154,9 +6383,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
   function startTicketOcr() {
-    const inp = document.getElementById('ticketOcr');
-    if (inp) { inp.value = ''; inp.click(); return; }
-    toast('티켓 사진 버튼을 찾지 못했어요');
+    /* 티켓 자동 채우기(OCR)는 아직 서버가 없다 — 파일 선택창 대신 개발 중 안내 */
+    ticketSoon();
   }
 
   function contribution() {
