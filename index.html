@@ -2473,26 +2473,10 @@ input,select,textarea,
         return;
       }
       var pA = [sx(A), sy(A)], pB = [sx(B), sy(B)], pC = [sx(C), sy(C)], pD = [sx(D), sy(D)];
-      /* 칸 경계를 1.4px 바깥으로 밀어 겹쳐 그린다 — 안티앨리어싱 경계의 검은 실선 제거 */
-      var e = offsetPoly([pA, pB, pC, pD], 1.4);
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(e[0][0], e[0][1]); ctx.lineTo(e[1][0], e[1][1]);
-      ctx.lineTo(e[2][0], e[2][1]); ctx.lineTo(e[3][0], e[3][1]);
-      ctx.closePath(); ctx.clip();
-      ctx.imageSmoothingEnabled = true;
-      var M1 = affTri(pA, pB, pC, SA, SB, SC);
-      if (M1) {
-        ctx.setTransform(M1[0], M1[1], M1[2], M1[3], M1[4], M1[5]);
-        ctx.drawImage(tex, rc[0], rc[1], rc[2], rc[3], rc[0], rc[1], rc[2], rc[3]);
-      }
-      var M2 = affTri(pA, pC, pD, SA, SC, SD);
-      if (M2) {
-        ctx.setTransform(M2[0], M2[1], M2[2], M2[3], M2[4], M2[5]);
-        ctx.drawImage(tex, rc[0], rc[1], rc[2], rc[3], rc[0], rc[1], rc[2], rc[3]);
-      }
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.restore();
+      /* 삼각형 단위로 1.2px 겹쳐 그린다 — 클립 경계 안티앨리어싱으로 생기던 검은 실선을
+         없애면서, 칸 사각형을 넘어 그려지던 이웃 겹침(회색 접힘)도 생기지 않는다. */
+      triClip(pA, pB, pC, SA, SB, SC, tex, null, rc);
+      triClip(pA, pC, pD, SA, SC, SD, tex, null, rc);
     }
     function meshCell(s0, s1, t0, t1, depth) {
       if (meshCells > MESH_MAX) return;
