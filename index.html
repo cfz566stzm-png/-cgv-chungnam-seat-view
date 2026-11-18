@@ -6039,7 +6039,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       ['목 꺾임 (올려다보는 정도)', `<b>${neckWord(m.neck)}</b>`, 'E'],
       ['앞사람에 가리는 정도', `<b>${occWord(sPct)}</b><span class="occmini"><i style="width:${sPct.toFixed(1)}%"></i></span>`, 'E'],
       m.isBox ? ['박스 자리 높이', `<b>${fmt(m.eyeY, 2)} m</b> <span class="anax">스크린 바닥 기준 내 눈높이</span>`, 'E']
-              : ['눈높이', `<b>${fmt(eyeMeters(p), 2)} m</b> <span class="anax">+ 의자 높이 ${fmt(m.steps, 2)} m</span>`, 'E'],
+              : ['맨 앞줄보다 높은 정도', `<b>${fmt(m.steps, 2)} m</b> <span class="anax">내 눈높이 ${fmt(m.eyeY, 2)} m</span>`, 'E'],
       ['좌석 유형', `<b>${esc(typeTxt)}</b> <span class="anax">${esc(typeNote)}</span>`, 'M'],
       ['스크린 크기', `<b>${fmt(p.screenW, 1)} × ${fmt(p.screenH, 1)} m</b>`, pr.screen],
       ['화면비', `<b>${Number(p.native || p.aspect).toFixed(2)} : 1</b>${p.system ? ` <span class="sysmini">${esc(p.system)}</span>` : ''}`, pr.screen],
@@ -6054,7 +6054,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       ['앞사람 머리 가림 비율', sPct < 0.5 ? '없음' : fmt(sPct, 0) + '%'],
       ['이 자리 눈높이(A열 바닥 + 앉은 눈높이)', `${fmt(m.eyeY, 2)} m`]
     ];
-    const eyeNote = m.isBox ? '' : `<p class="ana-eye-note">‘의자 높이’는 맨 앞줄(A열) 바닥보다 이 자리 바닥이 얼마나 높은지예요(한 줄당 ${fmt(p.riser, 2)} m). 입력한 앉은 눈높이에 이 높이를 더해 시야를 계산해요.</p>`;
+    /* 1.25 m는 의자 자체 높이가 아니라 맨 앞줄(A열)부터 올라온 좌석 단차 — 눈높이와 헷갈리지 않게 짧게 알려 준다 */
+    const eyeNote = m.isBox ? '' : `<p class="ana-eye-note">내 눈높이 <b>${fmt(m.eyeY, 2)} m</b>는 좌석 단차(계단 높이)를 더한 값이에요.</p>`;
     return `<section class="ana">
       <div class="ana-head"><h4>시야 분석</h4><span>${esc(seat.key)} · ${esc(h.name)}</span></div>
       ${eyeCtlHtml(p)}
