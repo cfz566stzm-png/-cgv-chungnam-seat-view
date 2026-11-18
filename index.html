@@ -2214,12 +2214,47 @@ input,select,textarea,
        넘어가 투영이 폭발해 초록 조각으로 찢어졌다. 판을 세그먼트로 나누고,
        각 조각을 근평면에서 잘라낸 뒤 삼각형마다 클립해 그리면 겹침·튐이 없다. */
     var NEAR_C = 0.4;
+    /* 클립 경로를 바깥으로 d px 넉넉하게 밀어낸 다각형.
+       Canvas 2D의 clip은 경계에서 안티앨리어싱으로 알파가 반쯤 깎여, 이웃한 칸/삼각형이
+       딱 맞물리면 그 선이 검은 실선(hairline)으로 비쳤다. 가장자리를 d만큼 겹쳐 그리면
+       양쪽 모두 경계 안쪽에서 불투명하게 칠해져 실선이 사라진다. */
+    function offsetPoly(pts, d) {
+      var n = pts.length, cx = 0, cy = 0, i;
+      for (i = 0; i < n; i++) { cx += pts[i][0]; cy += pts[i][1]; }
+      cx /= n; cy /= n;
+      var area = 0;
+      for (i = 0; i < n; i++) {
+        var q = pts[(i + 1) % n];
+        area += pts[i][0] * q[1] - q[0] * pts[i][1];
+      }
+      if (Math.abs(area * 0.5) < 1.5) return pts.slice();   /* 거의 0면적: 그대로 */
+      var out = [];
+      for (i = 0; i < n; i++) {
+        var prev = pts[(i - 1 + n) % n], cur = pts[i], next = pts[(i + 1) % n];
+        var n1 = edgeNormal(prev, cur, cx, cy), n2 = edgeNormal(cur, next, cx, cy);
+        var bx = n1[0] + n2[0], by = n1[1] + n2[1], bl = Math.sqrt(bx * bx + by * by);
+        if (bl < 1e-6) { out.push([cur[0], cur[1]]); continue; }
+        bx /= bl; by /= bl;
+        var cosHalf = bx * n1[0] + by * n1[1];
+        var s = d / Math.max(0.35, cosHalf);
+        out.push([cur[0] + bx * s, cur[1] + by * s]);
+      }
+      return out;
+    }
+    function edgeNormal(a, b, cx, cy) {
+      var ex = b[0] - a[0], ey = b[1] - a[1], L = Math.sqrt(ex * ex + ey * ey) || 1;
+      var nx = ey / L, ny = -ex / L;
+      var mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+      if ((mx - cx) * nx + (my - cy) * ny < 0) { nx = -nx; ny = -ny; }
+      return [nx, ny];
+    }
     function triClip(P0, P1, P2, S0, S1, S2, img, alpha, rect) {
       var M = affTri(P0, P1, P2, S0, S1, S2);
       if (!M) return;
+      var e = offsetPoly([P0, P1, P2], 1.2);
       ctx.save();
       ctx.beginPath();
-      ctx.moveTo(P0[0], P0[1]); ctx.lineTo(P1[0], P1[1]); ctx.lineTo(P2[0], P2[1]);
+      ctx.moveTo(e[0][0], e[0][1]); ctx.lineTo(e[1][0], e[1][1]); ctx.lineTo(e[2][0], e[2][1]);
       ctx.closePath(); ctx.clip();
       if (alpha != null) ctx.globalAlpha = alpha;
       ctx.imageSmoothingEnabled = true;
@@ -2438,16 +2473,12 @@ input,select,textarea,
         return;
       }
       var pA = [sx(A), sy(A)], pB = [sx(B), sy(B)], pC = [sx(C), sy(C)], pD = [sx(D), sy(D)];
-      var cx = (pA[0] + pB[0] + pC[0] + pD[0]) / 4, cy = (pA[1] + pB[1] + pC[1] + pD[1]) / 4;
-      function grow(p) {
-        var dx = p[0] - cx, dy = p[1] - cy, d = Math.sqrt(dx * dx + dy * dy) || 1;
-        return [p[0] + dx / d * 0.6, p[1] + dy / d * 0.6];
-      }
-      var eA = grow(pA), eB = grow(pB), eC = grow(pC), eD = grow(pD);
+      /* 칸 경계를 1.4px 바깥으로 밀어 겹쳐 그린다 — 안티앨리어싱 경계의 검은 실선 제거 */
+      var e = offsetPoly([pA, pB, pC, pD], 1.4);
       ctx.save();
       ctx.beginPath();
-      ctx.moveTo(eA[0], eA[1]); ctx.lineTo(eB[0], eB[1]);
-      ctx.lineTo(eC[0], eC[1]); ctx.lineTo(eD[0], eD[1]);
+      ctx.moveTo(e[0][0], e[0][1]); ctx.lineTo(e[1][0], e[1][1]);
+      ctx.lineTo(e[2][0], e[2][1]); ctx.lineTo(e[3][0], e[3][1]);
       ctx.closePath(); ctx.clip();
       ctx.imageSmoothingEnabled = true;
       var M1 = affTri(pA, pB, pC, SA, SB, SC);
