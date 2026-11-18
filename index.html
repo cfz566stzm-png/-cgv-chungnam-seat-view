@@ -4416,9 +4416,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
   function render(opt) {
-    /* 목록 필터·지역 탭처럼 '지금 보던 화면을 그대로 두고 내용만 바뀌는' 경우에는
-       스크롤을 맨 위로 올리지 않는다(필터 칩을 누를 때 페이지가 위로 튀던 제보). */
-    const keepY = !!(opt && opt.keepScroll) ? (window.scrollY || window.pageYOffset || 0) : null;
+    /* 스크롤은 '화면이 바뀔 때'만 맨 위로 올린다. 목록 필터·지역 탭·배경 새로고침처럼
+       같은 화면을 다시 그리는 경우에는 지금 보던 위치를 그대로 둔다
+       (필터 칩을 누를 때 페이지가 위로 튀던 제보 IMG_7272). */
+    const sig = [state.view, state.theaterId || '', state.hallId || ''].join('|');
+    const sameView = (state._viewSig === sig);
+    state._viewSig = sig;
+    const keepY = (opt && opt.keepScroll) || sameView ? (window.scrollY || window.pageYOffset || 0) : null;
     /* 관·지점이 바뀌는 모든 경로(해시·뒤로가기·좌석판·지점 카드)에서 비교 상태를 확실히 끈다.
        개별 이동 처리에만 기대면 한 곳이 빠질 때 이전 관의 비교 목록·비교 창이 그대로 남는다. */
     const curHallKey = (state.theaterId || '') + '/' + (state.hallId || '');
