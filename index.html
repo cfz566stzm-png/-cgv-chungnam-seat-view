@@ -1738,6 +1738,11 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 .eyectl-step{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:17px;font-weight:800;color:var(--ink);cursor:pointer;line-height:1}
 .eyectl-step:active{background:#EBF1EE}
 .eyectl-h{font-size:15px;font-weight:850;min-width:62px;text-align:center;font-variant-numeric:tabular-nums}
+/* 내 키 직접 입력 — 정수 cm 만(소수점·문자 막음). ± 버튼과 같은 폭감으로 보이게 */
+.eyectl-h.eyectl-num{width:66px;min-width:0;height:34px;padding:0 6px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);-webkit-appearance:none;appearance:none}
+.eyectl-h.eyectl-num:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(0,168,98,.14)}
+.eyectl-num::-webkit-outer-spin-button,.eyectl-num::-webkit-inner-spin-button{-webkit-appearance:none;appearance:none;margin:0}
+.eyectl-num[type=number]{-moz-appearance:textfield}
 .eyectl-eye{font-size:12px;font-weight:700;color:var(--sub)}
 .eyectl-eye b{color:var(--green-d)}
 .eyectl-row2{display:flex;align-items:center;gap:6px;margin-top:9px;flex-wrap:wrap}
@@ -4854,6 +4859,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
      데이터의 기본 눈높이(p.eye ≈ 1.05 m)는 키 170 cm 기준으로 보고 비례해 늘리고 줄인다(추정). */
   const EYE_KEY = 'cgv_eye_v1';
   const EYE_BASE_CM = 170;
+  const HEIGHT_MIN = 120, HEIGHT_MAX = 210;   /* 내 키 입력 허용 범위(cm) — ±버튼과 같은 기준 */
   let viewerSize = { h: 170, eye: null };   /* h: 키(cm) · eye: 앉은 눈높이(cm)를 직접 넣은 경우 */
   (function () {
     try {
@@ -4911,7 +4917,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <div class="eyectl-row">
         <span class="eyectl-lb">내 키</span>
         <button type="button" class="eyectl-step" data-eye="-5" aria-label="키 5cm 줄이기">−</button>
-        <b class="eyectl-h">${viewerSize.h} cm</b>
+        <input id="eyeHeight" class="eyectl-h eyectl-num" type="number" inputmode="numeric" pattern="[0-9]*" step="1" min="120" max="210" value="${viewerSize.h}" aria-label="내 키(cm, 정수)" title="키를 직접 입력하세요(정수 cm)">
+        <span class="eyectl-cm">cm</span>
         <button type="button" class="eyectl-step" data-eye="5" aria-label="키 5cm 늘리기">+</button>
         <span class="eyectl-eye">앉은 눈높이 <b>${(eyeCm / 100).toFixed(2)} m</b>${viewerSize.eye ? ' · 직접 입력' : ''}</span>
       </div>
@@ -4959,6 +4966,60 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }
     saveViewerSize();
     repaintForEye();
+  });
+
+  /* 내 키 직접 입력(2026-11-19 사용자 요청) — 정수 cm만. 소수점·쉼표·지수는 입력 단계에서 막고,
+     숫자만 남기며, 120~210 cm 밖은 버튼과 같은 범위로 당긴다. 입력하는 즉시(380ms 디바운스) 시야·
+     앞사람 가림을 다시 계산하고, 다시 그린 뒤에도 입력 초점과 커서를 그 자리에 돌려놓는다. */
+  function heightDigits(el) {
+    const digits = String((el && el.value) || '').replace(/[^0-9]/g, '').slice(0, 3);
+    if (el && el.value !== digits) el.value = digits;
+    return digits;
+  }
+  function applyHeightInput(el, refocus) {
+    const digits = heightDigits(el);
+    const n = digits ? Number(digits) : NaN;
+    if (!isFinite(n)) return false;
+    const v = clamp(n, HEIGHT_MIN, HEIGHT_MAX);
+    if (v !== viewerSize.h || viewerSize.eye !== null) {
+      viewerSize.h = v;
+      viewerSize.eye = null;            /* 키를 직접 넣으면 키 기준으로 돌아간다 */
+      saveViewerSize();
+      repaintForEye();
+    }
+    if (refocus) {
+      const again = document.getElementById('eyeHeight');
+      if (again) {
+        try {
+          again.value = String(viewerSize.h);
+          again.focus();
+          again.setSelectionRange(again.value.length, again.value.length);
+        } catch (e) {}
+      }
+    }
+    return true;
+  }
+  let hInputT = 0;
+  document.addEventListener('input', (e) => {
+    const el = e.target;
+    if (!el || el.id !== 'eyeHeight') return;
+    heightDigits(el);
+    clearTimeout(hInputT);
+    const n = Number(el.value || '');
+    if (!el.value || !isFinite(n) || n < HEIGHT_MIN || n > HEIGHT_MAX) return;   /* 아직 짧게 치는 중이면 기다린다 */
+    hInputT = setTimeout(() => { applyHeightInput(el, true); }, 380);
+  });
+  document.addEventListener('change', (e) => {
+    const el = e.target;
+    if (!el || el.id !== 'eyeHeight') return;
+    clearTimeout(hInputT);
+    applyHeightInput(el, false);       /* 범위 밖 값을 창 밖을 떠날 때 당겨 준다 */
+  });
+  document.addEventListener('keydown', (e) => {
+    const el = e.target;
+    if (!el || el.id !== 'eyeHeight') return;
+    if (e.key === '.' || e.key === ',' || e.key === 'e' || e.key === 'E' || e.key === '-' || e.key === '+') { e.preventDefault(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); clearTimeout(hInputT); applyHeightInput(el, true); if (el.blur) {} }
   });
 
   /* ---------- 물리 계산 ---------- */
@@ -5175,10 +5236,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const hgt = Math.round(tb.getBoundingClientRect().height || 58);
     document.documentElement.style.setProperty('--topbarH', hgt + 'px');
     if (bar) bar.style.top = hgt + 'px';
-    /* 데스크톱 2단 패널: 위에 붙은 막대(토픽바 + 지점 막대) 아래에서 시작하고, 창 바닥 위에서 끝난다. */
+    /* 데스크톱 2단 패널: 위에 붙은 막대(토픽바 + 지점 막대) 아래에서 시작하고, 창 바닥 위에서 끝난다.
+       막대 높이는 실제로 잰다 — 지점 이름이 길어 두 줄로 접히거나 글꼴·확대 배율이 다르면
+       높이가 달라지는데, 고정값을 쓰면 패널 윗부분(🎬 아이콘 등)이 막대에 가려 잘려 보였다. */
     const ch = bar ? Math.round(bar.getBoundingClientRect().height || 56) : 0;
-    document.documentElement.style.setProperty('--panelTop', (hgt + ch + 10) + 'px');
-    document.documentElement.style.setProperty('--panelMax', 'calc(100vh - ' + (hgt + ch + 18) + 'px)');
+    const panelTop = hgt + ch + 12;
+    document.documentElement.style.setProperty('--panelTop', panelTop + 'px');
+    document.documentElement.style.setProperty('--panelMax', 'calc(100dvh - ' + (panelTop + 14) + 'px)');
+    if (document.body.classList.contains('view-hall')) fitPanelHeight();
   }
 
   /* 지역 탭 — 데이터에 새 지역이 들어오면 자동으로 탭이 붙는다(전국 확장: 2026-11-18) */
@@ -5544,7 +5609,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function guideHtml() {
     const open = guideOpen();
     const items = [
-      ['지점·상영관 고르기', '전국 CGV 177곳의 관별 좌석표를 예매 화면 그대로 옮겼어요. 특별관은 IMAX·4DX·ULTRA 4DX·SCREENX·DOLBY ATMOS 필터로 바로 찾을 수 있어요.'],
+      ['지점·상영관 고르기', '특별관은 IMAX·4DX·ULTRA 4DX·SCREENX·DOLBY ATMOS 필터로 바로 찾을 수 있어요.'],
       ['좌석을 눌러 3D로 보기', '그 자리에 앉으면 화면이 얼마나 크게 보이는지 3D로 보여드려요. 내 키(눈높이)를 넣으면 앞사람에 얼마나 가리는지 계산해서 알려드려요.'],
       ['두 자리 이상 비교하기', '⚖️ 좌석 비교를 켜고 최대 4석을 담으면 같은 화각으로 나란히 놓고 볼 수 있어요.'],
       ['사진·한마디 남기기', '그 자리에서 찍은 사진과 한마디를 남기면 다음 사람에게 가장 큰 도움이 돼요.']
@@ -6747,6 +6812,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const panel = $('#seatPanel');
     const sheetBody = $('#sheetBody');
     const sheetHead = $('#sheetHead');
+    /* 좌석을 새로 고르면 패널을 맨 위부터 보여준다 — 이전 좌석에서 내려둔 스크롤이 남아
+       패널 첫 부분(아이콘·제목)이 잘려 보이지 않게. */
+    const pkey = (state.theaterId || '') + '/' + (state.hallId || '') + '/' + (state.seatKey || '');
+    if (panel && state._panelKey !== pkey) { state._panelKey = pkey; panel.scrollTop = 0; }
     if (panel) panel.innerHTML = onSheet ? '' : (seat ? panelHeadHtml(h, seat) : '') + body;
     if (sheetBody) sheetBody.innerHTML = onSheet ? body : '';
     if (sheetHead) sheetHead.innerHTML = (onSheet && seat) ? sheetHeadHtml(h, seat) : '';
@@ -9142,6 +9211,17 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }, 140);
   });
   window.addEventListener('orientationchange', () => setTimeout(() => window.dispatchEvent(new Event('resize')), 260));
+  /* 지점 막대가 두 줄로 접히거나 글꼴·확대 배율 때문에 높이가 바뀌면 패널 윗변 기준도 다시 잡는다.
+     (이걸 놓치면 패널 위쪽이 막대에 10~20px 가려 🎬 아이콘이 잘려 보였다) */
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => {
+      if (document.body.classList.contains('view-hall')) setCtxTop();
+    });
+    const tb = document.querySelector('.topbar');
+    const cb = document.getElementById('ctxbar');
+    if (tb) ro.observe(tb);
+    if (cb) ro.observe(cb);
+  }
   window.__APP__ = { state, metrics, render, setNickname, setNear, clearNear, toggleNear, toChoseong, distKm, homeList, openCompare, toggleCompare, mapZoomBy, dataStatus, openMask, favToggle, auth: AUTH, openAuth, openProfileSetup, authSignOut, profilePush };
   /* 첫 방문 때 닉네임을 묻는 팝업은 두지 않는다 — 처음엔 그냥 좌석을 보러 온 사람이 대부분이다.
      닉네임은 후기를 남길 때 입력란에서만 받는다. */
