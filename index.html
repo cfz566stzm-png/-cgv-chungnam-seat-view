@@ -833,9 +833,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .rtabs::-webkit-scrollbar{display:none;height:0}
 .rtab{flex:1 1 auto;min-width:max-content;padding:0 10px;white-space:nowrap;text-overflow:clip;overflow:visible;flex-shrink:0}
 @media (max-width:959px){ .hometools .tabsrow .rtabs{flex:1 1 100%} }
-@media (max-width:420px){ .rtabs{gap:4px;padding:4px} .rtab{font-size:12px;height:38px;padding:0 8px}
-  /* 390px 폰: 마지막 탭 뒤 여백을 탭 사이 간격(4px)과 같게 — '광주·전라·제주' 뒤 빈 칸 최소화 */
-  .rtabs-wrap.overflowing .rtabs{padding-right:6px} }
+@media (max-width:420px){ .rtabs{gap:4px;padding:4px} .rtab{font-size:12px;height:38px;padding:0 8px} }
 
 /* DOLBY ATMOS 배지 색 */
 .badge.dolby{background:#EAF1FE;color:#1D4ED8}
@@ -1170,6 +1168,8 @@ body{font-size:16px}
   padding-right:2px;font-size:15px;font-weight:900;color:#047857;pointer-events:none;
   background:linear-gradient(90deg,rgba(242,244,246,0),#F2F4F6 62%)}
 .rtabs-wrap.scrollable .rtabs-hint{display:flex}
+/* 390px 폰: 끝까지 스크롤했을 때 마지막 탭 뒤 빈 칸을 탭 사이 간격(4px)에 맞춘다 */
+@media (max-width:420px){ .rtabs-wrap.overflowing .rtabs{padding-right:6px} }
 @media (min-width:960px){
   .rtabs-hint{display:none !important}
   .rtabs-wrap.overflowing .rtabs{padding-right:0}
