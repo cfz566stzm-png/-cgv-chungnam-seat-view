@@ -7596,7 +7596,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       save(); paintSeatPanel();
       toast(rid ? '고쳤어요 · 공용 후기에 반영하는 중이에요' : '남겼어요. 고마워요!');
       /* 공용 저장(Supabase) — 실패해도 이 기기 기록은 그대로 남는다 */
-      submitShared(h, seat, rec, draft.shots.slice(), draft.shotFiles.slice(), rid);
+      submitShared(h, seat, rec, draft.shots.slice(), draft.shotFiles.slice(), rid, ugcKey());
     };
     /* 내 후기 삭제 — 서버에 올린 행(rid)이 있으면 DELETE 를 먼저 보내고, 그 결과를 정직하게 알린다.
        예전에는 이 기기 기록만 지워서 다른 사람에게는 후기가 그대로 남았다(2026-11-20 수정). */
@@ -7748,7 +7748,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
      티켓은 사진을 올리지 않고, 서버 자동 인식을 통과한 경우에만 verified:true 로 보낸다.
      rid 가 있으면(이미 서버에 올라간 내 후기) 새 POST 대신 그 행을 PATCH 로 고친다 — 예전에는 고칠 때마다
      새 행이 쌓여 다른 사람에게 수정 전·후 후기가 함께 보였다(2026-11-20 수정). */
-  function submitShared(h, seat, rec, shots, files, rid) {
+  function submitShared(h, seat, rec, shots, files, rid, bkey) {
     const go = async () => {
       const list = (shots || []).filter((s) => typeof s === 'string' && s);
       const urls = [];
@@ -7779,7 +7779,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       if (!target) { try { target = await sbFindMyReview(h.id, seat.key); } catch (e) { target = null; } }
       const edited = !!target;
       const res = edited ? await sbWriteReview('PATCH', target, body) : await sbWriteReview('POST', null, body);
-      const bucket = ugcBucket();
+      /* 저장할 때의 상영관 기록 칸 — 업로드 중에 다른 관으로 옴겨도 엉뚱한 기록을 고치지 않게 */
+      const bucket = (bkey && store[bkey]) || ugcBucket();
       const cur = (bucket.seats || {})[seat.key] || null;
       if (!res.ok) {
         /* 서버에 반영하지 못했다 — 이 기기 기록은 그대로 두고 '이 기기에만' 표시를 붙여 정직하게 알린다 */
