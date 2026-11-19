@@ -1954,10 +1954,14 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 /* 모바일에서 #filterRow(IMAX·4DX·SCREENX·DOLBY ATMOS …)는 가로 스크롤인데 스크롤바가 숨겨져 있어
    오른쪽에 필터가 더 있는지 알 수 없었다 — 지역 탭(.rtabs-wrap)과 같은 방식의 화살표 힌트를 붙인다. */
 .fchips-wrap{position:relative;min-width:0}
-.fchips-hint{position:absolute;right:0;top:0;bottom:0;width:24px;display:none;align-items:center;justify-content:flex-end;
-  padding-right:2px;font-size:15px;font-weight:900;color:#047857;pointer-events:none;
-  background:linear-gradient(90deg,rgba(255,255,255,0) 42%,rgba(255,255,255,.8) 76%,#fff 96%)}
+.fchips-hint{position:absolute;right:0;top:0;bottom:0;width:30px;display:none;align-items:center;justify-content:flex-end;
+  padding-right:1px;pointer-events:none;
+  background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.9) 46%,#fff 80%)}
 .fchips-wrap.scrollable .fchips-hint{display:flex}
+/* 잘린 칩 글자 위에 화살표를 그냥 겹치면 마지막 글자와 섞여 오려 보인다 — 작은 원 배경에 올린다 */
+.fchips-hint b{display:flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.18),0 0 0 1px rgba(16,24,40,.05);
+  color:#047857;font-size:12px;font-weight:900;line-height:1}
 .fchips-wrap.overflowing .chip-row{padding-right:8px}
 @media (max-width:420px){ .fchips-wrap.overflowing .chip-row{padding-right:6px} }
 @media (min-width:960px){
@@ -5755,7 +5759,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           ${[['all', '전체'], ['IMAX', 'IMAX'], ['4DX', '4DX'], ['ULTRA 4DX', 'ULTRA 4DX'], ['SCREENX', 'SCREENX'], ['DOLBY', 'DOLBY ATMOS'], ['리클라이너', '리클라이너']].map(([f, label]) => `<button class="chip sm" data-filter="${f}" aria-pressed="${state.filter === f}">${label}</button>`).join('')}
           <button class="chip sm nearchip" data-near="1" aria-pressed="${!!state.near}">📍 내 주변 영화관</button>
         </div>
-        <span class="fchips-hint" aria-hidden="true">›</span>
+        <span class="fchips-hint" aria-hidden="true"><b>›</b></span>
       </div>
       ${nearNoteHtml()}
     </div>
