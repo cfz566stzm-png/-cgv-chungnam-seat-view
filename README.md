@@ -4,7 +4,7 @@ CGV **전국 177개 지점, 797개 상영관, 109,453석**의 예매 좌석표�
 
 > 화면의 숫자는 모두 데이터에서 계산한 값입니다(지점 수·상영관 수·좌석 수·좌석배치도 확보·좌석유형 확인·실사/원문 링크). 2026-11-18 기준 **좌석배치도 595/797관(74.7%)**, 좌석표에 옮긴 좌석 **85,906석**, 좌석유형 확인 595관, 실사 사진(직접 촬영) 1석, 원문 링크 52석.
 
-- **바로 보기**: https://cfz566stzm-png.github.io/-cgv-chungnam-seat-view/
+- **바로 보기**: https://yeongsimi.kr/
 - 2단계 확장 기록: [서울-대전충청-cgv-확장-조사결과.md](서울-대전충청-cgv-확장-조사결과.md)
 - 1단계 충남 조사: [충남권-cgv-조사결과.md](충남권-cgv-조사결과.md)
 - 스크린샷: [preview-seat-view.png](preview-seat-view.png) · [preview-seat-profile.png](preview-seat-profile.png)
@@ -203,7 +203,7 @@ CGV **전국 177개 지점, 797개 상영관, 109,453석**의 예매 좌석표�
   1. Vercel에서 이 저장소를 Import (프레임워크 없음 / 그대로 배포)
   2. 프로젝트 → Settings → Environment Variables 에 `GEMINI_API_KEY` 추가 (키는 저장소에 넣지 않습니다)
   3. 배포 후 나온 도메인의 `https://<도메인>/api/ocr`을 `index.html`의 `OCR_ENDPOINT` 상수에 넣고 다시 배포
-  - CORS는 `https://cfz566stzm-png.github.io`와 `http://localhost:*`/`http://127.0.0.1:*`만 허용합니다.
+  - CORS는 `https://yeongsimi.kr`·`https://www.yeongsimi.kr`·`https://cfz566stzm-png.github.io`와 `http://localhost:*`/`http://127.0.0.1:*`만 허용합니다.
   - 함수가 없거나 한도(429)·네트워크 오류면 앱은 느린 브라우저 OCR을 돌리지 않고, 사진만 붙인 채 지점·관·좌석을 직접 고르는 시트로 바로 넘어갑니다.
 
 ## 고지

@@ -45,8 +45,9 @@ select 'profiles' as table_name, count(*) as rows from public.profiles;
 --  이어서 대시보드에서 직접 해야 하는 두 가지 (SQL 로는 안 됩니다)
 -- ----------------------------------------------------------------------------
 --  A. Authentication → URL Configuration
---     Site URL          : https://cfz566stzm-png.github.io/-cgv-chungnam-seat-view/
---     Redirect URLs     : https://cfz566stzm-png.github.io/-cgv-chungnam-seat-view/
+--     Site URL          : https://yeongsimi.kr/
+--     Redirect URLs     : https://yeongsimi.kr/
+--                         https://www.yeongsimi.kr/
 --     (로컬에서도 시험하려면 http://localhost:8000/ 같은 주소를 한 줄 더 추가)
 --
 --  B. Authentication → Providers

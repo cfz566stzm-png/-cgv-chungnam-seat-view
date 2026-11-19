@@ -15,7 +15,11 @@
 
 const MODEL = 'gemini-2.5-flash';
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
-const ALLOWED_ORIGIN = 'https://cfz566stzm-png.github.io';
+const ALLOWED_ORIGINS = [
+  'https://yeongsimi.kr',
+  'https://www.yeongsimi.kr',
+  'https://cfz566stzm-png.github.io'   /* 예전 주소 — 리디렉션 전 페이지에서도 동작하게 */
+];
 const MAX_B64_CHARS = 8 * 1024 * 1024; /* base64 문자열 상한 (≈6MB 이미지) */
 const UPSTREAM_TIMEOUT_MS = 12000;
 const MIME_OK = /^image\/(jpeg|jpg|png|webp|heic|heif)$/i;
@@ -42,7 +46,7 @@ const PROMPT = [
 
 function originAllowed(origin) {
   if (!origin) return false;
-  if (origin === ALLOWED_ORIGIN) return true;
+  if (ALLOWED_ORIGINS.indexOf(origin) >= 0) return true;
   return /^http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?$/.test(origin);
 }
 
