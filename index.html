@@ -596,10 +596,6 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .v3d-zoom button[aria-pressed="true"]{background:#fff;color:#0B3A2A}
 .v3d-reset{height:34px;padding:0 12px;border-radius:999px;background:rgba(8,16,13,.62);color:#fff;font-size:11.5px;font-weight:800;white-space:nowrap}
 .v3d-reset:active{background:rgba(8,16,13,.85)}
-/* 정면 고정 — 시야(3D) 볼 때만 나오는 시선 모드 토글 */
-.v3d-mode{height:34px;padding:0 12px;border-radius:999px;background:rgba(8,16,13,.62);color:rgba(255,255,255,.82);font-size:11.5px;font-weight:800;white-space:nowrap}
-.v3d-mode[aria-pressed="true"]{background:#fff;color:#0B3A2A}
-.v3d-mode:active{background:rgba(8,16,13,.85)}
 .v3d-hint{position:absolute;left:50%;bottom:32px;transform:translateX(-50%);font-size:11px;font-weight:800;color:rgba(255,255,255,.78);background:rgba(6,12,10,.6);padding:5px 11px;border-radius:999px;white-space:nowrap;transition:opacity .5s;pointer-events:none}
 .v3d-hint.off{opacity:0}
 .v3d-zoomnote{position:absolute;left:11px;bottom:9px;font-size:10.5px;font-weight:700;color:rgba(255,255,255,.6);pointer-events:none}
@@ -1871,9 +1867,9 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
    사용:
      var v = Viewer3D.mount(rootEl, {
        p: hall.params, seat: {x, y, key}, rows: hall.rows, tags: hall.tags,
-       aspect: 2.39, mode: 'center' | 'level'
+       aspect: 2.39
      });
-     v.setAspect(1.9); v.setMode('level'); v.reset(); v.destroy();
+     v.setAspect(1.9); v.reset(); v.destroy();
 */
 (function (global) {
   'use strict';
@@ -1883,9 +1879,12 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
 
   /* 좌우·상하로 아무리 드래그해도 스크린 일부가 항상 시야에 남도록 좁게 잡는다.
-     (-115~115도까지 열어 두면 벽만 보이는 빈 화면이 됐다) */
-  var YAW_MIN = -55, YAW_MAX = 55;
-  var PITCH_MIN = -22, PITCH_MAX = 36;
+     (-115~115도까지 열어 두면 벽만 보이는 빈 화면이 됐다)
+     다만 기본 시선·'정면 리셋'은 어느 좌석에서든 스크린 정중앙을 향해야 하므로,
+     가장 옆·앞 좌석에서 필요한 각(전국 좌석 기준 yaw ≈ 61°, pitch ≈ 62°)까지는 열어 둔다.
+     이보다 좁히면 사이드 좌석의 리셋 각이 잘려 화면 중앙이 아니라 옆벽을 보게 된다. */
+  var YAW_MIN = -70, YAW_MAX = 70;
+  var PITCH_MIN = -30, PITCH_MAX = 70;
 
   /* ---------------------------------------------------------------
      0. 관 유형별 좌석 단차(stepM, m) — screens.json _risers와 같은 표
@@ -2186,7 +2185,6 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
     this.scene = buildScene(opts);
     this.fov1x = 76;                       // 사람 눈(1배율) 가로 화각 — 실제 체감(넓게 보임)에 맞춤
     this.zoom = '1x';
-    this.mode = opts.mode || 'center';
     this.startPitch = 0;
     this.yaw = 0;
     this.pitch = 0;
@@ -2344,23 +2342,31 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
     this.render();
   };
 
-  Viewer.prototype.setMode = function (m) {
-    this.mode = m;
-    this.reset(false);
+  /* 이 좌석에서 스크린 정중앙이 보이는 방향(도) — 기본 시선과 '정면 리셋'이 함께 쓴다.
+     상영관 정면 축(yaw 0)이 아니라 스크린 중앙 좌표 (0, 화면 세로 중앙, 스크린 평면 z=0)를
+     카메라에서 바라본 각을 계산하므로, 사이드 열은 yaw가, 앞줄은 pitch가 그만큼 커진다.
+     등받이를 젖힌 상태(눈 12cm 아래·시선 15° 위)도 반영해 실제 시선이 중앙에 오게 한다. */
+  Viewer.prototype.centerGaze = function () {
+    var s = this.scene;
+    var rec = this._rec || 0;
+    var camY = s.cam.y - 0.12 * rec;
+    var dx = -s.cam.x, dz = -s.cam.z;              /* 카메라 → 스크린 중앙 */
+    var dist = Math.sqrt(dx * dx + dz * dz);
+    var cy = s.p.screenBottom + s.p.screenH / 2;
+    return {
+      yaw: Math.atan2(dx, dz) / D2R,
+      pitch: Math.atan2(cy - camY, dist) / D2R - 15 * rec
+    };
   };
 
-  /* 정면(또는 화면 응시) 위치로 */
+  /* 스크린 중앙 응시 위치로 */
   Viewer.prototype.reset = function (instant) {
-    var s = this.scene;
-    var neck = Math.atan2(s.p.screenBottom + s.p.screenH / 2 - s.cam.y, s.dCam) / D2R;
-    var target = this.mode === 'center' ? clamp(neck, -18, 26) : 0;
-    /* 박스는 유리창 너머로 내려다보므로 기본 시선을 조금 더 아래로 */
-    if (this.scene.isPB && this.mode === 'center') target = clamp(target - 4, -18, 8);
-    if (instant) { this.yaw = 0; this.pitch = target; this.vyaw = this.vpitch = 0; return; }
-    var self = this;
-    this._tween = { t0: performance.now(), y0: this.yaw, p0: this.pitch, y1: 0, p1: target };
+    var g = this.centerGaze();
+    var y1 = clamp(g.yaw, YAW_MIN, YAW_MAX);
+    var p1 = clamp(g.pitch, PITCH_MIN, PITCH_MAX);
+    if (instant) { this.yaw = y1; this.pitch = p1; this.vyaw = this.vpitch = 0; this._tween = null; return; }
+    this._tween = { t0: performance.now(), y0: this.yaw, p0: this.pitch, y1: y1, p1: p1 };
     if (!this.raf) this._loop();
-    if (self._tween) { /* loop picks it up */ }
   };
 
   Viewer.prototype._loop = function () {
@@ -3720,7 +3726,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
   const state = {
     view: 'home', filter: 'all', region: 'all', q: '', theaterId: null, hallId: null, seatKey: null,
-    aspect: null, mode: 'center', tab: 'sim', photoIdx: 0, photoOnly: false, compare: [], cmpMode: false,
+    aspect: null, tab: 'sim', photoIdx: 0, photoOnly: false, compare: [], cmpMode: false,
     near: null, nearErr: false,   /* 내 주변: 브라우저 위치(위도·경도)와 거부/오류 안내 */
     _mapHall: null,  /* 좌석판을 마지막으로 그린 관 — 관에 처음 들어올 때만 가운데로 맞춘다 */
     mapZoom: 1,      /* 좌석 배치도 확대 배율(1 = 폭 맞춤) */
@@ -5539,7 +5545,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
               <button class="chip sm cmpchip" data-cmpmode="1" aria-pressed="${state.cmpMode}">⚖️ 좌석 비교${(state.compare || []).length ? ' ' + state.compare.length : ''}</button>
             </div>
             <div class="chip-row">
-              <button class="chip sm" data-mode="center" aria-pressed="${state.mode === 'center'}" title="스크린 중앙을 바라보는 시점">화면 응시</button>
               <span class="mapzoom" role="group" aria-label="좌석 배치도 확대·축소">
                 <button data-mapzoom="-1" aria-label="배치도 축소" ${mapZoomNow() <= 1 ? 'disabled' : ''}>−</button>
                 <span id="mapZoomLabel">${Math.round(mapZoomNow() * 100)}%</span>
@@ -6062,8 +6067,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <button data-zoom="1x" aria-pressed="true">화각 1x</button>
         <button data-zoom="wide" aria-pressed="false">광각 0.5x</button>
       </span>
-      <button class="v3d-reset" data-reset="1">정면 리셋</button>
-      <button class="v3d-mode" data-mode="level" aria-pressed="${state.mode === 'level'}" title="고개를 들지 않고 정면을 보는 시점 — 한 번 더 누르면 화면 응시">정면 고정</button>
+      <button class="v3d-reset" data-reset="1" title="스크린 중앙을 바라보는 기본 시선으로">정면 리셋</button>
       <button class="v3d-big" data-big="1" title="3D 시야를 크게 보기">⛶ 크게</button>
       ${recl ? `<b class="v3d-recval" data-rec-read>내 눈높이 ${fmt(m.eyeY, 2)} m</b>` : ''}
     </div>
@@ -6347,7 +6351,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function viewerOpts(h, seat) {
     return {
       p: withEye(h.params, seat), seat: seat, rows: h.rows, tags: h.tags || [],
-      aspect: Number(state.aspect) || h.params.aspect, mode: state.mode,
+      aspect: Number(state.aspect) || h.params.aspect,
       hallKey: h.id, fourSide: isFourSide(h),
       name: h.name, total: h.total, box: h.boxOf || null,
       allowRecline: seat ? canRecline(h, seat) : false
@@ -6632,7 +6636,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (!el) return;
     document.body.appendChild(el);
     document.body.style.overflow = 'hidden';
-    const opts = Object.assign(viewerOpts(h, null), { mode: 'center' });
+    const opts = viewerOpts(h, null);
     el.querySelectorAll('.cmp-cell').forEach((cell) => {
       const seat = h._byKey ? h._byKey[cell.dataset.cmpseat] : null;
       const cv = cell.querySelector('.v3d-canvas');
@@ -7729,8 +7733,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const aspect = Number(state.aspect);
     const HSPAN = 118;
     const VSPAN = HSPAN * (H / W);
-    const gx = state.mode === 'center' ? (m.aL + m.aR) / 2 : 0;
-    const gv = state.mode === 'center' ? m.neck : 0;
+    /* 기본 시선은 항상 스크린 중앙 — 좌석이 옆·앞이어도 화면 가운데를 본다 */
+    const gx = (m.aL + m.aR) / 2;
+    const gv = m.neck;
     const X = (a) => W / 2 + ((a - gx) / HSPAN) * W;
     const Y = (a) => H / 2 - ((a - gv) / VSPAN) * H;
 
@@ -8121,19 +8126,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (pg) { const g = $('#photoGallery'); if (g) g.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
     const a = e.target.closest('[data-aspect]');
     if (a) { state.aspect = a.dataset.aspect; render({ keepScroll: true }); return; }
-    const md = e.target.closest('[data-mode]');
-    if (md) {
-      /* '정면 고정'은 3D 시야에서만 — 한 번 더 누르면 화면 응시로 돌아간다 */
-      state.mode = (md.dataset.mode === 'level' && state.mode === 'level') ? 'center' : md.dataset.mode;
-      /* 모드 칩의 선택 표시 + 3D 카메라 시선(yaw/pitch)을 바로 전환 — 재렌더 없이 */
-      document.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode)));
-      ['seatPanel', 'sheetBody'].forEach((id) => {
-        const root = document.getElementById(id);
-        const v = window.Viewer3D && window.Viewer3D.findFor ? window.Viewer3D.findFor(root) : null;
-        if (v) v.setMode(state.mode);
-      });
-      return;
-    }
     const soon = e.target.closest('[data-soon]');
     if (soon) { toast('이 상영관은 좌석표를 아직 확인하지 못했어요'); return; }
     if (e.target.closest('[data-report]')) { openReport(); return; }
