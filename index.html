@@ -8664,7 +8664,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <div class="authfields">
         <input id="authEmail" class="authinput" type="email" inputmode="email" autocomplete="email" placeholder="이메일 (예: name@example.com)" value="">
         <input id="authPw" class="authinput" type="password" autocomplete="${su ? 'new-password' : 'current-password'}" placeholder="비밀번호${su ? ' (6자 이상)' : ''}">
-        ${su ? `<label class="consent"><input type="checkbox" id="authAgree"><span><b>[필수]</b> 이메일·닉네임·연령대를 <b>회원 구분과 기록 동기화</b> 목적으로 수집·이용하는 데 동의해요. 로그아웃·탈퇴 시 지워지며, 후기에 남긴 닉네임은 후기와 함께 표시돼요.</span></label>` : ''}
+        ${su ? `<label class="consent"><input type="checkbox" id="authAgree"><span><b>[필수]</b> 이메일·닉네임·연령대를 <b>회원 구분과 기록 동기화</b> 목적으로 수집·이용하는 데 동의해요. 서버에 저장되며, 지우고 싶을 때는 아래 '제보' 메일로 알려 주시면 계정과 함께 지워 드려요. 후기에 남긴 닉네임은 후기와 함께 표시돼요.</span></label>` : ''}
       </div>
       <button class="btn" id="authSubmit" type="button" style="width:100%;margin-top:12px">${su ? '가입하기' : '로그인'}</button>
       ${su ? '' : `<button class="authlink" id="authForgot" type="button">비밀번호를 잊었어요</button>`}`;
