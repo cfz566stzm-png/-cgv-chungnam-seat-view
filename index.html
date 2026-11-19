@@ -4352,7 +4352,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
   function helpMine() { return lsGet(HELP_MINE, {}); }
   function helpVoted() { return lsGet(HELP_VOTED, {}); }
-  function helpCount(key) { return (HELP.counts[key] || 0) + (helpMine()[key] || 0); }
+  function helpCount(key) {
+    /* 서버 DELETE가 정책으로 막혀 로컬 보정이 쌓이면 음수가 될 수 있다 — 0 아래로는 내려가지 않게 */
+    return Math.max(0, (HELP.counts[key] || 0) + (helpMine()[key] || 0));
+  }
   /* 누적 카운트 받기 — 테이블이 없으면(404) 이번 화면에서는 다시 묻지 않는다 */
   function helpFetch(force) {
     if (HELP.off || HELP.busy) return;
