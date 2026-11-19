@@ -1839,7 +1839,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 }
 
 /* =======================================================================
-   2026-11-19 — 로그인(구글·카카오·이메일) · 프로필 동기화
+   2026-11-19 — 로그인(구글·이메일) · 프로필 동기화
    ======================================================================= */
 .authcard{border:1px solid var(--line)}
 .auth-title{display:block;font-size:15.5px;font-weight:850;letter-spacing:-.03em;color:var(--ink)}
@@ -1859,7 +1859,6 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 .btn.social{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;border-radius:14px;
   font-size:14.5px;font-weight:800;letter-spacing:-.02em;box-shadow:none}
 .btn.social.google{background:#fff;color:#1F1F1F;border:1px solid var(--line)}
-.btn.social.kakao{background:#FEE500;color:#191600;border:1px solid #FEE500}
 .btn.social .social-ic{flex:0 0 auto}
 .auth-or{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--mute);font-size:11.5px;font-weight:800}
 .auth-or::before,.auth-or::after{content:'';flex:1;height:1px;background:var(--line)}
@@ -1907,7 +1906,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
   .btn.social{height:46px}
 }
 
-/* 안내 토스트는 로그인/프로필 모달(z-index 200) 위에 보여야 한다 — '구글/카카오 준비 중' 안내가 가려지지 않게 */
+/* 안내 토스트는 로그인/프로필 모달(z-index 200) 위에 보여야 한다 — '구글 준비 중' 안내가 가려지지 않게 */
 .toast{z-index:320}
 
 </style>
@@ -8415,7 +8414,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   });
 
   /* ======================================================================
-     로그인 — Supabase Auth (이메일·비밀번호 + 구글·카카오 소셜) + public.profiles 동기화
+     로그인 — Supabase Auth (이메일·비밀번호 + 구글 소셜) + public.profiles 동기화
      · 프로젝트의 공개(publishable) 키만 쓴다. 비밀 키·서비스 키는 쓰지 않는다.
      · 세션(access/refresh token)만 이 기기에 남기고, 만료 1분 전에 스스로 갱신한다.
      · profiles 테이블이나 seat_reviews.user_id 가 아직 없어도(404/400) 앱은 멈추지 않고
@@ -8426,12 +8425,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   const SEEN_KEY = 'cgv_seen_v1';
   const AGE_KEY = 'cgv_age_v1';
   const AGE_OPTS = ['10대', '20대', '30대', '40대 이상'];
-  const PROV_MSG = '구글/카카오 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요.';
+  const PROV_MSG = '구글 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요.';
   const AUTH = {
     session: null, user: null, profile: null,
     profOff: false,        /* profiles 테이블이 없거나 권한이 없어 서버 저장을 못 하는 상태 */
     ready: false, busy: false, tab: 'login',
-    prov: { google: false, kakao: false },   /* provider 미등록을 이미 확인했는지 */
+    prov: { google: false },   /* provider 미등록을 이미 확인했는지 */
     applying: false, _tm: 0
   };
 
@@ -8660,7 +8659,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     el.className = 'authmsg' + (kind ? ' ' + kind : '');
   }
   const G_ICON = '<svg class="social-ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4z"/><path fill="#34A853" d="M12 22c2.7 0 4.9-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4.1 5.6-4.1z"/></svg>';
-  const K_ICON = '<svg class="social-ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#3C1E1E" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.7 5.2 4.3 6.7-.2.8-.8 2.9-.9 3.3 0 .4.3.4.5.2.3-.2 3.2-2.3 3.8-2.7.7.1 1.5.2 2.3.2 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>';
 
   function authFormHtml() {
     const su = AUTH.tab === 'signup';
@@ -8710,7 +8708,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <p class="sub">로그인하면 즐겨찾기·키·본 영화가 다른 기기에서도 이어져요.<br>로그인 없이도 좌석 보기와 후기는 그대로 쓸 수 있어요.</p>
         <div class="auth-social">
           <button class="btn social google" type="button" data-oauth="google" id="authGoogle">${G_ICON}<span>구글로 계속하기</span></button>
-          <button class="btn social kakao" type="button" data-oauth="kakao" id="authKakao">${K_ICON}<span>카카오로 계속하기</span></button>
         </div>
         <div class="auth-or"><span>또는 이메일로</span></div>
         <div class="authtabs" role="tablist">
@@ -8726,7 +8723,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     wrap.querySelector('#authClose').onclick = closeAuth;
     wrap.querySelectorAll('[data-atab]').forEach((b) => { b.onclick = () => setAuthTab(b.dataset.atab); });
     wrap.querySelector('#authGoogle').onclick = () => authOAuth('google');
-    wrap.querySelector('#authKakao').onclick = () => authOAuth('kakao');
     setAuthTab(AUTH.tab);
     setTimeout(() => { const e = document.getElementById('authEmail'); if (e) try { e.focus(); } catch (_) {} }, 150);
   }
@@ -8819,7 +8815,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
   /* 소셜 로그인 — provider 가 아직 등록 전이면 페이지를 떠나지 않고 안내만 한다 */
   async function authOAuth(provider) {
-    const nm = provider === 'google' ? '구글' : '카카오';
+    const nm = '구글';   /* 소셜 로그인은 구글만 쓴다(카카오는 2026-11-19 제외) */
     if (AUTH.prov[provider]) {
       authMsg(PROV_MSG, 'bad');
       toast(nm + ' 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요.', 6000);

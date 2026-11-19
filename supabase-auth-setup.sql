@@ -55,11 +55,8 @@ select 'profiles' as table_name, count(*) as rows from public.profiles;
 --              승인된 리디렉션 URI 에
 --                https://unoeugpeoxfbvdccqwxr.supabase.co/auth/v1/callback
 --              를 넣고, 받은 클라이언트 ID / 보안 비밀을 Supabase Google 항목에 붙여 저장.
---     Kakao  : developers.kakao.com → 내 애플리케이션 → 앱 키(REST API 키)
---              카카오 로그인 → 활성화 ON, Redirect URI 에 위와 같은
---                https://unoeugpeoxfbvdccqwxr.supabase.co/auth/v1/callback
---              보안 → Client Secret 발급 후 Supabase Kakao 항목에 REST API 키·시크릿 저장.
---     두 항목 모두 저장 전에는 사이트에서 누르면
---     "구글/카카오 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요."
+--     Kakao  : 카카오 로그인은 쓰지 않기로 했습니다(2026-11-19 사용자 결정) — 대시보드에서 꺼 두십시오.
+--     Google 항목을 저장하기 전에는 사이트에서 누르면
+--     "구글 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요."
 --     안내가 뜨고 이메일 가입으로 넘어갑니다.
 -- ============================================================================
