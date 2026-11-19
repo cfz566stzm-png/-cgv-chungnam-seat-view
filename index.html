@@ -1786,6 +1786,55 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
   body.view-hall .hallsplit .panel .card{padding-bottom:8px}
 }
 
+/* =======================================================================
+   2026-11-19 — 좌석 평점 0.5점 단위(반 별) + 시야 분석 표 정리
+   ======================================================================= */
+
+/* --- 별점: 회색 별 위에 금색 별을 채움 폭만큼 덮어 0.5개도 보이게 --- */
+.starpick{padding:11px 12px}
+.starpick-btns button{padding:0;background:none;border:0;line-height:0}
+.sp-wrap{position:relative;display:block;width:34px;height:34px}
+.sp-wrap .sp-bg,.sp-wrap .sp-fg b{position:absolute;inset:0;display:grid;place-items:center;font-size:23px;line-height:1}
+.sp-wrap .sp-bg{color:#DCE2E7}
+.sp-wrap .sp-fg{position:absolute;left:0;top:0;height:100%;overflow:hidden}
+.sp-wrap .sp-fg b{position:absolute;left:0;top:0;width:34px;height:100%;font-weight:400;color:#FFB020}
+.starpick-tx{font-variant-numeric:tabular-nums}
+.starline .sl{position:relative;display:inline-block;font-style:normal}
+.starline .sl s{text-decoration:none;color:#E3E8EC}
+.starline .sl b{position:absolute;left:0;top:0;overflow:hidden;white-space:nowrap;color:#FFB020;font-weight:400}
+
+/* --- 시야 분석 표: 라벨·값·배지 3열 고정, 행간·여백을 고르게 --- */
+.ana{border-radius:18px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.ana-head{padding:14px 15px 10px;border-bottom:1px solid var(--line-2)}
+.ana-head h4{font-size:15.5px;font-weight:900;letter-spacing:-.02em}
+.ana-head span{font-size:11.5px;font-weight:750;color:var(--mute);letter-spacing:-.01em}
+.ana-rows{padding:6px 6px 8px}
+.ana-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;column-gap:10px;
+  padding:10px 9px;border-radius:11px;min-height:46px}
+.ana-row:nth-child(odd){background:#FAFBFC}
+.ana-row>span:first-child{min-width:0;font-size:13px;font-weight:750;color:#4E5968;line-height:1.38;
+  letter-spacing:-.01em;word-break:keep-all}
+.ana-v{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-end;gap:2px 6px;
+  text-align:right;min-width:0}
+.ana-row b{font-size:14.5px;font-weight:850;color:#111827;line-height:1.3;font-variant-numeric:tabular-nums;
+  letter-spacing:-.02em;white-space:nowrap}
+.ana-row .anax{font-size:11.5px;font-weight:700;color:var(--mute);line-height:1.4;white-space:normal;word-break:keep-all}
+.ana-row>.cfb{justify-self:end;align-self:center;min-width:58px;justify-content:center;font-size:11px;padding:4px 7px}
+.ana-rows.tight{padding:4px 6px 8px}
+.ana-rows.tight .ana-row{padding:8px 9px;min-height:0;grid-template-columns:minmax(0,1fr) auto}
+.ana-rows.tight .ana-row>span:first-child{font-size:12.5px;font-weight:700;color:var(--sub)}
+.ana-rows.tight .ana-row b{font-size:13.5px;font-weight:800;color:#2A343F}
+.ana-eye-note{margin:4px 12px 12px;padding:10px 12px;border-radius:12px;background:#F4F8F5;
+  font-size:11.5px;line-height:1.6;font-weight:700;color:#4E5968;word-break:keep-all}
+.ana-foot{gap:6px;padding:12px 15px 14px}
+.ana-foot span{font-size:11.5px;font-weight:700;line-height:1.45}
+.ana-detail{margin-top:6px}
+@media (min-width:960px){
+  .ana-row{min-height:48px}
+  .ana-row>span:first-child{font-size:13.5px}
+  .ana-row b{font-size:15px}
+}
+
 </style>
 </head>
 <body>
@@ -3594,12 +3643,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
      · 판매중지(x)  : CGV 예매 화면의 그 회차 판매 상태일 뿐, 실제로 앉는 일반석이다.
                      그래서 별도 회색 점선으로 그리지 않고 일반석으로 합쳐 보여 준다(2026-11-18 제보). */
   const SEAT_INFO = {
-    n: { label: '일반석', desc: '기본 좌석', color: '#DCEDE4' },
-    p: { label: '장애인석', desc: '휠체어·동반석', color: '#BFE3FA' },
-    r: { label: '릴렉스시트', desc: '등받이 조절이 없는 넓은 고정형 좌석 — 관 태그가 리클라이너일 때만 젖히기가 열려요', color: '#DCD8FB' },
-    s: { label: 'SWEETBOX', desc: '2인용 소파형 좌석', color: '#FBD5E8' },
-    c: { label: '카바나석', desc: '커튼·개별 공간형 좌석', color: '#FDE7C3' },
-    b: { label: '빈백', desc: '빈백(쿠션) 좌석', color: '#E7E4DD' }
+    n: { label: '일반석', desc: '기본 좌석', color: '#DCEDE4', eye: 0 },
+    p: { label: '장애인석', desc: '휠체어·동반석', color: '#BFE3FA', eye: 0 },
+    r: { label: '릴렉스시트', desc: '등받이 조절이 없는 넓은 고정형 좌석 — 관 태그가 리클라이너일 때만 젖히기가 열려요', color: '#DCD8FB', eye: -0.02 },
+    s: { label: 'SWEETBOX', desc: '2인용 소파형 좌석', color: '#FBD5E8', eye: -0.08 },
+    c: { label: '카바나석', desc: '커튼·개별 공간형 좌석', color: '#FDE7C3', eye: -0.06 },
+    b: { label: '빈백', desc: '빈백(쿠션) 좌석', color: '#E7E4DD', eye: -0.32 }
   };
   const seatTypeLabel = (t) => (SEAT_INFO[t] ? SEAT_INFO[t].label : '일반석');
   const seatTypeDesc = (t) => (SEAT_INFO[t] ? SEAT_INFO[t].desc : '기본 좌석');
@@ -4394,6 +4443,36 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     } catch (e) { toast(LOCAL_ONLY_MSG, 4600); }
   }
 
+  /* 정보 수정 요청을 메일로도 받는다(FormSubmit) — DB 저장과 별개로 보내고 결과를 기다리지 않는다.
+     FormSubmit 은 처음 한 번 받는 메일 주소로 인증 링크를 보내고, 그 뒤부터 전달된다.
+     (인증 전에도 요청은 200으로 응답하므로 화면에는 영향이 없다) */
+  const FIX_MAIL = 'https://formsubmit.co/ajax/khanyokim@naver.com';
+  function mailFixRequest(body, o) {
+    try {
+      let owner = null;
+      for (const t of theaters) {
+        const h = (t.halls || []).find((x) => x.id === body.hall_key);
+        if (h) { owner = { t: t, h: h }; break; }
+      }
+      const payload = {
+        _subject: '영시미 정보 수정 요청 — ' + (o && o.label ? o.label : (body.seat_id || '좌석 정보')),
+        _template: 'table',
+        지점: owner ? owner.t.name + (owner.t.siteNo ? ' (' + owner.t.siteNo + ')' : '') : (body.hall_key || '-'),
+        상영관: owner ? owner.h.name : (body.hall_key || '-'),
+        좌석: body.seat_id || '-',
+        사유: body.reason || '-',
+        상세내용: body.detail || '(없음)',
+        대상ID: body.target_id || '-',
+        보낸시각: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+      };
+      fetch(FIX_MAIL, {
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    } catch (e) {}
+  }
+
   /* 정보 수정 요청 — 사유 선택 + 메모 */
   const FIX_REASONS = ['좌석 번호·배치가 달라요', '리뉴얼·리클라이너로 바뀌었어요', '사진이 흐리거나 잘못됐어요', '시야·단차 설명이 실제와 달라요', '기타'];
   function closeFix() { const m = document.getElementById('fixModal'); if (m) m.remove(); }
@@ -4434,6 +4513,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         target_id: o.targetId || null, reason, detail: detail || null
       };
       closeFix();
+      mailFixRequest(body, o);   /* 배경 전송 — DB 저장 성공/실패와 무관 */
       const localOnly = (why) => {
         fixStore(body);
         toast(LOCAL_ONLY_MSG, 5200);
@@ -4489,11 +4569,29 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (viewerSize.eye) return viewerSize.eye / 100;
     return baseEye(p) * (viewerSize.h / EYE_BASE_CM);
   }
+  /* 좌석·관 유형이 눈높이에 주는 차이(m) — 좌판이 낮은 빈백·소파, 모션베이스 위 4DX 좌석.
+     리클라이너 관의 높은 단차(0.40 m)는 params.riser로 이미 반영되고, 여기서는 좌판 높이만 본다.
+     (값은 유형별 추정치 — 표에서 '추정' 배지로 보인다) */
+  function seatEyeShift(p, seat) {
+    const out = { d: 0, why: '' };
+    if (!seat) return out;
+    const t = seat.t || 'n';
+    let d = (SEAT_INFO[t] && SEAT_INFO[t].eye) || 0;
+    let why = d ? seatTypeLabel(t) + ' 좌판' : '';
+    /* 리클라이너·릴렉스 관은 좌판이 눕는 구조라 일반석보다 조금 낮다 — 관 단차(0.40 m)와는 별개 */
+    if (p && p.recliner && (t === 'n' || t === 'r')) { d = -0.04; why = '리클라이너 좌판'; }
+    if (p && p.stepType === '4DX관' && t !== 'p') { d += 0.12; why = (why ? why + '·' : '') + '4DX 모션베이스'; }
+    out.d = Math.round(d * 100) / 100;
+    out.why = why;
+    return out;
+  }
   /* 3D·단면도에 넘길 사본 — 원본 데이터(params)는 건드리지 않는다 */
-  function withEye(p) {
+  function withEye(p, seat) {
     const c = {};
     for (const k in p) c[k] = p[k];
-    c.eye = eyeMeters(p);
+    const shift = seat ? seatEyeShift(p, seat).d : 0;
+    c.eye = eyeMeters(p) + shift;
+    c.seatEyeShift = shift;
     c.eyeDelta = c.eye - baseEye(p);
     c.eyeFor = viewerSize.h;
     return c;
@@ -4564,7 +4662,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const SW = p.screenW * rs, SH = p.screenH * rs;
     const centerX = (p.minx + p.maxx) / 2;
     const sx = (seat.ox != null) ? seat.ox : (seat.x - centerX) * p.pitch;
-    const eye0 = eyeMeters(p);
+    const eye0 = eyeMeters(p) + seatEyeShift(p, seat).d;   /* 좌석 유형별 좌판 높이 차이(빈백·소파·모션베이스) 반영 */
     /* PRIVATE BOX — 박스석은 관 바닥의 열·단차가 아니라 박스 자리(관 뒤·좌우 발코니 등)에서 본다.
        데이터에 박스 거리(boxD)·놓이(boxEye)가 있으면 그 값을 쓰고, 키 차이만 더한다. */
     const isBox = (p.boxEye > 0) && (p.boxD > 0);
@@ -6027,7 +6125,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const fit = fitLabel(m);
     const typeTxt = seatTypeLabel(seat.t);
     const recl = canRecline(h, seat);
-    const typeNote = recl ? '리클라이너 · 등받이 110°~160° 조절'
+    const typeNote = recl ? '리클라이너 · 등받이 110°~160° 조절(젖히면 눈높이 −12 cm)'
       : (isReclinerHall(h) ? '리클라이너 관이지만 이 좌석은 ' + typeTxt
         : (seat.t === 'r' ? '릴렉스시트 · 등받이 조절 없는 고정형' : seatTypeDesc(seat.t)));
     const sPct = clamp(m.occ || 0, 0, 100);
@@ -6054,8 +6152,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       ['앞사람 머리 가림 비율', sPct < 0.5 ? '없음' : fmt(sPct, 0) + '%'],
       ['이 자리 눈높이(A열 바닥 + 앉은 눈높이)', `${fmt(m.eyeY, 2)} m`]
     ];
-    /* 1.25 m는 의자 자체 높이가 아니라 맨 앞줄(A열)부터 올라온 좌석 단차 — 눈높이와 헷갈리지 않게 짧게 알려 준다 */
-    const eyeNote = m.isBox ? '' : `<p class="ana-eye-note">내 눈높이 <b>${fmt(m.eyeY, 2)} m</b>는 좌석 단차(계단 높이)를 더한 값이에요.</p>`;
+    /* 1.25 m는 의자 자체 높이가 아니라 맨 앞줄(A열)부터 올라온 좌석 단차 — 눈높이와 헷갈리지 않게 짧게 알려 준다.
+       빈백·소파·4DX처럼 좌판 높이가 다른 좌석은 그 차이도 함께 적는다. */
+    const shift = seatEyeShift(p, seat);
+    const eyeNote = m.isBox ? '' : (shift.d
+      ? `<p class="ana-eye-note">내 눈높이 <b>${fmt(m.eyeY, 2)} m</b>는 좌석 단차(계단 높이)에 ${esc(shift.why)}(${shift.d > 0 ? '+' : '−'}${fmt(Math.abs(shift.d), 2)} m)를 반영한 값이에요.</p>`
+      : `<p class="ana-eye-note">내 눈높이 <b>${fmt(m.eyeY, 2)} m</b>는 좌석 단차(계단 높이)를 더한 값이에요.</p>`);
     return `<section class="ana">
       <div class="ana-head"><h4>시야 분석</h4><span>${esc(seat.key)} · ${esc(h.name)}</span></div>
       ${eyeCtlHtml(p)}
@@ -6227,7 +6329,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
      박스 전용 시점(2층 발코니에서 내려다보기)을 그릴 수 있게 한다. */
   function viewerOpts(h, seat) {
     return {
-      p: withEye(h.params), seat: seat, rows: h.rows, tags: h.tags || [],
+      p: withEye(h.params, seat), seat: seat, rows: h.rows, tags: h.tags || [],
       aspect: Number(state.aspect) || h.params.aspect, mode: state.mode,
       hallKey: h.id, fourSide: isFourSide(h),
       name: h.name, total: h.total, box: h.boxOf || null,
@@ -6362,7 +6464,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         /* 모바일에서는 숨겨진 PC 패널에도 DOM이 있어 3D를 두 번 만들게 된다 — 보이는 쪽만 그린다 */
         const vis = !!(root.offsetWidth || root.offsetHeight || root.getClientRects().length);
         const pc = root.querySelector('.profile-canvas');
-        if (pc && vis) drawProfile(pc, withEye(p), m, seat, (window.Viewer3D && window.Viewer3D.reclineOf ? window.Viewer3D.reclineOf().rec : 0));
+        if (pc && vis) drawProfile(pc, withEye(p, seat), m, seat, (window.Viewer3D && window.Viewer3D.reclineOf ? window.Viewer3D.reclineOf().rec : 0));
         if (vis && root.querySelector('.v3d-canvas')) mount3d(root, opts, h, seat, m);
         else { const v3 = root.querySelector('.v3d'); if (v3) v3.classList.add('ready'); }
       });
@@ -6561,20 +6663,28 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return store[k];
   }
 
-  /* 좌석 평점(별점) — 요청 #13 */
+  /* 좌석 평점(별점) — 요청 #13 · 0.5점 단위 */
   const RATING_WORD = ['', '별로예요', '아쉬워요', '보통이에요', '좋아요', '최고예요'];
+  const ratingWord = (v) => { const n = Number(v) || 0; return n ? RATING_WORD[Math.max(1, Math.min(5, Math.ceil(n)))] : ''; };
+  const ratingTxt = (v) => { const n = Number(v) || 0; return n ? (n % 1 ? n.toFixed(1) : String(n)) + '점 · ' + ratingWord(n) : ''; };
+  /* 0.5점도 채워 보이도록 — 회색 별 위에 같은 별을 n/5 폭만큼 덮어 쒸운다 */
   function starsInline(v) {
-    const n = Math.max(0, Math.min(5, Math.round(Number(v) || 0)));
+    const n = Math.max(0, Math.min(5, Number(v) || 0));
     if (!n) return '';
-    return `<span class="starline" aria-label="별점 ${n}점">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
+    const w = (n / 5 * 100).toFixed(1);
+    return `<span class="starline" aria-label="별점 ${n % 1 ? n.toFixed(1) : n}점"><i class="sl"><s>★★★★★</s><b style="width:${w}%">★★★★★</b></i></span>`;
   }
   function starPickHtml(mine) {
     const cur = draft.rating || (mine && mine.rating) || 0;
     draft.rating = cur;
+    const cells = [1, 2, 3, 4, 5].map((i) => {
+      const fill = Math.max(0, Math.min(1, cur - (i - 1)));
+      return `<button type="button" data-star="${i}" aria-label="${i}점" aria-pressed="${fill >= 1}"><span class="sp-wrap"><span class="sp-bg">★</span><span class="sp-fg" style="width:${(fill * 100).toFixed(0)}%"><b>★</b></span></span></button>`;
+    }).join('');
     return `<div class="starpick" id="starPick" data-rating="${cur}">
       <span class="starpick-lb">좌석 평점</span>
-      <span class="starpick-btns">${[1, 2, 3, 4, 5].map((i) => `<button type="button" data-star="${i}" aria-label="${i}점" aria-pressed="${cur >= i}">★</button>`).join('')}</span>
-      <b class="starpick-tx" id="starTx">${cur ? RATING_WORD[cur] : '눌러서 별점 남기기'}</b>
+      <span class="starpick-btns" role="group" aria-label="좌석 평점(0.5점 단위)">${cells}</span>
+      <b class="starpick-tx" id="starTx">${cur ? ratingTxt(cur) : '눌러서 별점 남기기'}</b>
     </div>`;
   }
 
@@ -6605,7 +6715,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const shots = (mine && mine.shots) || [];
     const movie = mine && mine.movie ? mine.movie : '';
     /* 평점 — 이 자리 후기들의 평균 */
-    const rated = reviews.concat(mine && mine.rating ? [mine] : []).map((r) => r.rating).filter((v) => typeof v === 'number' && v >= 1);
+    const rated = reviews.concat(mine && mine.rating ? [mine] : []).map((r) => r.rating).filter((v) => typeof v === 'number' && v > 0);
     const avgRating = rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : 0;
     /* 선택 항목 — 모바일에선 접어 두고, 꼭 쓰는 사람만 펼친다 */
     const optional = `
@@ -6963,17 +7073,25 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       };
     });
 
-    /* 별점 — 누른 별까지 다 채운다(다시 같은 별을 누르면 0으로) */
+    /* 별점 — 0.5점 단위. 별의 왼쪽 절반을 누르면 i−0.5, 오른쪽 절반이면 i점(키보드는 반 칸 없이) */
     const paintStars = () => {
+      const cur = draft.rating || 0;
       root.querySelectorAll('[data-star]').forEach((x) => {
-        x.setAttribute('aria-pressed', String(Number(x.dataset.star) <= (draft.rating || 0)));
+        const i = Number(x.dataset.star) || 0;
+        const fill = Math.max(0, Math.min(1, cur - (i - 1)));
+        x.setAttribute('aria-pressed', String(fill >= 1));
+        const fg = x.querySelector('.sp-fg');
+        if (fg) fg.style.width = (fill * 100).toFixed(0) + '%';
       });
       const tx = root.querySelector('#starTx');
-      if (tx) tx.textContent = draft.rating ? RATING_WORD[draft.rating] : '눌러서 별점 남기기';
+      if (tx) tx.textContent = cur ? ratingTxt(cur) : '눌러서 별점 남기기';
     };
     root.querySelectorAll('[data-star]').forEach((b) => {
-      b.onclick = () => {
-        const v = Number(b.dataset.star) || 0;
+      b.onclick = (ev) => {
+        const i = Number(b.dataset.star) || 0;
+        const r = b.getBoundingClientRect();
+        const half = !!(ev && ev.detail !== 0 && r.width > 0 && (ev.clientX - r.left) < r.width / 2);
+        const v = i - (half ? 0.5 : 0);
         draft.rating = (draft.rating === v) ? 0 : v;
         paintStars();
       };
@@ -7130,15 +7248,26 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=representation' }),
           body: JSON.stringify(body)
         });
-        /* rating 컬럼이 없어 400이면 별점만 빼고 다시 — 후기 자체는 잃지 않는다 */
+        /* rating 이 smallint 인 DB면 4.5 같은 반 칸 값이 400이 된다 — 정수로 한 번 보내고,
+           그래도 안 되면(컬럼 없음) 별점만 빼서 보낸다. 후기 자체는 잃지 않는다. */
         if (r.status === 400 && body.rating) {
-          SB_RATING = false;
-          delete body.rating;
-          r = await fetch(SB_URL + '/rest/v1/seat_reviews', {
-            method: 'POST', signal: tm.signal,
-            headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=representation' }),
-            body: JSON.stringify(body)
-          });
+          if (body.rating % 1 !== 0) {
+            body.rating = Math.round(body.rating);
+            r = await fetch(SB_URL + '/rest/v1/seat_reviews', {
+              method: 'POST', signal: tm.signal,
+              headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=representation' }),
+              body: JSON.stringify(body)
+            });
+          }
+          if (r.status === 400) {
+            SB_RATING = false;
+            delete body.rating;
+            r = await fetch(SB_URL + '/rest/v1/seat_reviews', {
+              method: 'POST', signal: tm.signal,
+              headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=representation' }),
+              body: JSON.stringify(body)
+            });
+          }
         }
         if (!r.ok) throw new Error('HTTP ' + r.status);
         posted = true;
@@ -8002,7 +8131,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const m = metrics(h.params, seat);
     document.querySelectorAll('.profile-canvas').forEach((cv) => {
       const vis = !!(cv.offsetWidth || cv.offsetHeight || cv.getClientRects().length);
-      if (vis) drawProfile(cv, withEye(h.params), m, seat, d.rec || 0);
+      if (vis) drawProfile(cv, withEye(h.params, seat), m, seat, d.rec || 0);
     });
   });
 
