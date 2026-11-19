@@ -4958,8 +4958,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
      IMG_7249: 오른쪽 끝까지 스크롤한 상태에서 힌트가 마지막 탭 '광주·전라·제주'의 '주'를 덮었다.
      → 끝에 가까워지면 힌트를 감춘다. 탭 줄 오른쪽 여백은 탭 사이 간격 정도(6~10px)만 두고,
        끝까지 스크롤했을 때 마지막 탭 뒤에 빈 칸이 남지 않게 한다(2026-11-19). */
-  const RTAB_HINT_W = 24;   /* 힌트(›) 폭 — CSS .rtabs-hint 와 같게 */
-  const RTAB_EDGE = 12;     /* 끝에서 이만큼 남으면 힌트를 감춘다(마지막 탭 글자를 덮지 않게) */
+  const RTAB_EDGE = 12;     /* 끝에서 이만큼 남으면 힌트를 감춘다(마지막 탭 글자를 덮지 않게, CSS 힌트 폭 24px) */
   function paintRegionHint() {
     const box = document.getElementById('rtabs');
     const wr = box && box.closest('.rtabs-wrap');
