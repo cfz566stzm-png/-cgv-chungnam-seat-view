@@ -1809,11 +1809,11 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 .ana-head h4{font-size:15.5px;font-weight:900;letter-spacing:-.02em}
 .ana-head span{font-size:11.5px;font-weight:750;color:var(--mute);letter-spacing:-.01em}
 .ana-rows{padding:6px 6px 8px}
-.ana-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;column-gap:10px;
+.ana-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;
   padding:10px 9px;border-radius:11px;min-height:46px}
 .ana-row:nth-child(odd){background:#FAFBFC}
 .ana-row>span:first-child{min-width:0;font-size:13px;font-weight:750;color:#4E5968;line-height:1.38;
-  letter-spacing:-.01em;word-break:keep-all}
+  letter-spacing:-.01em;white-space:nowrap}
 .ana-v{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-end;gap:2px 6px;
   text-align:right;min-width:0}
 .ana-row b{font-size:14.5px;font-weight:850;color:#111827;line-height:1.3;font-variant-numeric:tabular-nums;
@@ -1821,7 +1821,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 .ana-row .anax{font-size:11.5px;font-weight:700;color:var(--mute);line-height:1.4;white-space:normal;word-break:keep-all}
 .ana-row>.cfb{justify-self:end;align-self:center;min-width:58px;justify-content:center;font-size:11px;padding:4px 7px}
 .ana-rows.tight{padding:4px 6px 8px}
-.ana-rows.tight .ana-row{padding:8px 9px;min-height:0;grid-template-columns:minmax(0,1fr) auto}
+.ana-rows.tight .ana-row{padding:8px 9px;min-height:0;grid-template-columns:auto minmax(0,1fr)}
 .ana-rows.tight .ana-row>span:first-child{font-size:12.5px;font-weight:700;color:var(--sub)}
 .ana-rows.tight .ana-row b{font-size:13.5px;font-weight:800;color:#2A343F}
 .ana-eye-note{margin:4px 12px 12px;padding:10px 12px;border-radius:12px;background:#F4F8F5;
@@ -1834,6 +1834,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
   .ana-row>span:first-child{font-size:13.5px}
   .ana-row b{font-size:15px}
 }
+.ana-rows.tight .ana-row>span:first-child{white-space:normal;word-break:keep-all}
 
 </style>
 </head>
