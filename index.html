@@ -3898,6 +3898,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       if (!btn || btn.disabled) return;
       /* 2글자 미만은 이름으로 쓰기엔 너무 짧다 — 모달에서는 빈 값도 받지 않는다(2026-11-19) */
       if (nickKey(inp.value).length < 2) {
+        /* 저장을 눌렀는데 짧으면, 다시 입력할 때까지 안내를 유지한다(inp.dataset.nickshort) */
+        inp.dataset.nickshort = '1';
         nickDupPaint(dupMsg, 'short');
         if (inp) { inp.classList.add('bad'); try { inp.focus(); } catch (e) {} }
         toast(NICK_MIN_MSG);
@@ -4444,7 +4446,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         const v = nickKey(inp.value);
         /* 1글자는 중복 확인을 하기 전에 먼저 알려 준다 */
         if (v.length === 1) { nickDupPaint(msg, 'short'); inp.classList.add('bad'); return; }
-        if (!v || v === '익명' || v === nickKey(nickname)) { nickDupPaint(msg, 'empty'); inp.classList.remove('bad'); return; }
+        if (!v) {
+          /* 모달에서 '짧아서 저장 거절'된 뒤에는 비어 있어도 안내를 남긴다 */
+          if (inp.dataset.nickshort === '1') { nickDupPaint(msg, 'short'); inp.classList.add('bad'); return; }
+          nickDupPaint(msg, 'empty'); inp.classList.remove('bad'); return;
+        }
+        if (v === '익명' || v === nickKey(nickname)) { nickDupPaint(msg, 'empty'); inp.classList.remove('bad'); return; }
         const my = ++seq;
         nickPeek(v).then((r) => {
           if (my !== seq || nickKey(inp.value) !== v) return;   /* 그 사이에 글자가 바뀌었다 */
@@ -4454,6 +4461,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       }, delay);
     };
     inp.addEventListener('input', () => {
+      delete inp.dataset.nickshort;   /* 다시 입력했으니 '짧음' 거절 안내는 해제 */
       /* 1글자 안내는 0.45초 기다리지 않고 바로 — 글자를 지우면 문구도 바로 지운다 */
       if (nickTooShort(inp.value)) { nickDupPaint(msg, 'short'); inp.classList.add('bad'); }
       else if (inp.classList.contains('bad')) { inp.classList.remove('bad'); nickDupPaint(msg, 'empty'); }
