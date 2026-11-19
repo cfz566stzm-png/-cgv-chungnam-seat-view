@@ -1155,8 +1155,6 @@ body{font-size:16px}
 .dstat-grid span{display:block;font-size:11px;font-weight:700;color:#6B7684;margin-top:2px}
 .dstat-bar{height:7px;border-radius:99px;background:#EEF1F0;margin-top:12px;overflow:hidden}
 .dstat-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#00A862,#34D399)}
-.dstat-note{margin-top:9px;font-size:11.5px;font-weight:650;color:#5C6672;line-height:1.6;word-break:keep-all}
-.dstat-note b{color:#2F4A3E}
 @media (max-width:520px){ .dstat-grid{grid-template-columns:repeat(2,1fr)} }
 .stat-sub{font-size:12px;color:#6B7684;font-weight:700;margin-top:2px}
 
@@ -1325,7 +1323,7 @@ input,select,textarea,
 .helpful,.helpbtn,.fixbtn,.regline,.seatfun span,.rego,.fixsel,.fixdetail{
   font-size:12px}
 .pv-bar span,.extphoto-foot,.ana-note,.ana-src>b,.dsec-head span,.ugc-note,
-.dstat-note,.v3d-fallback span,.mask-note,.cmp-line,.cmp-foot,.cmp-cap span,
+.v3d-fallback span,.mask-note,.cmp-line,.cmp-foot,.cmp-cap span,
 .v3d-recval,.big-inner .v3d-fov,.v3d-zoomnote,.regline .rdate,.regline .rtag{
   font-size:12.5px}
 .toc-note{font-size:12px !important}
@@ -1492,7 +1490,7 @@ input,select,textarea,
 @media (min-width:960px){
   .v3d-bar .v3d-recval{flex:0 1 auto;margin-left:auto;text-align:right;padding-top:0}
 }
-.ugc-sub,.dstat-note,.ana-note,.v3d-disc{line-height:1.62}
+.ugc-sub,.ana-note,.v3d-disc{line-height:1.62}
 .card-pad{box-sizing:border-box}
 
 /* =====================================================================
@@ -5524,10 +5522,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <div><b class="num">${st.linkSeats}</b><span>블로그로 연결한 좌석</span></div>
       </div>
       <div class="dstat-bar"><i style="width:${pctReady}%"></i></div>
-      <div class="dstat-note">
-        좌석표는 <b>${pctReady}%</b> 상영관에서 확인했어요${st.ready < st.halls ? '. 나머지는 좌석 수만 알아서 <b>준비 중</b>으로 표시해요.' : '. 모든 관의 좌석표를 확인했어요.'}
-        실제 사진이 없는 자리는 <b>3D 시뮬레이션</b>으로 보여주고, 둘 중 무엇인지 화면에 표시해요. 블로그 좌석은 저작권 때문에 사진을 복사하지 않고 원문으로만 연결해요.
-      </div>
     </section>
 
     <div class="section-title"><h2>지점 둘러보기</h2><span class="cap">전국 CGV ${st.theaters}곳</span></div>
