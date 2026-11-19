@@ -6344,8 +6344,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     /* 모바일: 실사 사진이 있는 자리는 실사 탭을 먼저 — 3D는 그 옆 탭 */
     const wantTab = state._seatTouched ? (state.tab || 'sim') : (hasReal ? 'photo' : 'sim');
     const tab = wantTab === 'photo' && !arr.length ? 'sim' : wantTab;
-    /* 후기·사진 등록은 시야(실사·3D·단면도·시야 분석)를 다 본 뒤에 둔다 —
-       2026-11-19 사용자 요청으로 다시 시야 영역 아래로 내렸다. */
+    /* 후기·평점 폼은 시야 확인(실사·3D·단면도) 바로 아래, 시야 분석 위에 둔다 —
+       2026-11-19 사용자 요청: 배지 → 탭(시야 확인) → 평점·후기 → 시야 분석 → 도움돼요/수정 요청 */
     return `
       <button class="back mini" data-go="hallback" style="margin:0 0 10px">‹ 좌석 선택으로</button>
       ${seatFlagBar(h, seat)}
@@ -6360,9 +6360,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         ${tab === 'profile' ? `<div class="profile-card"><canvas class="profile-canvas" width="720" height="230"></canvas></div>
           <p class="sub" style="font-size:12.5px;margin-top:8px;line-height:1.55">스크린과 단차를 옆에서 본 그림이에요. 이 자리가 화면·단차와 어떤 높이 관계인지 보여요.</p>` : ''}
       </div>
+      ${ugcHtml(h, seat, true)}
       ${tab === 'sim' ? analysisHtml(h, seat, m) : ''}
-      ${seatActionsHtml(h, seat)}
-      ${ugcHtml(h, seat, true)}`;
+      ${seatActionsHtml(h, seat)}`;
   }
 
   /* 실사 사진 한 컷 — 촬영 정보(지점·관·좌석·날짜·방향·화각·검증·출처)를 함께 */
