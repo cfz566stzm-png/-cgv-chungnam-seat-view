@@ -1749,16 +1749,20 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 .ana-detail[open] summary::before{content:'▾ '}
 .ana-rows.tight{margin-top:6px}
 
-/* --- 별점 --- */
-.starpick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}
-.starpick-lb{font-size:12.5px;font-weight:800;color:var(--ink-2)}
-.starpick-btns{display:flex;gap:2px}
-.starpick-btns button{width:44px;height:44px;border:0;background:none;font-size:31px;line-height:1;color:#DCE2E7;cursor:pointer;padding:0;transition:transform .08s}
-.starpick-btns button:active{transform:scale(.9)}
-.starpick-btns button[aria-pressed="true"]{color:#FFB020}
-.starpick-tx{font-size:12px;font-weight:700;color:var(--sub)}
-.starline{font-size:12px;color:#FFB020;letter-spacing:.5px}
-.starline i{font-style:normal;color:#E3E8EC}
+/* --- 별점: 글자 ★ 대신 인라인 SVG path로 그린다(iOS 사파리 폰트 메트릭 영향 없음) --- */
+.starpick{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin-top:12px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.starpick-lb{flex:0 0 100%;font-size:11.5px;font-weight:800;color:var(--sub);letter-spacing:-.1px}
+.starpick-btns{display:flex;gap:0}
+.starpick-btns button{width:48px;height:48px;border:0;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:transform .08s;-webkit-tap-highlight-color:transparent}
+.starpick-btns button:active{transform:scale(.92)}
+.starpick-tx{font-size:12px;font-weight:800;color:#B8790B;font-variant-numeric:tabular-nums;white-space:nowrap}
+/* 별 아이콘 한 칸 — 크기는 --sc 하나로 바꾼다. 반 칸(0.5)은 회색 별 위에 '왼쪽 절반 path'를 겹쳐 그린다. */
+.sc{--sc:13px;position:relative;display:block;width:var(--sc);height:var(--sc);flex:0 0 auto;line-height:0}
+.sc>svg,.sc>.sf>svg{display:block;width:var(--sc);height:var(--sc)}
+.sc>.sf{position:absolute;left:0;top:0;height:100%;overflow:hidden}
+.starpick-btns .sc{--sc:36px}
+.starline{display:inline-flex;align-items:center;gap:1px;vertical-align:-2px}
+.starline .sc{--sc:13px}
 .avgstar{display:inline-flex;align-items:center;gap:3px;margin-left:4px;font-size:11.5px;font-weight:800;color:var(--sub)}
 .avgstar b{color:#B8790B}
 
@@ -1794,20 +1798,14 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
    2026-11-19 — 좌석 평점 0.5점 단위(반 별) + 시야 분석 표 정리
    ======================================================================= */
 
-/* --- 별점: 회색 별 위에 금색 별을 채움 폭만큼 덮어 0.5개도 보이게 ---
-   손가락으로 반 칸(0.5점)을 정확히 누를 수 있게 별 한 칸을 44px 터치 영역으로 키웠다(2026-11-19). */
-.starpick{padding:13px 12px}
-.starpick-btns{gap:4px}
-.starpick-btns button{padding:0;background:none;border:0;line-height:0;width:44px;height:44px}
-.sp-wrap{position:relative;display:block;width:44px;height:44px}
-.sp-wrap .sp-bg,.sp-wrap .sp-fg b{position:absolute;inset:0;display:grid;place-items:center;font-size:31px;line-height:1}
-.sp-wrap .sp-bg{color:#DEE4EA}
-.sp-wrap .sp-fg{position:absolute;left:0;top:0;height:100%;overflow:hidden}
-.sp-wrap .sp-fg b{position:absolute;left:0;top:0;width:44px;height:100%;font-weight:400;color:#FFB020}
-.starpick-tx{font-variant-numeric:tabular-nums}
-.starline .sl{position:relative;display:inline-block;font-style:normal}
-.starline .sl s{text-decoration:none;color:#E3E8EC}
-.starline .sl b{position:absolute;left:0;top:0;overflow:hidden;white-space:nowrap;color:#FFB020;font-weight:400}
+/* --- 별점(2026-11-19): 반 칸을 글자 ★ 자르기 대신 SVG path 2장(회색 전체 별 + 왼쪽 절반 별)으로 그린다.
+   클리핑·id가 없어 0.5점이 iOS 사파리에서도 정확히 절반이고, 여러 번 렌더해도 id 충돌이 없다.
+   입력 별은 48×48px 터치(아이콘 36px) — 왼쪽 24px = i−0.5, 오른쪽 24px = i점.
+   390px 폭에서 별 5개(240px) + 점수 텍스트가 한 줄에 들어간다. */
+@media (max-width:340px){
+  .starpick-btns button{width:44px;height:44px}
+  .starpick-btns .sc{--sc:33px}
+}
 
 /* 시야 분석 표는 원래 스타일(라벨 왼쪽·값 오른쪽 한 줄)로 되돌렸다 — 2026-11-19 사용자 요청.
    7a3e682·9a3b056에서 넣었던 3열 그리드·라벨 nowrap 덮어쓰기는 지웠다. */
@@ -6684,24 +6682,45 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
   /* 좌석 평점(별점) — 0.5점 단위. 화면에는 점수만 적는다(감정 문구 없이) */
   const ratingTxt = (v) => { const n = Number(v) || 0; return n ? (n % 1 ? n.toFixed(1) : String(n)) + '점' : ''; };
-  /* 0.5점도 채워 보이도록 — 회색 별 위에 같은 별을 n/5 폭만큼 덮어 쒸운다 */
+  /* 별점은 글자 ★ 두 장을 겹쳐 width %로 자르지 않고 인라인 SVG path로 그린다 — iOS 사파리는 ★ 글자의
+     폰트 메트릭·베이스라인 차이로 반 칸의 경계가 어긋나 보였고, SVG는 그런 폰트 의존이 없어 픽셀 단위로 정확하다.
+     반 칸(0.5)은 회색 별 path 위에 '별을 x=12에서 자른 왼쪽 절반 path'를 겹쳐 그린다 — clipPath·linearGradient를
+     쓰지 않아 id가 없으므로 여러 번 렌더되거나 다크모드여도 id 충돌이 생기지 않는다. */
+  const STAR_D = 'M12 1L14.88 8.04L22.46 8.6L16.66 13.51L18.47 20.9L12 16.9L5.53 20.9L7.34 13.51L1.54 8.6L9.12 8.04Z';
+  const STAR_HALF_D = 'M12 1L9.12 8.04L1.54 8.6L7.34 13.51L5.53 20.9L12 16.9Z';
+  const STAR_GOLD = '#f5a623';
+  const STAR_GREY = '#e2e6ea';
+  const starSvg = (inner) => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${inner}</svg>`;
+  /* fill 0~1 → 별 한 칸 SVG. 0.5는 정확한 왼쪽 절반 path, 그 밖의 소수(후기 평균 3.7 등)는
+     금색 별을 폭 %만큼 잘라 덮는다(별은 고정 px SVG라 폰트처럼 어긋나지 않는다). */
+  function starShape(fill) {
+    const f = Math.max(0, Math.min(1, Number(fill) || 0));
+    const bg = `<path d="${STAR_D}" fill="${STAR_GREY}"/>`;
+    if (f <= 0.001) return starSvg(bg);
+    if (f >= 0.999) return starSvg(`<path d="${STAR_D}" fill="${STAR_GOLD}"/>`);
+    if (Math.abs(f - 0.5) < 0.001) return starSvg(bg + `<path d="${STAR_HALF_D}" fill="${STAR_GOLD}"/>`);
+    return starSvg(bg) + `<span class="sf" style="width:${(f * 100).toFixed(1)}%">${starSvg(`<path d="${STAR_D}" fill="${STAR_GOLD}"/>`)}</span>`;
+  }
+  /* 후기 목록·평균 별점 — 별 5칸을 한 줄로 */
   function starsInline(v) {
     const n = Math.max(0, Math.min(5, Number(v) || 0));
     if (!n) return '';
-    const w = (n / 5 * 100).toFixed(1);
-    return `<span class="starline" aria-label="별점 ${n % 1 ? n.toFixed(1) : n}점"><i class="sl"><s>★★★★★</s><b style="width:${w}%">★★★★★</b></i></span>`;
+    let cells = '';
+    for (let i = 1; i <= 5; i += 1) cells += `<i class="sc">${starShape(n - (i - 1))}</i>`;
+    return `<span class="starline" aria-label="별점 ${n % 1 ? n.toFixed(1) : n}점">${cells}</span>`;
   }
+  /* 별점 입력 — 버튼 한 칸 48×48px, 별 36px. 왼쪽 24px를 누르면 i−0.5, 오른쪽 24px면 i점 */
   function starPickHtml(mine) {
     const cur = draft.rating || (mine && mine.rating) || 0;
     draft.rating = cur;
     const cells = [1, 2, 3, 4, 5].map((i) => {
       const fill = Math.max(0, Math.min(1, cur - (i - 1)));
-      return `<button type="button" data-star="${i}" aria-label="${i}점" aria-pressed="${fill >= 1}"><span class="sp-wrap"><span class="sp-bg">★</span><span class="sp-fg" style="width:${(fill * 100).toFixed(0)}%"><b>★</b></span></span></button>`;
+      return `<button type="button" data-star="${i}" aria-label="${i}점(왼쪽 절반은 ${i - 0.5}점)" aria-pressed="${fill >= 1}"><i class="sc">${starShape(fill)}</i></button>`;
     }).join('');
     return `<div class="starpick" id="starPick" data-rating="${cur}">
-      <span class="starpick-lb">좌석 평점</span>
+      <span class="starpick-lb" id="starLb">${cur ? '좌석 평점' : '좌석 평점 · 별을 눌러 선택'}</span>
       <span class="starpick-btns" role="group" aria-label="좌석 평점(0.5점 단위)">${cells}</span>
-      <b class="starpick-tx" id="starTx">${cur ? ratingTxt(cur) : '눌러서 별점 남기기'}</b>
+      <b class="starpick-tx" id="starTx">${cur ? ratingTxt(cur) : ''}</b>
     </div>`;
   }
 
@@ -7097,11 +7116,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         const i = Number(x.dataset.star) || 0;
         const fill = Math.max(0, Math.min(1, cur - (i - 1)));
         x.setAttribute('aria-pressed', String(fill >= 1));
-        const fg = x.querySelector('.sp-fg');
-        if (fg) fg.style.width = (fill * 100).toFixed(0) + '%';
+        const cell = x.querySelector('.sc');
+        if (cell) cell.innerHTML = starShape(fill);
       });
       const tx = root.querySelector('#starTx');
-      if (tx) tx.textContent = cur ? ratingTxt(cur) : '눌러서 별점 남기기';
+      if (tx) tx.textContent = cur ? ratingTxt(cur) : '';
+      const lb = root.querySelector('#starLb');
+      if (lb) lb.textContent = cur ? '좌석 평점' : '좌석 평점 · 별을 눌러 선택';
     };
     root.querySelectorAll('[data-star]').forEach((b) => {
       b.onclick = (ev) => {
