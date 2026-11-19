@@ -3762,7 +3762,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   const SEAT_INFO = {
     n: { label: '일반석', desc: '기본 좌석', color: '#DCEDE4', eye: 0 },
     p: { label: '장애인석', desc: '휠체어·동반석', color: '#BFE3FA', eye: 0 },
-    r: { label: '릴렉스시트', desc: '등받이 조절이 없는 넓은 고정형 좌석 — 관 태그가 리클라이너일 때만 젖히기가 열려요', color: '#DCD8FB', eye: -0.02 },
+    r: { label: '릴렉스시트', desc: '넓은 좌석', color: '#DCD8FB', eye: -0.02 },
     s: { label: 'SWEETBOX', desc: '2인용 소파형 좌석', color: '#FBD5E8', eye: -0.08 },
     c: { label: '카바나석', desc: '커튼·개별 공간형 좌석', color: '#FDE7C3', eye: -0.06 },
     b: { label: '빈백', desc: '빈백(쿠션) 좌석', color: '#E7E4DD', eye: -0.32 }
@@ -5930,9 +5930,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (c.p) items.push(['장애인석', 'background:#BFE3FA']);
     items.push(['통로', 'background:transparent;border:1px dashed #C9CFD6']);
     const notes = [];
-    if (c.r) notes.push(isReclinerHall(h)
-      ? '이 관은 <b>리클라이너</b> 태그가 있어 등받이 젖히기(110°~160°)를 쓸 수 있어요. 보라색 칸은 리클라이너 좌석이에요.'
-      : '<b>릴렉스시트</b>는 등받이 조절이 없는 넓은 고정형 좌석이라 <b>리클라이너와 달라요</b>. 젖히기 버튼은 나오지 않습니다.');
+    if (c.r && isReclinerHall(h)) notes.push('이 관은 <b>리클라이너</b> 태그가 있어 등받이 젖히기(110°~160°)를 쓸 수 있어요. 보라색 칸은 리클라이너 좌석이에요.');
     return `<div class="lg-items">${items.map(([l, st]) => `<span><i style="${st}"></i>${l}</span>`).join('')}</div>` +      notes.map((n) => `<div class="lg-note">${n}</div>`).join('');
   }
 
@@ -6367,7 +6365,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
   /* 리클라이너 관 — 관 태그/이름이 리클라이너일 때만. 릴렉스시트(r) 좌석이 있다는 것만으로는
-     리클라이너가 아니다(릴렉스시트는 등받이 고정형). 젖히기 UI는 이 함수 하나로만 열린다. */
+     리클라이너가 아니다(좌석 유형 r 만으로는 판단하지 않는다). 젖히기 UI는 이 함수 하나로만 열린다. */
   function isReclinerHall(h) {
     if (!h) return false;
     const t = ((h.tags || []).join(' ') + ' ' + (h.name || '')).toUpperCase();
@@ -6493,8 +6491,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const typeTxt = seatTypeLabel(seat.t);
     const recl = canRecline(h, seat);
     const typeNote = recl ? '리클라이너 · 등받이 110°~160° 조절(젖히면 눈높이 −12 cm)'
-      : (isReclinerHall(h) ? '리클라이너 관이지만 이 좌석은 ' + typeTxt
-        : (seat.t === 'r' ? '릴렉스시트 · 등받이 조절 없는 고정형' : seatTypeDesc(seat.t)));
+      : (isReclinerHall(h) ? '리클라이너 관이지만 이 좌석은 ' + typeTxt : seatTypeDesc(seat.t));
     const sPct = clamp(m.occ || 0, 0, 100);
     const rows = [
       ['스크린까지 거리', `<b>${fmt(m.dist, 1)} m</b> <span class="anax">어른 걸음으로 약 ${Math.max(2, Math.round(m.dist / 0.75))}걸음</span>`, 'E'],
@@ -6562,9 +6559,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const rowL = String(seat.key).replace(/[0-9]/g, '');
     if (fw.indexOf(rowL) >= 0) extra.push('<span class="sflag x">앞열 · 스크린을 올려다보는 자리(추천하지 않음)</span>');
     if (seat.t === 'p') extra.push('<span class="sflag p">장애인석(휠체어·동반석)</span>');
-    else if (seat.t === 'r') extra.push(canRecline(h, seat)
-      ? `<span class="sflag r">릴렉스시트 · 이 관은 리클라이너라 젖히기 가능</span>`
-      : `<span class="sflag r">릴렉스시트 · 리클라이너 아님(등받이 고정형)</span>`);
+    else if (seat.t === 'r' && canRecline(h, seat)) extra.push('<span class="sflag r">이 관은 리클라이너라 젖히기 가능</span>');
     else if (seat.t === 's') extra.push('<span class="sflag s">SWEETBOX · 2인 소파형</span>');
     else if (seat.t === 'c') extra.push('<span class="sflag c">카바나석 · 개별 공간형</span>');
     else if (seat.t === 'b') extra.push('<span class="sflag b">빈백석 · 쿠션형</span>');
