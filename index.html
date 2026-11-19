@@ -1118,6 +1118,13 @@ body{font-size:16px}
 .nickrow input{flex:1;min-width:120px;height:38px;border-radius:10px;border:1px solid var(--line);
   background:#FAFBFC;padding:0 11px;font-size:16px !important;font-weight:700;color:var(--ink)}
 .nickrow span{flex:0 0 auto;font-size:11px;font-weight:700;color:#6B7684}
+/* 남길 이름 고정 줄(2026-11-19) — 입력 칸 없이 지금 이름만 보여준다 */
+.nickrow.fixed{align-items:baseline;gap:8px;padding:9px 11px;border:1px solid var(--line-2);border-radius:12px;background:#F7FAF8}
+.nickrow.fixed .nicklabel{font-size:12px;font-weight:800;color:#4E5968;flex:0 0 auto}
+.nickrow.fixed .nickfixed{font-size:13.5px;font-weight:850;color:var(--ink);letter-spacing:-.02em}
+.nickrow.fixed .nicknote{font-size:11px;font-weight:700;color:var(--mute)}
+/* 로그인 안내 경고 문구 — 첫 접속 로그인 칸과 내 기록 카드 */
+.auth-warn{margin-top:10px;padding:9px 11px;border-radius:11px;background:#FFF6E5;border:1px solid #FFE2AE;color:#8A5A00;font-size:12px;font-weight:800;line-height:1.55;word-break:keep-all}
 .ugc-note{margin-top:9px;font-size:11.5px;font-weight:650;color:#5C6672;line-height:1.55;word-break:keep-all}
 .ugc-note a{color:#047857;font-weight:800}
 .helpful.del{color:#B42318;border-color:#F3C6C0;background:#FFF6F5}
@@ -3960,9 +3967,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const av = document.getElementById('myAvatar');
     if (av) av.innerHTML = avatarHtml();
     const nm = document.getElementById('myName');
-    if (nm) nm.textContent = nickname || '내 좌석 기록';
+    if (nm) nm.textContent = AUTH.user ? whoName() : '익명';
     const sb = document.getElementById('mySub');
-    if (sb) sb.textContent = nickname ? '내 좌석 기록 · 이 기기에만 저장돼요' : '닉네임을 정하면 여기에 표시돼요 · 이 기기에만 저장돼요';
+    if (sb) sb.textContent = AUTH.user ? (AUTH.profOff ? '이 기기에만 저장돼' : '계정에 저장돼 · 다른 기기에서도 이어져') : '비회원 · 로그인하지 않으면 기록이 지워질 수 있어요';
     const cl = document.getElementById('avatarClear');
     if (cl) cl.style.display = avatarImg ? '' : 'none';
   }
@@ -7100,12 +7107,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const avgRating = rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : 0;
     /* 선택 항목 — 모바일에선 접어 두고, 꼭 쓰는 사람만 펼친다 */
     const optional = `
-      <div class="nickrow">
-        <label for="revNick">닉네임</label>
-        <input id="revNick" maxlength="12" placeholder="비우면 익명" value="${esc(nickname)}" autocomplete="off">
-        <span>후기를 남길 때만 쓰여요</span>
+      <div class="nickrow fixed">
+        <span class="nicklabel">남길 이름</span>
+        <b class="nickfixed">${esc(whoName())}</b>
+        <span class="nicknote">${AUTH.user ? '로그인한 이름으로 남아요' : '로그인하면 내 이름으로 남길 수 있어요'}</span>
       </div>
-      <p class="nickdup" id="revNickDup" hidden></p>
 
       <div class="tagpick" id="tags">${tags.map((tg) => `<button data-tag="${tg}" aria-pressed="${mine && (mine.tags || []).includes(tg)}">${tg}</button>`).join('')}</div>
 
@@ -7525,44 +7531,18 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     };
 
     const saveBtn = root.querySelector('#saveReview');
-    /* 닉네임 칸 아래 중복 안내 — 입력을 멈추거나 포커스가 빠질 때 바로 알려 준다 */
-    const rni = root.querySelector('#revNick');
-    const rniMsg = root.querySelector('#revNickDup');
-    if (rni) nickDupWatch(rni, rniMsg);
     if (saveBtn) saveBtn.onclick = async () => {
       if (saveBtn._busy) return;
       const text = (root.querySelector('#reviewText').value || '').trim().slice(0, 200);
       const mv = (root.querySelector('#movieInput').value || '').trim().slice(0, 40);
-      const nv = ((root.querySelector('#revNick') || {}).value || '').trim().slice(0, 12);
+      /* 남길 이름은 고정 — 로그인했으면 계정 닉네임, 아니면 '익명'(2026-11-19 사용자 요청).
+         후기 폼에서 이름을 직접 바꾸거나 비우는 일은 없다. */
+      const nv = whoName();
       if (!text && !draft.shots.length && !draft.ticket) { toast('사진이나 한마디, 별점 중 하나는 남겨주세요'); return; }
-      /* 후기 폼은 비우면 익명(기존 흐름 그대로), 1글자만 막는다 — public.nicknames 에도 올리지 않는다 */
-      if (nickTooShort(nv)) {
-        const ni = root.querySelector('#revNick');
-        if (ni) {
-          const dt = ni.closest('details'); if (dt) dt.open = true;   /* 접힌 '닉네임 · 태그 · 본 영화'를 펼쳐 안내를 보이게 */
-          ni.classList.add('bad'); try { ni.focus(); } catch (e) {}
-        }
-        nickDupPaint(root.querySelector('#revNickDup'), 'short');
-        toast(NICK_MIN_MSG);
-        return;
-      }
-      /* 남길 이름이 이미 다른 사람 것이면 등록을 막는다(익명은 확인하지 않음) */
-      saveBtn._busy = true; saveBtn.disabled = true;
-      let nres;
-      try { nres = await nickCheck(nv || nickname); } catch (e) { nres = { ok: true }; }
-      saveBtn._busy = false; saveBtn.disabled = false;
-      if (!nres.ok) {
-        const ni = root.querySelector('#revNick');
-        if (ni) { ni.classList.add('bad'); try { ni.focus(); ni.select(); } catch (e) {} }
-        nickDupPaint(root.querySelector('#revNickDup'), 'taken');
-        toast(NICK_TAKEN);
-        return;
-      }
-      if (nv) setNickname(nv);
       const bucket2 = ugcBucket();
       const prev = bucket2.seats[seat.key];
       const id = prev && prev.id ? prev.id : 'r' + Date.now();
-      const rec = { id, seat: seat.key, hall: h.name, author: nv || nickname || '익명', text, tags: [...draft.tags], rating: draft.rating || null, movie: mv, mm: mv ? mvMetaOf(mv) : '', ticket: draft.ticket || null, ticketVerified: !!(draft.ticket && draft.ticketVerified), shots: [...draft.shots], date: new Date().toISOString().slice(0, 10) };
+      const rec = { id, seat: seat.key, hall: h.name, author: nv, text, tags: [...draft.tags], rating: draft.rating || null, movie: mv, mm: mv ? mvMetaOf(mv) : '', ticket: draft.ticket || null, ticketVerified: !!(draft.ticket && draft.ticketVerified), shots: [...draft.shots], date: new Date().toISOString().slice(0, 10) };
       bucket2.seats[seat.key] = rec;
       bucket2.list = bucket2.list.filter((r) => !(r.seat === seat.key && r.id === id));
       bucket2.list.unshift({ ...rec, help: prev ? prev.help || 0 : 0 });
@@ -8302,12 +8282,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <div class="myhead">
         <button class="avatar" id="myAvatar" type="button" aria-label="프로필 사진 변경">${avatarHtml()}</button>
         <div style="flex:1;min-width:0">
-          <div class="my-name" id="myName">${esc(nickname || '내 좌석 기록')}</div>
-          <div class="my-sub" id="mySub">${AUTH.user ? (AUTH.profOff ? '이 기기에만 저장돼요' : '계정에 저장돼요 · 다른 기기에서도 이어져요') : (nickname ? '내 좌석 기록 · 이 기기에만 저장돼요' : '닉네임을 정하면 여기에 표시돼요')}</div>
+          <div class="my-name" id="myName">${esc(AUTH.user ? whoName() : '익명')}</div>
+          <div class="my-sub" id="mySub">${AUTH.user ? (AUTH.profOff ? '이 기기에만 저장돼요' : '계정에 저장돼요 · 다른 기기에서도 이어져요') : '비회원 · 로그인하지 않으면 기록이 지워질 수 있어요'}</div>
           <div class="my-actions">
             <button class="chip sm" id="avatarChange" type="button">프로필 사진 변경</button>
             <button class="chip sm" id="avatarClear" type="button" style="${avatarImg ? '' : 'display:none'}">사진 지우기</button>
-            <button class="chip sm" id="editNick" type="button">닉네임 ${nickname ? '변경' : '설정'}</button>
           </div>
         </div>
       </div>
@@ -8588,6 +8567,20 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     applying: false, _tm: 0
   };
 
+  /* 남길 이름 — 로그인했으면 계정 닉네임, 아니면 '익명'으로 고정(2026-11-19 사용자 요청).
+     후기 폼·내 기록 어느 곳에서도 이름을 직접 바꿀 수 없다. */
+  function whoName() {
+    if (AUTH.user) {
+      const pn = (AUTH.profile && AUTH.profile.nickname) ? String(AUTH.profile.nickname).slice(0, 12) : '';
+      return pn || nickname || '익명';
+    }
+    return '익명';
+  }
+  /* 첫 접속 로그인 안내 — '비회원으로 계속하기'를 고른 사람에게는 다시 묻지 않는다 */
+  const GUEST_KEY = 'cgv_guest_v1';
+  function guestOk() { try { return localStorage.getItem(GUEST_KEY) === '1'; } catch (e) { return false; } }
+  function setGuestOk() { try { localStorage.setItem(GUEST_KEY, '1'); } catch (e) {} }
+
   function lsGet(k, dflt) { try { const v = localStorage.getItem(k); return v == null ? dflt : JSON.parse(v); } catch (e) { return dflt; } }
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   /* 로그인 리다이렉트는 지금 페이지의 origin+pathname (쿼리·해시 제외) — GitHub Pages·로컬 모두 같은 코드 */
@@ -8798,6 +8791,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return `<div class="card card-pad authcard">
       <b class="auth-title">로그인하고 내 기록을 이어서</b>
       <p class="auth-lead">즐겨찾기·내 키·본 영화가 다른 기기에서도 그대로 열려요. 로그인 없이도 좌석 보기와 후기는 지금처럼 쓸 수 있어요.</p>
+      <p class="auth-warn">⚠️ 로그인하지 않고 이용하면 저장한 내 기록이 지워질 수 있어요.</p>
       <div class="authbtns">
         <button class="btn" id="authLoginBtn" type="button">로그인 / 회원가입</button>
       </div>
@@ -8860,6 +8854,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <div class="modal-grab"></div>
         <h3>영시미 로그인</h3>
         <p class="sub">로그인하면 즐겨찾기·키·본 영화가 다른 기기에서도 이어져요.<br>로그인 없이도 좌석 보기와 후기는 그대로 쓸 수 있어요.</p>
+        <p class="auth-warn">⚠️ 로그인하지 않고 이용하면 저장한 내 기록이 지워질 수 있어요.</p>
         <div class="auth-social">
           <button class="btn social google" type="button" data-oauth="google" id="authGoogle">${G_ICON}<span>구글로 계속하기</span></button>
         </div>
@@ -8870,11 +8865,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         </div>
         <div id="authForm"></div>
         <p class="authmsg" id="authMsg" hidden></p>
-        <button class="btn ghost" id="authClose" type="button" style="width:100%;margin-top:10px;background:#F2F4F6;color:#6B7684;border:0">닫기</button>
+        <button class="btn ghost" id="authGuest" type="button" style="width:100%;margin-top:10px;background:#fff;color:#6B7684;border:1px solid var(--line)">비회원으로 계속하기</button>
+        <button class="btn ghost" id="authClose" type="button" style="width:100%;margin-top:6px;background:#F2F4F6;color:#6B7684;border:0">닫기</button>
       </div>`;
     document.body.appendChild(wrap);
     wrap.querySelector('.modal-scrim').onclick = closeAuth;
     wrap.querySelector('#authClose').onclick = closeAuth;
+    wrap.querySelector('#authGuest').onclick = () => { setGuestOk(); closeAuth(); };
     wrap.querySelectorAll('[data-atab]').forEach((b) => { b.onclick = () => setAuthTab(b.dataset.atab); });
     wrap.querySelector('#authGoogle').onclick = () => authOAuth('google');
     setAuthTab(AUTH.tab);
@@ -9160,6 +9157,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   authInit();
   applyHash();
   render();
+  /* 첫 접속: 로그인 안 했고 '비회원으로 계속' 기록도 없으면 로그인 칸을 먼저 보여 준다.
+     (이미 로그인했거나 비회원을 고른 사람에게는 다시 묻지 않는다) */
+  setTimeout(() => {
+    try {
+      if (AUTH.session || AUTH.user || guestOk()) return;
+      if (!document.getElementById('authModal')) openAuth('login');
+    } catch (e) {}
+  }, 600);
   /* 예전 해시 주소(#/t/…)로 들어왔으면 주소창을 깔끔한 쿼리 주소로 바꿔 둔다 */
   try { if (location.hash) syncHash(false); } catch (e) {}
   /* 공용 후기·실사: 앱을 열 때 한 번, 이후에는 상영관에 들어갈 때 1분 스로틀로 새로 받는다.
