@@ -5423,7 +5423,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <div><b class="num">${seats.toLocaleString()}</b>좌석</div>
           <div><b class="num">${ok}</b>좌석표</div>
         </div>`}
-        ${ph ? `<div class="progress" style="background:var(--green-l)"><i style="width:100%;background:var(--green)"></i></div><div class="tregion" style="margin-top:6px;color:var(--green-d);font-weight:800">📷 사진 있는 좌석 ${ph}석</div>` : (t.halls.length ? `<div class="tregion" style="margin-top:8px;color:#8B95A1;font-weight:700">3D 시뮬레이션으로 보기</div>` : '')}
+        ${ph ? `<div class="progress" style="background:var(--green-l)"><i style="width:100%;background:var(--green)"></i></div><div class="tregion" style="margin-top:6px;color:var(--green-d);font-weight:800">📷 사진 있는 좌석 ${ph}석</div>` : ''}
       </button>`;
     }).join('') + (list.length === 0 ? `<div class="card empty-state" style="grid-column:1/-1"><div class="empty-ic">🔍</div><h3>조건에 맞는 지점이 없어요</h3><p>지역 탭이나 검색어를 바꿔 보세요.</p></div>` : '');
   }
