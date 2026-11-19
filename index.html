@@ -1824,7 +1824,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
   letter-spacing:-.01em;word-break:keep-all;
 }
 .nickdup[hidden]{display:none}
-.nickdup.taken{color:#C2410C}         /* 주황·빨강 — 다른 사람이 쓰는 이름 */
+.nickdup.taken,.nickdup.short{color:#C2410C}   /* 주황·빨강 — 다른 사람이 쓰는 이름 / 2글자 미만 */
 .nickdup.free{color:#047857}          /* 초록 — 쓸 수 있는 이름 */
 .nickdup.empty,.nickdup.unknown,.nickdup.checking{display:none}
 /* 문제가 있는 입력 칸은 테두리를 주황으로 — 문구와 함께 눈에 띄게 */
@@ -3896,6 +3896,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     wrap.querySelector('#nickSave').onclick = async () => {
       const btn = wrap.querySelector('#nickSave');
       if (!btn || btn.disabled) return;
+      /* 2글자 미만은 이름으로 쓰기엔 너무 짧다 — 모달에서는 빈 값도 받지 않는다(2026-11-19) */
+      if (nickKey(inp.value).length < 2) {
+        nickDupPaint(dupMsg, 'short');
+        if (inp) { inp.classList.add('bad'); try { inp.focus(); } catch (e) {} }
+        toast(NICK_MIN_MSG);
+        return;
+      }
       const label = nickname ? '저장' : '시작하기';
       btn.disabled = true; btn.textContent = '확인 중…';
       let res;
@@ -3909,7 +3916,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         return;
       }
       NICK_PEEK.set(nickKey(inp.value), 'mine');
-      setNickname(inp.value); closeNick(); toast(nickname ? '닉네임을 저장했어요' : '닉네임 없이 둘러볼게요'); render();
+      setNickname(inp.value); closeNick(); toast('닉네임을 저장했어요'); render();
     };
     inp.onkeydown = (e) => { if (e.key === 'Enter') wrap.querySelector('#nickSave').click(); };
     const sk = wrap.querySelector('#nickSkip');
@@ -4328,7 +4335,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return id;
   }
   const NICK_TAKEN = '이미 다른 사람이 사용 중인 닉네임이에요. 다른 닉네임을 입력해 주세요.';
+  const NICK_MIN_MSG = '닉네임은 2글자 이상 입력해 주세요.';
   function nickKey(n) { return String(n == null ? '' : n).trim().slice(0, 12); }
+  /* 공백을 뺀 글자 수 — 1글자는 너무 짧아 남과 구분되지 않는다 */
+  function nickTooShort(n) { return nickKey(n).length === 1; }
   /* seat_reviews 에 다른 사람이 쓴 같은 닉네임이 있는지(보조 확인).
      내가 올렸던 후기는 sb:<id> 형태로 이 기기에 기록돼 있어 내 것으로 가뤄낸다. */
   function nickInShared(nick) {
@@ -4411,6 +4421,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
   const NICK_LINE = {
     taken: '⚠ ' + NICK_TAKEN,
+    short: '⚠ ' + NICK_MIN_MSG,
     free: '✓ 사용할 수 있는 닉네임이에요.',
     mine: '',
     empty: '', unknown: '', checking: ''
@@ -4431,6 +4442,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       clearTimeout(timer);
       timer = setTimeout(() => {
         const v = nickKey(inp.value);
+        /* 1글자는 중복 확인을 하기 전에 먼저 알려 준다 */
+        if (v.length === 1) { nickDupPaint(msg, 'short'); inp.classList.add('bad'); return; }
         if (!v || v === '익명' || v === nickKey(nickname)) { nickDupPaint(msg, 'empty'); inp.classList.remove('bad'); return; }
         const my = ++seq;
         nickPeek(v).then((r) => {
@@ -4440,7 +4453,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         });
       }, delay);
     };
-    inp.addEventListener('input', () => { if (inp.classList.contains('bad')) inp.classList.remove('bad'); run(450); });
+    inp.addEventListener('input', () => {
+      /* 1글자 안내는 0.45초 기다리지 않고 바로 — 글자를 지우면 문구도 바로 지운다 */
+      if (nickTooShort(inp.value)) { nickDupPaint(msg, 'short'); inp.classList.add('bad'); }
+      else if (inp.classList.contains('bad')) { inp.classList.remove('bad'); nickDupPaint(msg, 'empty'); }
+      run(450);
+    });
     inp.addEventListener('blur', () => run(0));
   }
   function helpMine() { return lsGet(HELP_MINE, {}); }
@@ -7281,6 +7299,17 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const mv = (root.querySelector('#movieInput').value || '').trim().slice(0, 40);
       const nv = ((root.querySelector('#revNick') || {}).value || '').trim().slice(0, 12);
       if (!text && !draft.shots.length && !draft.ticket) { toast('사진이나 한마디, 별점 중 하나는 남겨주세요'); return; }
+      /* 후기 폼은 비우면 익명(기존 흐름 그대로), 1글자만 막는다 — public.nicknames 에도 올리지 않는다 */
+      if (nickTooShort(nv)) {
+        const ni = root.querySelector('#revNick');
+        if (ni) {
+          const dt = ni.closest('details'); if (dt) dt.open = true;   /* 접힌 '닉네임 · 태그 · 본 영화'를 펼쳐 안내를 보이게 */
+          ni.classList.add('bad'); try { ni.focus(); } catch (e) {}
+        }
+        nickDupPaint(root.querySelector('#revNickDup'), 'short');
+        toast(NICK_MIN_MSG);
+        return;
+      }
       /* 남길 이름이 이미 다른 사람 것이면 등록을 막는다(익명은 확인하지 않음) */
       saveBtn._busy = true; saveBtn.disabled = true;
       let nres;
