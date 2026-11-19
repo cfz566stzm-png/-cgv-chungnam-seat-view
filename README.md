@@ -199,6 +199,7 @@ CGV **전국 177개 지점, 797개 상영관, 109,453석**의 예매 좌석표�
 ## 배포
 
 - **사이트**: GitHub Pages, `main` 브랜치 루트(`/`)를 그대로 서빙합니다. 빌드 과정은 없습니다.
+- **도메인**: `yeongsimi.kr`(호스팅케이알 등록, 1년) — 저장소 루트의 `CNAME` 파일로 GitHub Pages 맞춤 도메인을 유지합니다. DNS는 A `185.199.108~111.153`(루트) + CNAME `cfz566stzm-png.github.io`(www). 옛 주소 `cfz566stzm-png.github.io/-cgv-chungnam-seat-view/`는 새 도메인으로 리디렉션됩니다.
 - **티켓 OCR 함수**: `api/ocr.js`는 Vercel에 따로 올려 `/api/ocr`로 동작합니다(GitHub Pages는 Node 함수를 실행하지 않습니다).
   1. Vercel에서 이 저장소를 Import (프레임워크 없음 / 그대로 배포)
   2. 프로젝트 → Settings → Environment Variables 에 `GEMINI_API_KEY` 추가 (키는 저장소에 넣지 않습니다)
