@@ -8892,7 +8892,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <div class="agegrid" role="radiogroup" aria-label="연령대">
           ${AGE_OPTS.map((a) => `<button class="agechip" type="button" role="radio" aria-checked="${curAge === a}" data-age="${a}">${a}</button>`).join('')}
         </div>
-        <label class="consent" style="margin-top:14px"><input type="checkbox" id="profAgree" ${(AUTH.profile && AUTH.profile.consent_at) || force ? '' : ''}><span><b>[필수]</b> 이메일·닉네임·연령대를 회원 구분과 기록 동기화 목적으로 저장하는 데 동의해요.</span></label>
+        <label class="consent" style="margin-top:14px"><input type="checkbox" id="profAgree" ${(AUTH.profile && AUTH.profile.consent_at) ? 'checked' : ''}><span><b>[필수]</b> 이메일·닉네임·연령대를 회원 구분과 기록 동기화 목적으로 저장하는 데 동의해요.</span></label>
         <p class="authmsg" id="profMsg" hidden></p>
         <button class="btn" id="profSave" type="button" style="width:100%;margin-top:12px">저장하고 시작하기</button>
         ${force ? '' : `<button class="btn ghost" id="profClose" type="button" style="width:100%;margin-top:8px;background:#F2F4F6;color:#6B7684;border:0">닫기</button>`}
