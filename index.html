@@ -833,7 +833,9 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .rtabs::-webkit-scrollbar{display:none;height:0}
 .rtab{flex:1 1 auto;min-width:max-content;padding:0 10px;white-space:nowrap;text-overflow:clip;overflow:visible;flex-shrink:0}
 @media (max-width:959px){ .hometools .tabsrow .rtabs{flex:1 1 100%} }
-@media (max-width:420px){ .rtabs{gap:4px;padding:4px} .rtab{font-size:12px;height:38px;padding:0 8px} }
+@media (max-width:420px){ .rtabs{gap:4px;padding:4px} .rtab{font-size:12px;height:38px;padding:0 8px}
+  /* 390px 폰: 마지막 탭 뒤 여백을 탭 사이 간격(4px)과 같게 — '광주·전라·제주' 뒤 빈 칸 최소화 */
+  .rtabs-wrap.overflowing .rtabs{padding-right:6px} }
 
 /* DOLBY ATMOS 배지 색 */
 .badge.dolby{background:#EAF1FE;color:#1D4ED8}
@@ -1159,14 +1161,19 @@ body{font-size:16px}
 /* --- 지역 탭 스크롤 힌트 --- */
 .rtabs-wrap{position:relative;flex:1 1 auto;min-width:0;display:flex}
 .rtabs-wrap .rtabs{flex:1 1 auto}
-/* 힌트(›) 폭만큼 탭 줄에 오른쪽 여백을 줘서 마지막 탭 글자가 힌트 밑으로 들어가지 않게 한다.
-   끝까지 스크롤되면 힌트를 감춘다(.scrollable 해제) — IMG_7249 '주' 가림 수정 */
-.rtabs-wrap.overflowing .rtabs{padding-right:30px}
-.rtabs-hint{position:absolute;right:0;top:0;bottom:0;width:30px;display:none;align-items:center;justify-content:flex-end;
-  font-size:17px;font-weight:900;color:#047857;pointer-events:none;
-  background:linear-gradient(90deg,rgba(237,240,243,0),#EDF0F3 55%)}
+/* 힌트(›)는 탭 줄 위에 겹쳐 띄우기만 하고, 탭 줄 오른쪽 여백은 탭 사이 간격과 같은 정도(10px)만 둔다.
+   예전에는 힌트 폭 30px 를 그대로 여백으로 잡아서, 끝까지 스크롤했을 때 마지막 탭 '광주·전라·제주'
+   오른쪽에 회색 빈 칸이 크게 남았다(2026-11-19 지적). 끝까지 스크롤되면 힌트를 감추므로(.scrollable 해제)
+   마지막 탭 글자가 힌트 밑으로 들어가는 문제(IMG_7249 '주' 가림)는 그대로 막힌다. */
+.rtabs-wrap.overflowing .rtabs{padding-right:10px}
+.rtabs-hint{position:absolute;right:0;top:0;bottom:0;width:24px;display:none;align-items:center;justify-content:flex-end;
+  padding-right:2px;font-size:15px;font-weight:900;color:#047857;pointer-events:none;
+  background:linear-gradient(90deg,rgba(242,244,246,0),#F2F4F6 62%)}
 .rtabs-wrap.scrollable .rtabs-hint{display:flex}
-@media (min-width:960px){ .rtabs-hint{display:none !important} }
+@media (min-width:960px){
+  .rtabs-hint{display:none !important}
+  .rtabs-wrap.overflowing .rtabs{padding-right:0}
+}
 
 /* --- 3D: 로딩·실패 대체 안내·화각·고지 --- */
 .v3d{position:relative}
@@ -1806,6 +1813,26 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 /* 시야 분석 표는 원래 스타일(라벨 왼쪽·값 오른쪽 한 줄)로 되돌렸다 — 2026-11-19 사용자 요청.
    7a3e682·9a3b056에서 넣었던 3열 그리드·라벨 nowrap 덮어쓰기는 지웠다. */
 
+/* =======================================================================
+   2026-11-19 — 닉네임 중복 안내 (닉네임 모달 · 후기 폼 닉네임 칸 아래)
+   ======================================================================= */
+.nickdup{
+  display:block;margin:7px 2px 0;font-size:12px;font-weight:800;line-height:1.55;
+  letter-spacing:-.01em;word-break:keep-all;
+}
+.nickdup[hidden]{display:none}
+.nickdup.taken{color:#C2410C}         /* 주황·빨강 — 다른 사람이 쓰는 이름 */
+.nickdup.free{color:#047857}          /* 초록 — 쓸 수 있는 이름 */
+.nickdup.empty,.nickdup.unknown,.nickdup.checking{display:none}
+/* 문제가 있는 입력 칸은 테두리를 주황으로 — 문구와 함께 눈에 띄게 */
+.nickinput.bad,.nickrow input.bad{
+  border-color:#F59E0B !important;background:#FFFBF3 !important;
+  box-shadow:0 0 0 3px rgba(245,158,11,.14);
+}
+.nickrow input.bad:focus{border-color:#F59E0B !important}
+@media (max-width:959px){
+  .nickdup{font-size:12.5px;margin-top:6px}
+}
 
 </style>
 </head>
@@ -3854,12 +3881,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <h3>어떻게 불러드릴까요?</h3>
         <p class="sub">좌석 후기에 함께 표시되는 닉네임이에요.<br>나중에 언제든 바꿀 수 있어요.</p>
         <input id="nickInput" class="nickinput" type="text" maxlength="12" placeholder="닉네임 (최대 12자)" value="${esc(nickname)}">
+        <p class="nickdup" id="nickDup" hidden></p>
         <button class="btn" id="nickSave" style="width:100%;margin-top:12px">${nickname ? '저장' : '시작하기'}</button>
         ${force ? '' : `<button class="btn ghost" id="nickSkip" style="width:100%;margin-top:8px;background:#F2F4F6;color:#6B7684">건너뛰기</button>`}
       </div>`;
     document.body.appendChild(wrap);
     const inp = wrap.querySelector('#nickInput');
+    const dupMsg = wrap.querySelector('#nickDup');
     setTimeout(() => inp && inp.focus(), 120);
+    nickDupWatch(inp, dupMsg);
     wrap.querySelector('#nickSave').onclick = async () => {
       const btn = wrap.querySelector('#nickSave');
       if (!btn || btn.disabled) return;
@@ -3869,10 +3899,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       try { res = await nickCheck(inp.value); } catch (e) { res = { ok: true }; }
       btn.disabled = false; btn.textContent = label;
       if (!res.ok) {
+        /* 입력 칸 아래에도 같은 안내를 남긴다 — 토스트만으로는 지나가 버린다 */
+        nickDupPaint(dupMsg, 'taken');
+        if (inp) { inp.classList.add('bad'); try { inp.focus(); inp.select(); } catch (e) {} }
         toast(NICK_TAKEN);
-        if (inp) { try { inp.focus(); inp.select(); } catch (e) {} }
         return;
       }
+      NICK_PEEK.set(nickKey(inp.value), 'mine');
       setNickname(inp.value); closeNick(); toast(nickname ? '닉네임을 저장했어요' : '닉네임 없이 둘러볼게요'); render();
     };
     inp.onkeydown = (e) => { if (e.key === 'Enter') wrap.querySelector('#nickSave').click(); };
@@ -4291,7 +4324,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     cookieSet(OWN_COOKIE, id, 365);
     return id;
   }
-  const NICK_TAKEN = '이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해 주세요.';
+  const NICK_TAKEN = '이미 다른 사람이 사용 중인 닉네임이에요. 다른 닉네임을 입력해 주세요.';
   function nickKey(n) { return String(n == null ? '' : n).trim().slice(0, 12); }
   /* seat_reviews 에 다른 사람이 쓴 같은 닉네임이 있는지(보조 확인).
      내가 올렸던 후기는 sb:<id> 형태로 이 기기에 기록돼 있어 내 것으로 가뤄낸다. */
@@ -4353,6 +4386,59 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       if (row) return String(row.owner_id || '') === me ? { ok: true } : { ok: false, why: 'taken' };
       return nickClaim(nm, me);
     }).catch(() => (nickInShared(nm) ? { ok: false, why: 'taken' } : { ok: true }));
+  }
+
+  /* ---------- 닉네임 중복 안내 (입력 칸 아래 문구) ----------
+     저장하기 전에 미리 알려 준다. 여기서는 선점(POST)하지 않고 '지금 누가 쓰고 있는지'만 본다.
+     · 내 owner_id 것이면 중복이 아니다(mine — 안내하지 않음)
+     · 남의 것이면 taken → 주황/빨강 문구
+     · 확인 실패는 조용히 넘긴다(등록 자체는 저장할 때 판단) */
+  const NICK_PEEK = new Map();
+  function nickPeek(nick) {
+    const nm = nickKey(nick);
+    if (!nm || nm === '익명') return Promise.resolve({ state: 'empty' });
+    if (NICK_PEEK.has(nm)) return Promise.resolve({ state: NICK_PEEK.get(nm) });
+    const keep = (st) => { NICK_PEEK.set(nm, st); return { state: st }; };
+    if (sbMissing('nicknames')) return Promise.resolve(keep(nickInShared(nm) ? 'taken' : 'free'));
+    const me = ownerId();
+    return nickFind(nm).then((row) => {
+      if (!row) return keep('free');
+      return keep(String(row.owner_id || '') === me ? 'mine' : 'taken');
+    }).catch(() => ({ state: 'unknown' }));
+  }
+  const NICK_LINE = {
+    taken: '⚠ ' + NICK_TAKEN,
+    free: '✓ 사용할 수 있는 닉네임이에요.',
+    mine: '',
+    empty: '', unknown: '', checking: ''
+  };
+  function nickDupPaint(msg, state) {
+    if (!msg) return;
+    const line = NICK_LINE[state] || '';
+    msg.className = 'nickdup ' + state;
+    msg.dataset.state = state;
+    if (!line) { msg.hidden = true; msg.textContent = ''; return; }
+    msg.hidden = false; msg.textContent = line;
+  }
+  /* 입력 중(0.45초 멈추면)·포커스가 빠질 때 확인. 결과가 늦게 와도 최신 글자만 반영한다. */
+  function nickDupWatch(inp, msg) {
+    if (!inp || !msg) return;
+    let timer = 0, seq = 0;
+    const run = (delay) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const v = nickKey(inp.value);
+        if (!v || v === '익명' || v === nickKey(nickname)) { nickDupPaint(msg, 'empty'); inp.classList.remove('bad'); return; }
+        const my = ++seq;
+        nickPeek(v).then((r) => {
+          if (my !== seq || nickKey(inp.value) !== v) return;   /* 그 사이에 글자가 바뀌었다 */
+          nickDupPaint(msg, r.state === 'taken' ? 'taken' : (r.state === 'free' ? 'free' : 'empty'));
+          inp.classList.toggle('bad', r.state === 'taken');
+        });
+      }, delay);
+    };
+    inp.addEventListener('input', () => { if (inp.classList.contains('bad')) inp.classList.remove('bad'); run(450); });
+    inp.addEventListener('blur', () => run(0));
   }
   function helpMine() { return lsGet(HELP_MINE, {}); }
   function helpVoted() { return lsGet(HELP_VOTED, {}); }
@@ -4870,23 +4956,22 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
   /* 지역 탭 스크롤 힌트(›)
      IMG_7249: 오른쪽 끝까지 스크롤한 상태에서 힌트가 마지막 탭 '광주·전라·제주'의 '주'를 덮었다.
-     → 넘치는 동안에는 탭 줄에 오른쪽 여백(힌트 폭)을 줘서 글자가 힌트 밑으로 들어가지 않게 하고,
-       끝까지 스크롤되면 힌트를 감춘다. */
-  const RTAB_HINT_W = 30;
+     → 끝에 가까워지면 힌트를 감춘다. 탭 줄 오른쪽 여백은 탭 사이 간격 정도(6~10px)만 두고,
+       끝까지 스크롤했을 때 마지막 탭 뒤에 빈 칸이 남지 않게 한다(2026-11-19). */
+  const RTAB_HINT_W = 24;   /* 힌트(›) 폭 — CSS .rtabs-hint 와 같게 */
+  const RTAB_EDGE = 12;     /* 끝에서 이만큼 남으면 힌트를 감춘다(마지막 탭 글자를 덮지 않게) */
   function paintRegionHint() {
     const box = document.getElementById('rtabs');
     const wr = box && box.closest('.rtabs-wrap');
     if (!box || !wr) return;
     const max = Math.max(0, box.scrollWidth - box.clientWidth);
     const overflow = max > 2;
-    /* 힌트가 보이는 동안에는 마지막 탭 오른쪽에 항상 힌트 폭 이상의 여유가 남도록,
-       끝에서 (힌트 폭+3) 남은 지점에 닿으면 힌트를 감춘다 — 그래야 글자와 절대 겹치지 않는다 */
-    const atEnd = max <= 2 || box.scrollLeft >= max - (RTAB_HINT_W + 3);
-    wr.classList.toggle('overflowing', overflow);   /* 오른쪽 여백(힌트 폭) 유지 */
+    const atEnd = max <= 2 || box.scrollLeft >= max - RTAB_EDGE;
+    wr.classList.toggle('overflowing', overflow);   /* 오른쪽 여백 유지 */
     wr.classList.toggle('scrollable', overflow && !atEnd);  /* 화살표 표시 */
     wr.classList.toggle('at-end', atEnd);
   }
-  /* 선택된 지역 탭이 화면 밖이면(마지막 탭 등) 힌트 폭만큼 여유를 두고 끝까지 스크롤한다 */
+  /* 선택된 지역 탭이 화면 밖이면(마지막 탭 등) 끝까지 스크롤한다 */
   function regionTabIntoView() {
     const box = document.getElementById('rtabs');
     if (!box) return;
@@ -4895,7 +4980,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const br = box.getBoundingClientRect(), sr = sel.getBoundingClientRect();
     if (sr.left >= br.left && sr.right <= br.right) return;
     const max = Math.max(0, box.scrollWidth - box.clientWidth);
-    box.scrollLeft = Math.max(0, Math.min(max, box.scrollLeft + (sr.right - br.right) + RTAB_HINT_W + 8));
+    box.scrollLeft = Math.max(0, Math.min(max, box.scrollLeft + (sr.right - br.right) + 8));
   }
 
   /* 상단 막대 높이를 재서 '현재 지점·상영관' 막대가 그 바로 아래에 붙게 */
@@ -6764,6 +6849,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <input id="revNick" maxlength="12" placeholder="비우면 익명" value="${esc(nickname)}" autocomplete="off">
         <span>후기를 남길 때만 쓰여요</span>
       </div>
+      <p class="nickdup" id="revNickDup" hidden></p>
 
       <div class="tagpick" id="tags">${tags.map((tg) => `<button data-tag="${tg}" aria-pressed="${mine && (mine.tags || []).includes(tg)}">${tg}</button>`).join('')}</div>
 
@@ -7183,6 +7269,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     };
 
     const saveBtn = root.querySelector('#saveReview');
+    /* 닉네임 칸 아래 중복 안내 — 입력을 멈추거나 포커스가 빠질 때 바로 알려 준다 */
+    const rni = root.querySelector('#revNick');
+    const rniMsg = root.querySelector('#revNickDup');
+    if (rni) nickDupWatch(rni, rniMsg);
     if (saveBtn) saveBtn.onclick = async () => {
       if (saveBtn._busy) return;
       const text = (root.querySelector('#reviewText').value || '').trim().slice(0, 200);
@@ -7195,9 +7285,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       try { nres = await nickCheck(nv || nickname); } catch (e) { nres = { ok: true }; }
       saveBtn._busy = false; saveBtn.disabled = false;
       if (!nres.ok) {
-        toast(NICK_TAKEN);
         const ni = root.querySelector('#revNick');
-        if (ni) { try { ni.focus(); ni.select(); } catch (e) {} }
+        if (ni) { ni.classList.add('bad'); try { ni.focus(); ni.select(); } catch (e) {} }
+        nickDupPaint(root.querySelector('#revNickDup'), 'taken');
+        toast(NICK_TAKEN);
         return;
       }
       if (nv) setNickname(nv);
