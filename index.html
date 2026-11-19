@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>영시미 — 영화관 좌석 시야 평점</title>
-<meta name="description" content="전국 CGV 177개 지점의 실제 예매 좌석표로 좌석별 시야각·거리·가림을 계산해 미리 보는 서비스. 서울·경기·인천·강원·대전·충청·부산·울산·대구·경상·광주·전라·제주. IMAX·4DX·SCREENX·씨네드쉐프까지.">
+<title>영시미 — 영화관 177개 지점 좌석 시야 평점</title>
+<meta name="description" content="CGV 영화관 177개 지점의 실제 예매 좌석표로 좌석별 시야·거리·단차·앞사람 가림을 계산해 예매 전에 미리 보는 서비스. 서울·경기·인천·강원·대전·충청·부산·울산·대구·경상·광주·전라·제주. IMAX·4DX·SCREENX·씨네드쉐프까지.">
 <meta name="theme-color" content="#F2F4F6">
 <link rel="canonical" href="https://yeongsimi.kr/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -15,8 +15,8 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="영시미">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" content="영시미 — 영화관 좌석 시야 평점">
-<meta property="og:description" content="전국 CGV 실제 예매 좌석표로 좌석마다 시야·거리·단차·앞사람 가림을 3D로 미리 확인하는 서비스.">
+<meta property="og:title" content="영시미 — 영화관 177개 지점 좌석 시야 평점">
+<meta property="og:description" content="CGV 영화관 177개 지점 실제 예매 좌석표로 좌석마다 시야·거리·단차·앞사람 가림을 3D로 미리 확인하는 서비스.">
 <meta property="og:url" content="https://yeongsimi.kr/">
 <meta property="og:image" content="https://yeongsimi.kr/media/og-image.png">
 <meta property="og:image:type" content="image/png">
@@ -24,8 +24,8 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="영시미 — 좌석마다 시야를 미리 봅니다">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="영시미 — 영화관 좌석 시야 평점">
-<meta name="twitter:description" content="전국 CGV 실제 예매 좌석표로 좌석마다 시야·거리·단차·앞사람 가림을 3D로 미리 확인하는 서비스.">
+<meta name="twitter:title" content="영시미 — 영화관 177개 지점 좌석 시야 평점">
+<meta name="twitter:description" content="CGV 영화관 177개 지점 실제 예매 좌석표로 좌석마다 시야·거리·단차·앞사람 가림을 3D로 미리 확인하는 서비스.">
 <meta name="twitter:image" content="https://yeongsimi.kr/media/og-image.png">
 <script>
 /* 화면에 문제가 생겼을 때 사용자에게 안내하고, 원인을 확인할 수 있도록 조용히 모아 둔다 */
@@ -1963,7 +1963,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
       </span>
     </button>
     <span class="topbar-spacer"></span>
-    <span class="top-badge desktop-only"><i class="dot"></i><span id="topBadge">서울·대전·충청 49개 지점</span></span>
+    <span class="top-badge desktop-only"><i class="dot"></i><span id="topBadge">영화관 177개 지점</span></span>
     <button class="chip sm" data-go="my" style="margin-left:8px">내 기록</button>
     <button class="chip sm" id="authTopBtn" type="button" data-auth="out" style="margin-left:6px">로그인</button>
   </div>
@@ -5195,7 +5195,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }
     stopMedia();
     const tb = document.getElementById('topBadge');
-    if (tb) tb.textContent = areaScopeLabel() + ' ' + DATA.meta.theaterCount + '개 지점';
+    if (tb) {
+      /* 2026-11-20 사용자 요청 — 기본(전국)에서는 '전국' 대신 '영화관 177개 지점'으로. 지역을 골랐을 때는 지역 이름 그대로. */
+      const scope = areaScopeLabel();
+      tb.textContent = (scope === '전국' ? '영화관' : scope) + ' ' + DATA.meta.theaterCount + '개 지점';
+    }
     /* 하단 탭바: 지금 보고 있는 화면을 표시(지점 / 내 기록) */
     document.querySelectorAll('.tabbar .tabbtn').forEach((b) => {
       const on = (b.getAttribute('data-go') === 'my') === (state.view === 'my');
@@ -5667,7 +5671,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const pctReady = st.halls ? Math.round((st.ready / st.halls) * 100) : 0;
     return `
     <section class="hero">
-      <h1>${areaScopeLabel()} CGV ${st.theaters}개 지점,<br>좌석마다 시야를 미리 봅니다</h1>
+      <h1>영화관 ${st.theaters}개 지점,<br>예매 전에 내 자리 시야부터</h1>
       <p><span class="hero-p-full">실제 예매 좌석표를 그대로 옮겨, 그 자리에 앉았을 때 화면이 어떻게 보이는지 3D로 미리 확인하세요. 좌석을 고르면 시야·거리·단차·앞사람 가림을 한 화면에서 보여드려요.</span><span class="hero-p-short">실제 예매 좌석표 그대로, 앉은 자리에서 보이는 화면을 3D로 미리 확인하세요.</span></p>
       <div class="hero-stats">
         <div class="hstat"><b class="num">${st.theaters}</b><span>지점</span></div>
@@ -7086,8 +7090,19 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const tags = ['명당', '몰입 잘 됨', '앞사람 안 가림', '자막 잘 보임', '사운드 좋음'];
     const shots = (mine && mine.shots) || [];
     const movie = mine && mine.movie ? mine.movie : '';
-    /* 평점 — 이 자리 후기들의 평균 */
-    const rated = reviews.concat(mine && mine.rating ? [mine] : []).map((r) => r.rating).filter((v) => typeof v === 'number' && v > 0);
+    /* 평점 — 이 자리 후기들의 평균.
+       내 후기는 저장할 때 bucket.seats 와 bucket.list 양쪽에 들어가서 reviews 목록에 이미 포함된다.
+       그래서 목록에 없을 때(오래돼 list 에서 밀려난 경우)만 따로 더하고, 같은 후기는 한 번만 센다.
+       2026-11-20 수정 — 예전에는 늘 [mine] 을 더해서 내 별점이 두 번 계산됐다. */
+    const counted = Object.create(null);
+    const rated = [];
+    reviews.forEach((r) => {
+      if (!r) return;
+      const k = r.id ? String(r.id) : '';
+      if (k) { if (counted[k]) return; counted[k] = 1; }
+      if (typeof r.rating === 'number' && r.rating > 0) rated.push(r.rating);
+    });
+    if (mine && typeof mine.rating === 'number' && mine.rating > 0 && !(mine.id && counted[String(mine.id)])) rated.push(mine.rating);
     const avgRating = rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : 0;
     /* 선택 항목 — 모바일에선 접어 두고, 꼭 쓰는 사람만 펼친다 */
     const optional = `
