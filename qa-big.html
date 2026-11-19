@@ -41,7 +41,8 @@
     } catch (e) {}
   }, 8);
 
-  f.src = './index.html' + path;
+  /* ?cb= 로 브라우저·CDN 캐시를 매번 비켜 간다 — 예전 빌드가 보이면 QA가 거짓말을 한다 */
+  f.src = './index.html?cb=' + Date.now() + path;
 
   window.__qa = {
     errs: function () { return window.__errs.slice(); },
