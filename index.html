@@ -1837,6 +1837,75 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
   .nickdup{font-size:12.5px;margin-top:6px}
 }
 
+/* =======================================================================
+   2026-11-19 — 로그인(구글·카카오·이메일) · 프로필 동기화
+   ======================================================================= */
+.authcard{border:1px solid var(--line)}
+.auth-title{display:block;font-size:15.5px;font-weight:850;letter-spacing:-.03em;color:var(--ink)}
+.auth-lead{margin-top:6px;font-size:12.5px;font-weight:600;line-height:1.6;color:var(--mute);word-break:keep-all}
+.authbtns{display:flex;gap:8px;margin-top:12px}
+.authbtns .btn{flex:1}
+.authrow{display:flex;align-items:center;gap:8px}
+.authrow #authEdit,.authrow #authOut{flex:0 0 auto}
+.authmark{flex:0 0 auto;width:34px;height:34px;border-radius:11px;background:var(--green-l);color:var(--green-d);
+  display:flex;align-items:center;justify-content:center}
+.auth-mail{font-size:14px;font-weight:850;letter-spacing:-.02em;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.auth-sub{margin-top:2px;font-size:12px;font-weight:700;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* 로그인 모달 */
+.auth-card{padding-bottom:22px}
+.auth-social{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.btn.social{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;border-radius:14px;
+  font-size:14.5px;font-weight:800;letter-spacing:-.02em;box-shadow:none}
+.btn.social.google{background:#fff;color:#1F1F1F;border:1px solid var(--line)}
+.btn.social.kakao{background:#FEE500;color:#191600;border:1px solid #FEE500}
+.btn.social .social-ic{flex:0 0 auto}
+.auth-or{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--mute);font-size:11.5px;font-weight:800}
+.auth-or::before,.auth-or::after{content:'';flex:1;height:1px;background:var(--line)}
+.authtabs{display:flex;gap:4px;background:#F2F4F6;border-radius:12px;padding:3px}
+.authtab{flex:1;height:38px;border:0;border-radius:9px;background:transparent;color:var(--mute);
+  font-size:13.5px;font-weight:800;letter-spacing:-.02em;cursor:pointer}
+.authtab[aria-selected="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(25,31,40,.1)}
+.authfields{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.authinput{width:100%;height:50px;border-radius:14px;border:1px solid var(--line);background:#F7F9FA;padding:0 14px;
+  font-size:16px;font-weight:700;color:var(--ink)}
+.authinput:focus{outline:none;border-color:var(--green);background:#fff}
+.consent{display:flex;align-items:flex-start;gap:9px;margin-top:12px;padding:11px 12px;border-radius:13px;
+  background:#F7F9FA;font-size:12px;font-weight:600;line-height:1.6;color:var(--sub);word-break:keep-all;cursor:pointer}
+.consent input{flex:0 0 auto;width:18px;height:18px;margin:1px 0 0;accent-color:var(--green)}
+.consent b{font-weight:850;color:var(--ink-2)}
+.authmsg{margin-top:10px;font-size:12.5px;font-weight:800;line-height:1.55;color:#C2410C;word-break:keep-all}
+.authmsg.ok{color:#047857}
+.authmsg[hidden]{display:none}
+.authlink{display:block;width:100%;margin-top:10px;border:0;background:none;color:var(--mute);
+  font-size:12.5px;font-weight:800;text-decoration:underline;cursor:pointer}
+.authdone{text-align:center;padding:14px 4px 4px}
+.authdone b{display:block;font-size:15px;font-weight:850;letter-spacing:-.02em}
+.authdone p{margin-top:8px;font-size:12.5px;font-weight:600;line-height:1.65;color:var(--mute);word-break:keep-all}
+.authdone .btn{margin-top:14px;width:100%}
+
+/* 온보딩 연령대 */
+.agelabel{margin-top:14px;font-size:12.5px;font-weight:850;color:var(--ink-2)}
+.agegrid{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.agechip{height:40px;padding:0 15px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--sub);
+  font-size:13.5px;font-weight:800;letter-spacing:-.02em;cursor:pointer}
+.agechip[aria-checked="true"]{border-color:var(--green);background:var(--green-l);color:var(--green-dd)}
+
+/* 상단 로그인 칩 */
+#authTopBtn[data-auth="in"]{border-color:var(--green-soft);background:var(--green-l);color:var(--green-dd)}
+
+/* 본 영화 칩 */
+.seenwrap{display:flex;flex-wrap:wrap;gap:6px}
+.seenchip{display:inline-flex;align-items:center;height:30px;padding:0 11px;border-radius:99px;background:#fff;
+  border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--sub)}
+.seenchip.more{color:var(--mute)}
+
+@media (max-width:420px){
+  .authrow{gap:6px}
+  .authrow .chip{padding:0 9px}
+  .btn.social{height:46px}
+}
+
 </style>
 </head>
 <body>
@@ -1861,6 +1930,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
     <span class="topbar-spacer"></span>
     <span class="top-badge desktop-only"><i class="dot"></i><span id="topBadge">서울·대전·충청 49개 지점</span></span>
     <button class="chip sm" data-go="my" style="margin-left:8px">내 기록</button>
+    <button class="chip sm" id="authTopBtn" type="button" data-auth="out" style="margin-left:6px">로그인</button>
   </div>
 </header>
 
@@ -3784,6 +3854,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       favs[k] = { tid, hid, seat, t: t ? t.name : '', h: h ? h.name : '', at: Date.now() };
     }
     saveFavs();
+    try { profileSchedule(); } catch (e) {}
     return !!favs[k];
   }
 
@@ -4713,6 +4784,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   })();
   function saveViewerSize() {
     try { localStorage.setItem(EYE_KEY, JSON.stringify(viewerSize)); } catch (e) {}
+    try { profileSchedule(); } catch (e) {}   /* 로그인 상태면 계정에도 키·눈높이를 남긴다 */
   }
   function baseEye(p) { return (p && p.eye > 0.5) ? p.eye : 1.05; }
   /* 이 사람의 앉은 눈높이(m) — 좌석 열 바닥 기준 */
@@ -7411,6 +7483,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         verified: !!(rec.ticketVerified && rec.ticket)
       };
       if (SB_RATING && rec.rating) body.rating = rec.rating;
+      /* 로그인 상태면 후기를 계정에 연결한다. user_id 컬럼이 아직 없으면(400) 그 칸만 빼고 보낸다. */
+      if (AUTH.user && AUTH.user.id) body.user_id = AUTH.user.id;
       const tm = sbTimer(20000);
       let row = null;
       let posted = false;
@@ -7440,6 +7514,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
               body: JSON.stringify(body)
             });
           }
+        }
+        if (r.status === 400 && body.user_id) {
+          delete body.user_id;
+          r = await fetch(SB_URL + '/rest/v1/seat_reviews', {
+            method: 'POST', signal: tm.signal,
+            headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=representation' }),
+            body: JSON.stringify(body)
+          });
         }
         if (!r.ok) throw new Error('HTTP ' + r.status);
         posted = true;
@@ -8056,13 +8138,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       });
     });
     timeline.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+    const seen = seenAll();
     return `
-    <div class="card card-pad">
+    ${authCardHtml()}
+    <div class="card card-pad" style="margin-top:10px">
       <div class="myhead">
         <button class="avatar" id="myAvatar" type="button" aria-label="프로필 사진 변경">${avatarHtml()}</button>
         <div style="flex:1;min-width:0">
           <div class="my-name" id="myName">${esc(nickname || '내 좌석 기록')}</div>
-          <div class="my-sub" id="mySub">${nickname ? '내 좌석 기록' : ''}</div>
+          <div class="my-sub" id="mySub">${AUTH.user ? (AUTH.profOff ? '이 기기에만 저장돼요' : '계정에 저장돼요 · 다른 기기에서도 이어져요') : (nickname ? '내 좌석 기록 · 이 기기에만 저장돼요' : '닉네임을 정하면 여기에 표시돼요')}</div>
           <div class="my-actions">
             <button class="chip sm" id="avatarChange" type="button">프로필 사진 변경</button>
             <button class="chip sm" id="avatarClear" type="button" style="${avatarImg ? '' : 'display:none'}">사진 지우기</button>
@@ -8101,6 +8185,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
             <i>CGV ${esc(r.tName)} · ${esc(r.hName)} · ${esc(r.seat)}</i></span>
           ${r.ticket ? '<span class="tthumb">🎫</span>' : (r.shots && r.shots.length ? `<span class="tthumb"><img src="${esc(r.shots[0])}" alt=""></span>` : '')}
         </button>`).join('')}</div>`}
+
+    ${seen.length ? `<div class="section-title"><h2>본 영화</h2><span class="cap">${seen.length}편</span></div>
+    <div class="seenwrap">${seen.slice(0, 24).map((t) => `<span class="seenchip">${esc(t)}</span>`).join('')}${seen.length > 24 ? `<span class="seenchip more">+${seen.length - 24}</span>` : ''}</div>` : ''}
 
     <div class="section-title"><h2>내가 남긴 후기</h2><span class="cap">${c.seats}석</span></div>
     ${keys.length === 0 ? `<div class="card empty-state"><div class="empty-ic">💬</div><h3>아직 남긴 후기가 없어요</h3><p>좌석 화면에서 사진과 한마디를 남기면<br>여기에 차곡차곡 쌓여요.</p><button class="btn sm" style="margin-top:14px" data-go="home">지점 둘러보기</button></div>` :
@@ -8267,6 +8354,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (e.target.closest('[data-big]')) { openBigView(); return; }
     if (e.target.closest('#bigClose')) { closeBigView(); return; }
     if (e.target.closest('#editNick')) { nicknameModal(true); return; }
+    if (e.target.closest('#authTopBtn')) { if (AUTH.user) { state.view = 'my'; syncHash(true); render(); } else openAuth('login'); return; }
+    if (e.target.closest('#authLoginBtn')) { openAuth('login'); return; }
+    if (e.target.closest('#authEdit')) { openProfileSetup(false); return; }
+    if (e.target.closest('#authOut')) { authSignOut(); return; }
     const uf = e.target.closest('[data-unfav]');
     if (uf) {
       const k = uf.dataset.unfav;
@@ -8298,6 +8389,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (document.getElementById('cmpModal')) { const b = document.getElementById('cmpClose'); if (b) b.click(); return; }
     if (document.getElementById('tocModal')) { closeOcr(); return; }
     if (document.getElementById('nickModal')) { closeNick(); return; }
+    if (document.getElementById('profModal')) { const forceProf = document.getElementById('profSave'); if (forceProf) return; const pm = document.getElementById('profModal'); if (pm) pm.remove(); return; }
+    if (document.getElementById('authModal')) { closeAuth(); return; }
     if (document.getElementById('reportModal')) { closeReport(); return; }
     openSheet(false);
   });
@@ -8317,6 +8410,592 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     });
   });
 
+  /* ======================================================================
+     로그인 — Supabase Auth (이메일·비밀번호 + 구글·카카오 소셜) + public.profiles 동기화
+     · 프로젝트의 공개(publishable) 키만 쓴다. 비밀 키·서비스 키는 쓰지 않는다.
+     · 세션(access/refresh token)만 이 기기에 남기고, 만료 1분 전에 스스로 갱신한다.
+     · profiles 테이블이나 seat_reviews.user_id 가 아직 없어도(404/400) 앱은 멈추지 않고
+       '이 기기에만 저장'으로 조용히 돌아간다.
+     ====================================================================== */
+  const AUTH_KEY = 'cgv_auth_v1';
+  const PROF_LOCAL_KEY = 'cgv_profile_local_v1';
+  const SEEN_KEY = 'cgv_seen_v1';
+  const AGE_KEY = 'cgv_age_v1';
+  const AGE_OPTS = ['10대', '20대', '30대', '40대 이상'];
+  const PROV_MSG = '구글/카카오 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요.';
+  const AUTH = {
+    session: null, user: null, profile: null,
+    profOff: false,        /* profiles 테이블이 없거나 권한이 없어 서버 저장을 못 하는 상태 */
+    ready: false, busy: false, tab: 'login',
+    prov: { google: false, kakao: false },   /* provider 미등록을 이미 확인했는지 */
+    applying: false, _tm: 0
+  };
+
+  function lsGet(k, dflt) { try { const v = localStorage.getItem(k); return v == null ? dflt : JSON.parse(v); } catch (e) { return dflt; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  /* 로그인 리다이렉트는 지금 페이지의 origin+pathname (쿼리·해시 제외) — GitHub Pages·로컬 모두 같은 코드 */
+  function authRedirectUrl() { return location.origin + location.pathname; }
+
+  function authWriteSession(s) {
+    AUTH.session = s || null;
+    if (s) lsSet(AUTH_KEY, s); else { try { localStorage.removeItem(AUTH_KEY); } catch (e) {} }
+  }
+  function authStore(j) {
+    if (!j || !j.access_token) return false;
+    authWriteSession({
+      access_token: j.access_token,
+      refresh_token: j.refresh_token,
+      expires_at: Date.now() + ((+j.expires_in || 3600) * 1000),
+      token_type: j.token_type || 'bearer'
+    });
+    if (j.user) AUTH.user = { id: j.user.id, email: j.user.email || '', provider: ((j.user.app_metadata || {}).provider) || '' };
+    AUTH.profOff = false;
+    return true;
+  }
+  function authExpired() {
+    const s = AUTH.session;
+    return !s || !s.expires_at || (s.expires_at - 60000) < Date.now();
+  }
+  function authRefresh() {
+    const s = AUTH.session;
+    if (!s || !s.refresh_token) return Promise.resolve(false);
+    return fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST', cache: 'no-store',
+      headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: s.refresh_token })
+    }).then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+      .then((j) => authStore(j))
+      .catch(() => { authWriteSession(null); AUTH.user = null; paintAuthTop(); return false; });
+  }
+  async function authFetch(path, opts) {
+    if (!AUTH.session) throw new Error('no session');
+    if (authExpired()) { const ok = await authRefresh(); if (!ok) throw new Error('no session'); }
+    const o = Object.assign({}, opts || {});
+    o.headers = Object.assign({ apikey: SB_KEY, Authorization: 'Bearer ' + AUTH.session.access_token }, o.headers || {});
+    o.cache = 'no-store';
+    return fetch(SB_URL + path, o);
+  }
+
+  function authErrText(msg) {
+    const m = String(msg || '');
+    if (/Invalid login credentials/i.test(m)) return '이메일 또는 비밀번호가 맞지 않아요.';
+    if (/Email not confirmed/i.test(m)) return '이메일 확인이 아직 안 됐어요. 받은 메일의 인증 링크를 눌러 주세요.';
+    if (/User already registered|already been registered/i.test(m)) return '이미 가입된 이메일이에요. 로그인으로 들어와 주세요.';
+    if (/Password should be at least|password.*6 characters/i.test(m)) return '비밀번호는 6자 이상으로 넣어 주세요.';
+    if (/Unable to validate email|invalid format/i.test(m)) return '이메일 주소 형식을 확인해 주세요.';
+    if (/rate limit|too many|429/i.test(m)) return '요청이 잠시 많았어요. 1~2분 뒤 다시 시도해 주세요.';
+    if (/not enabled|Unsupported provider/i.test(m)) return PROV_MSG;
+    if (/Failed to fetch|NetworkError|load failed/i.test(m)) return '네트워크가 잠시 끊겼어요. 연결을 확인하고 다시 시도해 주세요.';
+    return m || '로그인에 실패했어요. 잠시 뒤 다시 시도해 주세요.';
+  }
+
+  /* ---------- 본 영화 목록(이 기기) ---------- */
+  function seenLocal() {
+    const v = lsGet(SEEN_KEY, []);
+    return Array.isArray(v) ? v.filter((t) => typeof t === 'string' && t) : [];
+  }
+  function seenAll() {
+    const out = [];
+    const add = (t) => { t = String(t || '').trim(); if (t && out.indexOf(t) < 0) out.push(t); };
+    const p = AUTH.profile;
+    if (p && Array.isArray(p.seen_movies)) p.seen_movies.forEach(add);
+    seenLocal().forEach(add);
+    Object.keys(store || {}).forEach((k) => {
+      const b = store[k]; if (!b || !b.seats) return;
+      Object.values(b.seats).forEach((r) => { if (r && r.movie) add(r.movie); });
+    });
+    return out.slice(0, 200);
+  }
+
+  /* ---------- 프로필(public.profiles) ---------- */
+  function profileLocal() { const v = lsGet(PROF_LOCAL_KEY, null); return (v && typeof v === 'object') ? v : {}; }
+  function profileSaveLocal(patch) { const p = Object.assign(profileLocal(), patch || {}); lsSet(PROF_LOCAL_KEY, p); return p; }
+
+  function applyProfile(p) {
+    if (!p || typeof p !== 'object') return;
+    AUTH.applying = true;
+    AUTH.profile = p;
+    const nm = p.nickname ? String(p.nickname).slice(0, 12) : '';
+    if (nm && nm !== nickname) { try { setNickname(nm); } catch (e) {} }
+    const age = p.age_group || p.ageGroup;
+    if (age && AGE_OPTS.indexOf(age) >= 0) lsSet(AGE_KEY, age);
+    if (typeof p.height_cm === 'number' && p.height_cm >= 120 && p.height_cm <= 210) viewerSize.h = Math.round(p.height_cm);
+    if (typeof p.eye_cm === 'number' && p.eye_cm >= 70 && p.eye_cm <= 160) viewerSize.eye = Math.round(p.eye_cm);
+    try { saveViewerSize(); } catch (e) {}
+    if (Array.isArray(p.favorites)) {
+      let changed = false;
+      p.favorites.forEach((f) => {
+        if (!f || !f.tid || !f.hid || !f.seat) return;
+        const k = favId(f.tid, f.hid, f.seat);
+        if (!favs[k]) { favs[k] = { tid: f.tid, hid: f.hid, seat: f.seat, t: f.t || '', h: f.h || '', at: f.at || Date.now() }; changed = true; }
+      });
+      if (changed) saveFavs();
+    }
+    if (Array.isArray(p.seen_movies)) {
+      const cur = seenLocal(); let add = false;
+      p.seen_movies.forEach((t) => { if (typeof t === 'string' && t && cur.indexOf(t) < 0) { cur.push(t); add = true; } });
+      if (add) lsSet(SEEN_KEY, cur.slice(-200));
+    }
+    AUTH.applying = false;
+    paintAuthTop();
+    try { paintAvatar(); } catch (e) {}
+  }
+
+  /* 서버에서 내 프로필 한 줄 받기. 테이블이 없으면(404) 이 기기 저장으로 대체한다. */
+  async function profileFetch() {
+    if (!AUTH.user) return;
+    if (AUTH.profOff) { const l = profileLocal(); if (l && Object.keys(l).length) applyProfile(l); return; }
+    let r;
+    try { r = await authFetch('/rest/v1/profiles?id=eq.' + encodeURIComponent(AUTH.user.id) + '&select=*'); }
+    catch (e) { return; }
+    if (r.ok) {
+      const rows = await r.json().catch(() => []);
+      const row = Array.isArray(rows) && rows[0];
+      if (row) applyProfile(row);
+      else { const l = profileLocal(); if (l && Object.keys(l).length) applyProfile(l); }
+      return;
+    }
+    /* 404 = 테이블 없음 · 403 = RLS 정책 없음 · 400 = 스키마 캐시에 없음 */
+    AUTH.profOff = true;
+    const l = profileLocal(); if (l && Object.keys(l).length) applyProfile(l);
+  }
+
+  /* 내 프로필 저장(없으면 만들고, 있으면 덮어쓴다). 없는 컬럼은 그 컬럼만 빼고 다시 보낸다. */
+  async function profilePush(extra) {
+    if (!AUTH.user) return false;
+    const body = Object.assign({
+      id: AUTH.user.id,
+      nickname: nickname || null,
+      age_group: lsGet(AGE_KEY, null),
+      height_cm: viewerSize.h,
+      eye_cm: viewerSize.eye || null,
+      favorites: Object.values(favs || {}),
+      seen_movies: seenAll(),
+      updated_at: new Date().toISOString()
+    }, extra || {});
+    profileSaveLocal(body);
+    if (AUTH.profOff) return false;
+    for (let i = 0; i < 8; i++) {
+      let r;
+      try {
+        r = await authFetch('/rest/v1/profiles?on_conflict=id', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=representation' },
+          body: JSON.stringify([body])
+        });
+      } catch (e) { return false; }
+      if (r.ok) {
+        const rows = await r.json().catch(() => []);
+        if (Array.isArray(rows) && rows[0]) AUTH.profile = rows[0];
+        return true;
+      }
+      if (r.status === 404) { AUTH.profOff = true; return false; }
+      if (r.status === 401 || r.status === 403) { AUTH.profOff = true; return false; }
+      const j = await r.json().catch(() => null);
+      const msg = String((j && (j.message || j.details || j.hint)) || ('HTTP ' + r.status));
+      const drop = Object.keys(body).filter((k) => k !== 'id' && k !== 'nickname' && new RegExp('\\b' + k + '\\b').test(msg));
+      if (r.status === 400 && drop.length) { drop.forEach((k) => delete body[k]); continue; }
+      try { console.warn('[영시미] 프로필 저장 실패:', msg); } catch (e) {}
+      return false;
+    }
+    return false;
+  }
+
+  /* 즐겨찾기·키·닉네임이 바뀌면 1.5초 뒤 한 번만 서버로 보낸다 */
+  function profileSchedule() {
+    if (!AUTH.user || AUTH.applying) return;
+    clearTimeout(AUTH._tm);
+    AUTH._tm = setTimeout(() => {
+      profilePush().then((ok) => { if (ok && state.view === 'my') render({ keepScroll: true }); });
+    }, 1500);
+  }
+
+  /* ---------- 로그인 상태 표시 ---------- */
+  function authAge() { return lsGet(AGE_KEY, '') || ((AUTH.profile && AUTH.profile.age_group) || ''); }
+  function paintAuthTop() {
+    const b = document.getElementById('authTopBtn');
+    if (!b) return;
+    const on = !!AUTH.user;
+    b.textContent = on ? (nickname || '내 계정') : '로그인';
+    b.setAttribute('data-auth', on ? 'in' : 'out');
+    b.title = on ? (AUTH.user.email || '') : '로그인 / 회원가입';
+  }
+  function authCardHtml() {
+    if (AUTH.user) {
+      const age = authAge();
+      const p = AUTH.profile || {};
+      const sub = [nickname || p.nickname || '닉네임 미설정', age || '연령대 미설정'].filter(Boolean).join(' · ');
+      return `<div class="card card-pad authcard">
+        <div class="authrow">
+          <span class="authmark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 11V8a7 7 0 0 1 14 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3.5" y="10.5" width="17" height="10.5" rx="3" stroke="currentColor" stroke-width="1.8"/></svg></span>
+          <div style="flex:1;min-width:0">
+            <div class="auth-mail">${esc(AUTH.user.email || '로그인됨')}</div>
+            <div class="auth-sub">${esc(sub)} · ${AUTH.profOff ? '이 기기에만 저장돼요' : '기기 간 동기화 중'}</div>
+          </div>
+          <button class="chip sm" id="authEdit" type="button">프로필</button>
+          <button class="chip sm" id="authOut" type="button">로그아웃</button>
+        </div>
+        ${AUTH.profOff ? `<div class="storagenote" style="margin-top:10px">프로필 서버가 아직 준비되지 않아 지금은 <b>로그인 정보만</b> 연결돼 있고, 기록은 이 기기에 저장돼요. 서버가 열리면 같은 계정으로 자동으로 이어집니다.</div>` : ''}
+      </div>`;
+    }
+    return `<div class="card card-pad authcard">
+      <b class="auth-title">로그인하고 내 기록을 이어서</b>
+      <p class="auth-lead">즐겨찾기·내 키·본 영화가 다른 기기에서도 그대로 열려요. 로그인 없이도 좌석 보기와 후기는 지금처럼 쓸 수 있어요.</p>
+      <div class="authbtns">
+        <button class="btn" id="authLoginBtn" type="button">로그인 / 회원가입</button>
+      </div>
+    </div>`;
+  }
+
+  /* ---------- 로그인 모달 ---------- */
+  function authMsg(text, kind) {
+    const el = document.getElementById('authMsg');
+    if (!el) return;
+    el.hidden = !text;
+    el.textContent = text || '';
+    el.className = 'authmsg' + (kind ? ' ' + kind : '');
+  }
+  const G_ICON = '<svg class="social-ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4z"/><path fill="#34A853" d="M12 22c2.7 0 4.9-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4.1 5.6-4.1z"/></svg>';
+  const K_ICON = '<svg class="social-ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#3C1E1E" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.7 5.2 4.3 6.7-.2.8-.8 2.9-.9 3.3 0 .4.3.4.5.2.3-.2 3.2-2.3 3.8-2.7.7.1 1.5.2 2.3.2 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>';
+
+  function authFormHtml() {
+    const su = AUTH.tab === 'signup';
+    return `
+      <div class="authfields">
+        <input id="authEmail" class="authinput" type="email" inputmode="email" autocomplete="email" placeholder="이메일 (예: name@example.com)" value="">
+        <input id="authPw" class="authinput" type="password" autocomplete="${su ? 'new-password' : 'current-password'}" placeholder="비밀번호${su ? ' (6자 이상)' : ''}">
+        ${su ? `<label class="consent"><input type="checkbox" id="authAgree"><span><b>[필수]</b> 이메일·닉네임·연령대를 <b>회원 구분과 기록 동기화</b> 목적으로 수집·이용하는 데 동의해요. 로그아웃·탈퇴 시 지워지며, 후기에 남긴 닉네임은 후기와 함께 표시돼요.</span></label>` : ''}
+      </div>
+      <button class="btn" id="authSubmit" type="button" style="width:100%;margin-top:12px">${su ? '가입하기' : '로그인'}</button>
+      ${su ? '' : `<button class="authlink" id="authForgot" type="button">비밀번호를 잊었어요</button>`}`;
+  }
+
+  function bindAuthForm() {
+    const sub = document.getElementById('authSubmit');
+    if (sub) sub.onclick = () => authPassword(AUTH.tab);
+    const em = document.getElementById('authEmail');
+    const pw = document.getElementById('authPw');
+    const key = (e) => { if (e.key === 'Enter') { e.preventDefault(); authPassword(AUTH.tab); } };
+    if (em) em.onkeydown = key;
+    if (pw) pw.onkeydown = key;
+    const fg = document.getElementById('authForgot');
+    if (fg) fg.onclick = () => authReset();
+  }
+  function paintAuthTabs() {
+    document.querySelectorAll('#authModal [data-atab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.atab === AUTH.tab)));
+    document.querySelectorAll('#authModal [data-oauth]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+  }
+  function setAuthTab(tab) {
+    AUTH.tab = tab === 'signup' ? 'signup' : 'login';
+    const box = document.getElementById('authForm');
+    if (box) box.innerHTML = authFormHtml();
+    paintAuthTabs(); bindAuthForm(); authMsg('');
+  }
+  function openAuth(tab) {
+    if (AUTH.user) { if (state.view !== 'my') { state.view = 'my'; syncHash(true); render(); } return; }
+    if (document.getElementById('authModal')) return;
+    AUTH.tab = tab === 'signup' ? 'signup' : 'login';
+    const wrap = document.createElement('div');
+    wrap.id = 'authModal';
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="modal-card auth-card">
+        <div class="modal-grab"></div>
+        <h3>영시미 로그인</h3>
+        <p class="sub">로그인하면 즐겨찾기·키·본 영화가 다른 기기에서도 이어져요.<br>로그인 없이도 좌석 보기와 후기는 그대로 쓸 수 있어요.</p>
+        <div class="auth-social">
+          <button class="btn social google" type="button" data-oauth="google" id="authGoogle">${G_ICON}<span>구글로 계속하기</span></button>
+          <button class="btn social kakao" type="button" data-oauth="kakao" id="authKakao">${K_ICON}<span>카카오로 계속하기</span></button>
+        </div>
+        <div class="auth-or"><span>또는 이메일로</span></div>
+        <div class="authtabs" role="tablist">
+          <button class="authtab" type="button" role="tab" data-atab="login">로그인</button>
+          <button class="authtab" type="button" role="tab" data-atab="signup">회원가입</button>
+        </div>
+        <div id="authForm"></div>
+        <p class="authmsg" id="authMsg" hidden></p>
+        <button class="btn ghost" id="authClose" type="button" style="width:100%;margin-top:10px;background:#F2F4F6;color:#6B7684;border:0">닫기</button>
+      </div>`;
+    document.body.appendChild(wrap);
+    wrap.querySelector('.modal-scrim').onclick = closeAuth;
+    wrap.querySelector('#authClose').onclick = closeAuth;
+    wrap.querySelectorAll('[data-atab]').forEach((b) => { b.onclick = () => setAuthTab(b.dataset.atab); });
+    wrap.querySelector('#authGoogle').onclick = () => authOAuth('google');
+    wrap.querySelector('#authKakao').onclick = () => authOAuth('kakao');
+    setAuthTab(AUTH.tab);
+    setTimeout(() => { const e = document.getElementById('authEmail'); if (e) try { e.focus(); } catch (_) {} }, 150);
+  }
+  function closeAuth() { const m = document.getElementById('authModal'); if (m) m.remove(); }
+
+  /* 확인 메일 안내(가입 직후) */
+  function authSignedUp(email) {
+    const box = document.getElementById('authForm');
+    if (!box) return;
+    box.innerHTML = `<div class="authdone">
+      <b>확인 메일을 보냈어요</b>
+      <p>${esc(email)} 앞으로 보낸 메일에서 <b>인증 링크</b>를 누르면 가입이 끝나요. 메일이 안 보이면 스팸함도 확인해 주세요.</p>
+      <button class="btn ghost" id="authResend" type="button">메일 다시 받기</button>
+    </div>`;
+    const rs = document.getElementById('authResend');
+    if (rs) rs.onclick = async () => {
+      rs.disabled = true; rs.textContent = '보내는 중…';
+      try {
+        const r = await fetch(SB_URL + '/auth/v1/resend', {
+          method: 'POST', cache: 'no-store',
+          headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'signup', email })
+        });
+        if (r.ok) authMsg('메일을 다시 보냈어요.', 'ok');
+        else { const j = await r.json().catch(() => null); authMsg(authErrText((j && (j.msg || j.message || j.error_description)) || 'HTTP ' + r.status), 'bad'); }
+      } catch (e) { authMsg(authErrText(e && e.message), 'bad'); }
+      rs.disabled = false; rs.textContent = '메일 다시 받기';
+    };
+    authMsg('');
+  }
+
+  async function authPassword(mode) {
+    const em = (document.getElementById('authEmail') || {}).value || '';
+    const pw = (document.getElementById('authPw') || {}).value || '';
+    const email = em.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { authMsg('이메일 주소를 확인해 주세요.', 'bad'); return; }
+    if (pw.length < 6) { authMsg('비밀번호는 6자 이상으로 넣어 주세요.', 'bad'); return; }
+    if (mode === 'signup') {
+      const cb = document.getElementById('authAgree');
+      if (!cb || !cb.checked) { authMsg('개인정보 수집·이용 동의에 체크해 주세요.', 'bad'); return; }
+    }
+    const btn = document.getElementById('authSubmit');
+    if (btn) { btn.disabled = true; btn.textContent = mode === 'signup' ? '가입 중…' : '로그인 중…'; }
+    authMsg('');
+    try {
+      const url = SB_URL + (mode === 'signup' ? '/auth/v1/signup' : '/auth/v1/token?grant_type=password');
+      const r = await fetch(url, {
+        method: 'POST', cache: 'no-store',
+        headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pw })
+      });
+      const j = await r.json().catch(() => null);
+      if (!r.ok) throw new Error((j && (j.error_description || j.msg || j.message)) || ('HTTP ' + r.status));
+      if (mode === 'signup') {
+        if (j && j.access_token) {           /* 이메일 확인이 꺼져 있는 프로젝트면 바로 로그인된다 */
+          authStore(j);
+          closeAuth();
+          await authAfterLogin();
+        } else {
+          authSignedUp(email);
+        }
+        return;
+      }
+      authStore(j);
+      closeAuth();
+      await authAfterLogin();
+    } catch (e) {
+      const msg = String((e && e.message) || e);
+      authMsg(authErrText(msg), 'bad');
+      if (/not enabled|Unsupported provider/i.test(msg)) toast(PROV_MSG, 6000);
+    } finally {
+      const b = document.getElementById('authSubmit');
+      if (b) { b.disabled = false; b.textContent = mode === 'signup' ? '가입하기' : '로그인'; }
+    }
+  }
+
+  async function authReset() {
+    const em = ((document.getElementById('authEmail') || {}).value || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { authMsg('먼저 이메일 주소를 넣어 주세요. 그 주소로 재설정 링크를 보내 드려요.', 'bad'); return; }
+    try {
+      const r = await fetch(SB_URL + '/auth/v1/recover', {
+        method: 'POST', cache: 'no-store',
+        headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: em })
+      });
+      if (!r.ok) { const j = await r.json().catch(() => null); throw new Error((j && (j.msg || j.message || j.error_description)) || ('HTTP ' + r.status)); }
+      authMsg('재설정 링크를 보냈어요. 메일함을 확인해 주세요.', 'ok');
+    } catch (e) { authMsg(authErrText(e && e.message), 'bad'); }
+  }
+
+  /* 소셜 로그인 — provider 가 아직 등록 전이면 페이지를 떠나지 않고 안내만 한다 */
+  async function authOAuth(provider) {
+    const nm = provider === 'google' ? '구글' : '카카오';
+    if (AUTH.prov[provider]) {
+      authMsg(PROV_MSG, 'bad');
+      toast(nm + ' 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요.', 6000);
+      return;
+    }
+    const url = SB_URL + '/auth/v1/authorize?provider=' + provider + '&redirect_to=' + encodeURIComponent(authRedirectUrl());
+    let go = true;
+    try {
+      /* 페이지를 떠나기 전에 provider 가 켜져 있는지 한 번 확인한다(켜져 있으면 302 → opaqueredirect) */
+      const r = await fetch(url, { headers: { apikey: SB_KEY }, redirect: 'manual', cache: 'no-store' });
+      if (r.status === 400) {
+        const j = await r.json().catch(() => null);
+        const msg = String((j && (j.msg || j.message || j.error_description)) || '');
+        if (/not enabled|Unsupported provider/i.test(msg)) {
+          AUTH.prov[provider] = true; go = false;
+          authMsg(PROV_MSG, 'bad');
+          toast(nm + ' 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요.', 6000);
+        }
+      }
+    } catch (e) {}   /* 확인만 실패했으면 그대로 이동해 본다 */
+    if (go) location.href = url;
+  }
+
+  async function authAfterLogin() {
+    try {
+      const r = await authFetch('/auth/v1/user');
+      if (r.ok) {
+        const u = await r.json();
+        AUTH.user = { id: u.id, email: u.email || '', provider: ((u.app_metadata || {}).provider) || '' };
+      }
+    } catch (e) {}
+    AUTH.ready = true;
+    paintAuthTop();
+    await profileFetch();
+    const age = authAge();
+    if (!nickname || nickKey(nickname).length < 2 || !age) openProfileSetup(true);
+    else { toast('로그인했어요 · ' + (AUTH.user && AUTH.user.email ? AUTH.user.email : ''), 3400); profileSchedule(); }
+    if (state.view === 'my') render({ keepScroll: true });
+  }
+
+  function authLocalClear() {
+    authWriteSession(null);
+    AUTH.user = null; AUTH.profile = null; AUTH.profOff = false; AUTH.ready = false;
+  }
+  async function authSignOut() {
+    const tok = AUTH.session && AUTH.session.access_token;
+    authLocalClear();
+    paintAuthTop();
+    if (state.view === 'my') render();
+    toast('로그아웃했어요. 이 기기에 남은 기록은 그대로예요.', 3400);
+    if (tok) {
+      try { await fetch(SB_URL + '/auth/v1/logout', { method: 'POST', cache: 'no-store', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + tok } }); } catch (e) {}
+    }
+  }
+
+  /* ---------- 프로필 설정(온보딩) 모달 ---------- */
+  function openProfileSetup(force) {
+    if (!AUTH.user) { openAuth('login'); return; }
+    const old = document.getElementById('profModal'); if (old) old.remove();
+    const p = AUTH.profile || {};
+    const curAge = authAge();
+    const wrap = document.createElement('div');
+    wrap.id = 'profModal';
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="modal-card">
+        <div class="modal-grab"></div>
+        <h3>프로필 설정</h3>
+        <p class="sub">후기와 기록에 표시될 이름이에요. 나중에 언제든 바꿀 수 있어요.</p>
+        <input id="profNick" class="nickinput" type="text" maxlength="12" placeholder="닉네임 (2글자 이상)" value="${esc(nickname || p.nickname || '')}">
+        <p class="nickdup" id="profDup" hidden></p>
+        <div class="agelabel">연령대</div>
+        <div class="agegrid" role="radiogroup" aria-label="연령대">
+          ${AGE_OPTS.map((a) => `<button class="agechip" type="button" role="radio" aria-checked="${curAge === a}" data-age="${a}">${a}</button>`).join('')}
+        </div>
+        <label class="consent" style="margin-top:14px"><input type="checkbox" id="profAgree" ${(AUTH.profile && AUTH.profile.consent_at) || force ? '' : ''}><span><b>[필수]</b> 이메일·닉네임·연령대를 회원 구분과 기록 동기화 목적으로 저장하는 데 동의해요.</span></label>
+        <p class="authmsg" id="profMsg" hidden></p>
+        <button class="btn" id="profSave" type="button" style="width:100%;margin-top:12px">저장하고 시작하기</button>
+        ${force ? '' : `<button class="btn ghost" id="profClose" type="button" style="width:100%;margin-top:8px;background:#F2F4F6;color:#6B7684;border:0">닫기</button>`}
+      </div>`;
+    document.body.appendChild(wrap);
+    let age = curAge || '';
+    wrap.querySelectorAll('[data-age]').forEach((b) => {
+      b.onclick = () => {
+        age = b.dataset.age;
+        wrap.querySelectorAll('[data-age]').forEach((x) => x.setAttribute('aria-checked', String(x.dataset.age === age)));
+      };
+    });
+    const inp = wrap.querySelector('#profNick');
+    const dup = wrap.querySelector('#profDup');
+    nickDupWatch(inp, dup);
+    const msg = (t, k) => { const m = wrap.querySelector('#profMsg'); if (!m) return; m.hidden = !t; m.textContent = t || ''; m.className = 'authmsg' + (k ? ' ' + k : ''); };
+    wrap.querySelector('.modal-scrim').onclick = () => { if (!force) wrap.remove(); };
+    const pc = wrap.querySelector('#profClose');
+    if (pc) pc.onclick = () => wrap.remove();
+    wrap.querySelector('#profSave').onclick = async () => {
+      const btn = wrap.querySelector('#profSave');
+      if (btn.disabled) return;
+      const nm = (inp.value || '').trim().slice(0, 12);
+      if (nickKey(nm).length < 2) { inp.classList.add('bad'); nickDupPaint(dup, 'short'); msg(NICK_MIN_MSG, 'bad'); try { inp.focus(); } catch (e) {} return; }
+      if (!age) { msg('연령대를 골라 주세요.', 'bad'); return; }
+      if (!wrap.querySelector('#profAgree').checked) { msg('개인정보 수집·이용 동의에 체크해 주세요.', 'bad'); return; }
+      btn.disabled = true; btn.textContent = '저장 중…';
+      let res;
+      try { res = await nickCheck(nm); } catch (e) { res = { ok: true }; }
+      if (!res.ok) {
+        btn.disabled = false; btn.textContent = '저장하고 시작하기';
+        inp.classList.add('bad'); nickDupPaint(dup, 'taken'); msg(NICK_TAKEN, 'bad');
+        return;
+      }
+      NICK_PEEK.set(nickKey(nm), 'mine');
+      setNickname(nm);
+      lsSet(AGE_KEY, age);
+      AUTH.applying = true;
+      const ok = await profilePush({ age_group: age, consent_at: new Date().toISOString() });
+      AUTH.applying = false;
+      if (ok) { AUTH.applying = true; await profileFetch(); AUTH.applying = false; }
+      wrap.remove();
+      paintAuthTop();
+      toast(ok ? '프로필을 저장했어요' : '이 기기에 프로필을 저장했어요', 3200);
+      if (state.view === 'my') render(); else { state.view = 'my'; syncHash(true); render(); }
+    };
+  }
+
+  /* ---------- 부팅: 세션 복원 · OAuth 콜백 · 헤더 표시 ---------- */
+  function authCatchRedirect() {
+    const h = location.hash || '';
+    if (!/[#&](access_token|error|error_description)=/.test(h)) return false;
+    const p = new URLSearchParams(h.replace(/^#/, ''));
+    const at = p.get('access_token'), rt = p.get('refresh_token');
+    const err = p.get('error_description') || p.get('error_code') || p.get('error');
+    /* 주소창에서 토큰을 지운다 — 뒤로가기·주소 복사로 새지 않게 */
+    try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) {}
+    if (at && rt) {
+      authWriteSession({
+        access_token: at, refresh_token: rt,
+        expires_at: Date.now() + ((+p.get('expires_in') || 3600) * 1000),
+        token_type: p.get('token_type') || 'bearer'
+      });
+      return true;
+    }
+    if (err) setTimeout(() => toast(authErrText(err), 6000), 600);
+    return false;
+  }
+  function authInit() {
+    const fromRedirect = authCatchRedirect();
+    if (!AUTH.session) {
+      const s = lsGet(AUTH_KEY, null);
+      if (s && s.access_token) AUTH.session = s;
+    }
+    paintAuthTop();
+    if (AUTH.session) {
+      (async () => {
+        try {
+          const r = await authFetch('/auth/v1/user');
+          if (r.ok) {
+            const u = await r.json();
+            AUTH.user = { id: u.id, email: u.email || '', provider: ((u.app_metadata || {}).provider) || '' };
+            AUTH.ready = true;
+            paintAuthTop();
+            await profileFetch();
+            if (state.view === 'my') render({ keepScroll: true });
+            if (fromRedirect) {
+              const age = authAge();
+              if (!nickname || nickKey(nickname).length < 2 || !age) openProfileSetup(true);
+              else toast('로그인했어요 · ' + (AUTH.user.email || ''), 3400);
+            }
+          } else if (r.status === 401) {
+            await authRefresh();
+            if (AUTH.session) {
+              const r2 = await authFetch('/auth/v1/user');
+              if (r2.ok) { const u = await r2.json(); AUTH.user = { id: u.id, email: u.email || '' }; AUTH.ready = true; paintAuthTop(); await profileFetch(); }
+            }
+          }
+        } catch (e) {}
+      })();
+    }
+  }
+
   /* 스크린 제원·화면비는 데이터(__DATA__)에 실려 온다 — build2.py + screens.json에서 보정 */
   hallSeats_init();
   function hallSeats_init() {
@@ -8324,6 +9003,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       if (h.status === 'ok' && h.rows) hallSeats(h);
     }));
   }
+  authInit();
   applyHash();
   render();
   /* 예전 해시 주소(#/t/…)로 들어왔으면 주소창을 깔끔한 쿼리 주소로 바꿔 둔다 */
@@ -8376,7 +9056,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }, 140);
   });
   window.addEventListener('orientationchange', () => setTimeout(() => window.dispatchEvent(new Event('resize')), 260));
-  window.__APP__ = { state, metrics, render, setNickname, setNear, clearNear, toggleNear, toChoseong, distKm, homeList, openCompare, toggleCompare, mapZoomBy, dataStatus, openMask, favToggle };
+  window.__APP__ = { state, metrics, render, setNickname, setNear, clearNear, toggleNear, toChoseong, distKm, homeList, openCompare, toggleCompare, mapZoomBy, dataStatus, openMask, favToggle, auth: AUTH, openAuth, openProfileSetup, authSignOut, profilePush };
   /* 첫 방문 때 닉네임을 묻는 팝업은 두지 않는다 — 처음엔 그냥 좌석을 보러 온 사람이 대부분이다.
      닉네임은 후기를 남길 때 입력란에서만 받는다. */
   if (nickname) {
