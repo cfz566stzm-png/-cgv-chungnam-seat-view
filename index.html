@@ -110,11 +110,6 @@ h1,h2,h3,h4,p{margin:0}
 .brand-name{font-size:16.5px;font-weight:800;letter-spacing:-.03em;white-space:nowrap}
 .brand-sub{font-size:12px;color:var(--mute);font-weight:600;margin-top:-2px}
 .topbar-spacer{flex:1}
-.top-badge{
-  display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;
-  background:var(--green-l);color:var(--green-d);font-size:12.5px;font-weight:700;
-}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(0,168,98,.16)}
 
 /* ---------- common ---------- */
 .view{padding:22px 0 120px;animation:fade .28s var(--ease)}
@@ -1411,6 +1406,8 @@ input,select,textarea,
 .seatfun{margin-top:12px;padding:11px 13px;border-radius:14px;background:#F6FAF8;
   border:1px solid var(--line-2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .seatfun>span{flex:1 1 140px;font-weight:800;color:#2F4A3E;min-width:120px}
+/* 2026-11-21: 안내 글을 없애고 버튼만 남겼다 — 두 버튼이 한 줄을 반씩 나눠 가지면 빈칸이 생기지 않는다 */
+.seatfun>.helpbtn,.seatfun>.fixbtn{flex:1 1 0;justify-content:center;min-width:0}
 .fixsel{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);
   background:#fff;padding:0 12px;font-weight:750;color:var(--ink);margin-top:14px}
 .fixdetail{width:100%;min-height:88px;border-radius:12px;border:1px solid var(--line);
@@ -1910,6 +1907,8 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 .btn.social{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;border-radius:14px;
   font-size:14.5px;font-weight:800;letter-spacing:-.02em;box-shadow:none}
 .btn.social.google{background:#fff;color:#1F1F1F;border:1px solid var(--line)}
+.btn.social.kakao{background:#FEE500;color:#191600;border:1px solid #FEE500}
+.btn.social.kakao:hover{background:#F6DE00;border-color:#F6DE00}
 .btn.social .social-ic{flex:0 0 auto}
 .auth-or{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--mute);font-size:11.5px;font-weight:800}
 .auth-or::before,.auth-or::after{content:'';flex:1;height:1px;background:var(--line)}
@@ -2069,7 +2068,6 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
       </span>
     </button>
     <span class="topbar-spacer"></span>
-    <span class="top-badge desktop-only"><i class="dot"></i><span id="topBadge">영화관 177개 지점</span></span>
     <button class="chip sm" data-go="my" style="margin-left:8px">내 기록</button>
     <button class="chip sm" id="authTopBtn" type="button" data-auth="out" style="margin-left:6px">로그인</button>
   </div>
@@ -4625,9 +4623,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
      화면에는 아무 오류도 내지 않고 이 기기(localStorage)에만 남긴다. */
   const DEV_KEY = 'cgv_dev_id_v1';
   const HELP_VOTED = 'cgv_helpful_voted_v1';
-  const HELP_MINE = 'cgv_helpful_mine_v1';
+  const HELP_SRV = 'cgv_helpful_srv_v1';   /* 내 표가 서버에 올라가 있는 대상 */
   const FIX_LOCAL = 'cgv_fix_requests_v1';
-  const HELP = { counts: Object.create(null), at: 0, busy: false, off: false };
+  const HELP = { counts: Object.create(null), at: 0, busy: false, off: false, lock: Object.create(null), again: Object.create(null) };
   const FIXQ = { off: false };
   const SB_MISS = 'cgv_sb_miss_v1';   /* 테이블이 없다고 확인된 시각 — 하루에 한 번만 다시 확인한다 */
   function sbMissing(tbl) {
@@ -4808,20 +4806,37 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     });
     inp.addEventListener('blur', () => run(0));
   }
-  function helpMine() { return lsGet(HELP_MINE, {}); }
-  function helpVoted() { return lsGet(HELP_VOTED, {}); }
+  function helpVoted() { const v = lsGet(HELP_VOTED, null); return (v && typeof v === 'object') ? v : {}; }
+  function helpSrv() { const v = lsGet(HELP_SRV, null); return (v && typeof v === 'object') ? v : {}; }
+  /* 화면 숫자 = 기본값 + (서버 집계 − 서버에 올라간 내 표) + 이 기기의 선택(0/1)
+     2026-11-21 제보: 연타하면 +1씩 쌓였다. 이제 내 몫은 '선택했으면 1, 아니면 0' 하나로만 세고,
+     서버 집계에서는 내 행 하나를 빼서 두 번 더해지지 않게 한다. */
   function helpCount(key) {
-    /* 서버 DELETE가 정책으로 막혀 로컬 보정이 쌓이면 음수가 될 수 있다 — 0 아래로는 내려가지 않게 */
-    return Math.max(0, (HELP.counts[key] || 0) + (helpMine()[key] || 0));
+    const srv = HELP.counts[key] || 0;
+    const mine = helpSrv()[key] ? 1 : 0;
+    const me = helpVoted()[key] ? 1 : 0;
+    return Math.max(0, srv - mine) + me;
   }
-  /* 누적 카운트 받기 — 테이블이 없으면(404) 이번 화면에서는 다시 묻지 않는다 */
+  /* 이 대상의 '도움돼요' 버튼은 화면 여러 군데(좌석 정보·사진·후기 목록)에 있다 — 숫자·눌림 상태를 같이 맞춘다 */
+  function repaintHelp(key) {
+    document.querySelectorAll('[data-helpcount]').forEach((el) => {
+      if (key != null && el.dataset.helpcount !== key) return;
+      const k = el.dataset.helpcount;
+      const b = el.querySelector('b');
+      if (b) b.textContent = Number(el.dataset.helpbase || 0) + helpCount(k);
+      el.setAttribute('aria-pressed', helpVoted()[k] ? 'true' : 'false');
+    });
+  }
+  /* 누적 카운트 받기 — 테이블이 없으면(404) 이번 화면에서는 다시 묻지 않는다.
+     내 표(voter_id)가 서버에 있는지도 함께 받아 와서 '내 몫'을 정확히 가른다. */
   function helpFetch(force) {
     if (HELP.off || HELP.busy) return;
     if (!force && Date.now() - HELP.at < 120000) return;
     if (sbMissing('seat_review_helpful')) return;
     HELP.busy = true;
     const tm = sbTimer(12000);
-    const url = SB_URL + '/rest/v1/seat_review_helpful?select=target_key&limit=5000';
+    const me = deviceId();
+    const url = SB_URL + '/rest/v1/seat_review_helpful?select=target_key,voter_id&limit=5000';
     fetch(url, { headers: sbHeaders(), signal: tm.signal, cache: 'no-store' })
       .then((r) => {
         if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); return []; }
@@ -4829,17 +4844,19 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         return r.json();
       })
       .then((rows) => {
+        if (!Array.isArray(rows)) return;
         const m = Object.create(null);
-        (Array.isArray(rows) ? rows : []).forEach((r) => {
-          const k = r && r.target_key; if (k) m[k] = (m[k] || 0) + 1;
+        const mine = {};
+        rows.forEach((r) => {
+          const k = r && r.target_key; if (!k) return;
+          m[k] = (m[k] || 0) + 1;
+          if (me && r.voter_id && String(r.voter_id) === me) mine[k] = 1;
         });
-        if (Array.isArray(rows) && rows.length) HELP.counts = m;
+        HELP.counts = m;
+        lsPut(HELP_SRV, mine);
         HELP.at = Date.now();
         try {
-          document.querySelectorAll('[data-helpcount]').forEach((el) => {
-            const b = el.querySelector('b');
-            if (b) b.textContent = Number(el.dataset.helpbase || 0) + helpCount(el.dataset.helpcount);
-          });
+          repaintHelp(null);
           /* 아직 그려지지 않은 카드(사진 탭·후기 목록)도 숫자를 맞춰 다시 그린다 */
           if (state.view === 'hall') paintSeatPanel();
         } catch (e) {}
@@ -4852,80 +4869,67 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const on = helpVoted()[key] ? 'true' : 'false';
     return `<button class="helpbtn" data-help="${esc(key)}" data-helpcount="${esc(key)}" data-helpbase="${Number(base || 0)}" aria-pressed="${on}" type="button">👍 <span>도움돼요</span> <b>${n}</b></button>`;
   }
+  /* 누를 때마다 이 기기의 선택만 0 ↔ 1로 뒤집는다(1번째 +1, 2번째 취소, 3번째 +1).
+     서버 반영은 대상마다 한 번에 하나만 보내고, 그 사이 더 누른 것은 마지막 상태로 한 번 더 맞춘다. */
   function voteHelp(btn, key) {
-    if (!btn || !key) return;
+    if (!key) return;
     const voted = helpVoted();
-    const adj = helpMine();
-    /* 같은 좌석의 '도움돼요' 버튼이 여러 군데(좌석 정보·후기 목록)에 있어도 숫자가 같이 움직이게 한다 */
-    const repaintAll = () => {
-      document.querySelectorAll('[data-helpcount]').forEach((el) => {
-        if (el.dataset.helpcount !== key) return;
-        const b = el.querySelector('b');
-        if (b) b.textContent = Number(el.dataset.helpbase || 0) + helpCount(key);
-      });
-    };
-    const setAdj = (v) => { if (v) adj[key] = v; else delete adj[key]; lsPut(HELP_MINE, adj); repaintAll(); };
-
-    /* --- 이미 누른 버튼을 한 번 더 누르면 취소 (2026-11-19 요청) ---
-       2026-11-20 제보: 3번째 누를 때 +2가 되고 누를수록 숫자가 늘어났다.
-       원인은 서버 집계(HELP.counts)와 이 기기 보정값이 한 화면에서 두 번 더해지던 것.
-       이제 화면 숫자 = 기본값 + max(0, 서버 집계 + 이 기기 보정) 하나로만 계산하고,
-       서버 반영이 끝나면 서버 집계와 보정값을 서로 맞바꿔 합이 절대 틀어지지 않는다. */
-    if (voted[key]) {
-      delete voted[key]; lsPut(HELP_VOTED, voted);
-      setAdj((adj[key] || 0) - 1);              /* 표시에서 내 표 1개를 뺀다(0 아래로는 helpCount가 막아 준다) */
-      const el = document.querySelector(`[data-help="${esc(key)}"]`);
-      if (el) el.setAttribute('aria-pressed', 'false');
-      toast('도움돼요를 취소했어요');
-      if (HELP.off || sbMissing('seat_review_helpful')) return;
-      /* 서버에 올라간 내 표가 있으면 그 행을 지운다. 지워지면 서버 집계 −1·보정 +1 로 표시는 그대로 */
-      try {
-        const tm = sbTimer(12000);
-        const q = SB_URL + '/rest/v1/seat_review_helpful?target_key=eq.' + encodeURIComponent(key)
-          + '&voter_id=eq.' + encodeURIComponent(deviceId());
-        fetch(q, { method: 'DELETE', signal: tm.signal,
-          headers: sbHeaders({ 'Prefer': 'return=representation' }) })
-          .then((r) => {
-            tm.done();
-            if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); throw new Error('missing'); }
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            return r.json().catch(() => []);
-          })
-          .then((rows) => {
-            if (!Array.isArray(rows) || !rows.length) return;   /* 지울 행이 없었다 — 보정값만 남는다 */
-            HELP.counts[key] = Math.max(0, (HELP.counts[key] || 0) - 1);
-            setAdj((adj[key] || 0) + 1);
-          })
-          .catch(() => {});
-      } catch (e) {}
-      return;
-    }
-
-    /* --- 처음 누를 때: 먼저 이 기기에서 +1, 서버에 올라가면 집계/보정을 맞바꾼다 --- */
-    voted[key] = 1; lsPut(HELP_VOTED, voted);
-    setAdj((adj[key] || 0) + 1);
-    const b2 = document.querySelector(`[data-help="${esc(key)}"]`);
-    if (b2) b2.setAttribute('aria-pressed', 'true');
-    toast('도움돼요로 남겼어요');
+    const on = !voted[key];
+    if (on) voted[key] = 1; else delete voted[key];
+    lsPut(HELP_VOTED, voted);
+    repaintHelp(key);
+    toast(on ? '도움돼요로 남겼어요' : '도움돼요를 취소했어요');
+    helpSync(key);
+  }
+  /* 이 기기의 선택(voted)과 서버에 올라간 내 행(HELP_SRV)을 맞춘다 — 대상마다 잠금 하나 */
+  function helpSync(key) {
+    if (HELP.lock[key]) { HELP.again[key] = 1; return; }
     if (HELP.off || sbMissing('seat_review_helpful')) { toast(LOCAL_ONLY_MSG, 4600); return; }
-    try {
-      const tm = sbTimer(12000);
+    const want = helpVoted()[key] ? 1 : 0;
+    const has = helpSrv()[key] ? 1 : 0;
+    if (want === has) return;
+    HELP.lock[key] = 1;
+    const tm = sbTimer(12000);
+    const done = () => {
+      delete HELP.lock[key];
+      repaintHelp(key);
+      if (HELP.again[key]) { delete HELP.again[key]; helpSync(key); }
+    };
+    if (want) {
       fetch(SB_URL + '/rest/v1/seat_review_helpful', {
         method: 'POST', signal: tm.signal,
         headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
         body: JSON.stringify({ target_key: String(key).slice(0, 120), voter_id: deviceId() })
       }).then((r) => {
         tm.done();
-        if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); toast(LOCAL_ONLY_MSG, 4600); return; }
-        if (r.ok) {
-          HELP.counts[key] = (HELP.counts[key] || 0) + 1;
-          setAdj((adj[key] || 0) - 1);      /* 서버 집계로 옮겼으니 보정에서 뺀다 — 화면 숫자는 그대로 */
-        } else {
-          toast(LOCAL_ONLY_MSG, 4600);
-        }
-      })
-        .catch(() => { tm.done(); toast(LOCAL_ONLY_MSG, 4600); });
-    } catch (e) { toast(LOCAL_ONLY_MSG, 4600); }
+        if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); throw new Error('missing'); }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        HELP.counts[key] = (HELP.counts[key] || 0) + 1;
+        const m = helpSrv(); m[key] = 1; lsPut(HELP_SRV, m);
+      }).catch(() => {
+        /* 서버에 못 올렸어도 이 기기에서는 눌린 상태 그대로 둔다 */
+        if (!HELP.off) toast(LOCAL_ONLY_MSG, 4600);
+      }).then(done, done);
+    } else {
+      const q = SB_URL + '/rest/v1/seat_review_helpful?target_key=eq.' + encodeURIComponent(key)
+        + '&voter_id=eq.' + encodeURIComponent(deviceId());
+      fetch(q, { method: 'DELETE', signal: tm.signal, headers: sbHeaders({ 'Prefer': 'return=representation' }) })
+        .then((r) => {
+          tm.done();
+          if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); throw new Error('missing'); }
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json().catch(() => []);
+        })
+        .then((rows) => {
+          const n = Array.isArray(rows) ? rows.length : 0;
+          HELP.counts[key] = Math.max(0, (HELP.counts[key] || 0) - (n ? 1 : 0));
+          const m = helpSrv(); delete m[key]; lsPut(HELP_SRV, m);
+        })
+        .catch(() => {
+          /* 서버에서 못 지웠어도(정책 차단) 화면은 취소 상태 그대로 — 내 몫은 0으로 센다 */
+        })
+        .then(done, done);
+    }
   }
 
   /* 정보 수정 요청을 메일로도 받는다(FormSubmit) — DB 저장과 별개로 보내고 결과를 기다리지 않는다.
@@ -5027,36 +5031,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     try { localStorage.setItem(FIX_LOCAL, JSON.stringify(arr.slice(0, 50))); } catch (e) {}
   }
 
-  /* ---------- 내 키·눈높이 (요청 #8) ----------
-     전에는 모든 좌석을 '눈높이 1.05 m 고정'으로 계산해, 키가 큰 사람·작은 사람 모두 같은 값이 나왔다.
-     이제 사용자가 자기 키(cm)나 앉은 눈높이(cm)를 넣으면 그 값으로 시야·앞사람 가림을 다시 계산한다.
-     데이터의 기본 눈높이(p.eye ≈ 1.05 m)는 키 170 cm 기준으로 보고 비례해 늘리고 줄인다(추정). */
-  const EYE_KEY = 'cgv_eye_v1';
-  const EYE_BASE_CM = 170;
-  const HEIGHT_MIN = 120, HEIGHT_MAX = 210;   /* 내 키 입력 허용 범위(cm) — ±버튼과 같은 기준 */
-  let viewerSize = { h: 170, eye: null };   /* h: 키(cm) · eye: 앉은 눈높이(cm)를 직접 넣은 경우 */
-  (function () {
-    try {
-      const v = JSON.parse(localStorage.getItem(EYE_KEY) || 'null');
-      if (v && typeof v.h === 'number') {
-        viewerSize = {
-          h: clamp(Math.round(v.h), 120, 210),
-          eye: (typeof v.eye === 'number' ? clamp(Math.round(v.eye), 70, 160) : null)
-        };
-      }
-    } catch (e) {}
-  })();
-  function saveViewerSize() {
-    try { localStorage.setItem(EYE_KEY, JSON.stringify(viewerSize)); } catch (e) {}
-    try { profileSchedule(); } catch (e) {}   /* 로그인 상태면 계정에도 키·눈높이를 남긴다 */
-  }
+  /* ---------- 앉은 눈높이 (표준값) ----------
+     2026-11-21 사용자 요청으로 '내 키로 계산했어요 · 앉은 눈높이 직접 입력' 블록을 화면에서 지웠다.
+     시야·앞사람 가림은 관 데이터의 기본 눈높이(p.eye ≈ 1.05 m, 키 170 cm 기준) 표준값으로 계산한다. */
+  const EYE_BASE_CM = 170;   /* 표준 키(cm) — 데이터의 기본 눈높이가 이 키 기준 */
   function baseEye(p) { return (p && p.eye > 0.5) ? p.eye : 1.05; }
-  /* 이 사람의 앉은 눈높이(m) — 좌석 열 바닥 기준 */
-  function eyeMeters(p) {
-    if (viewerSize.eye) return viewerSize.eye / 100;
-    return baseEye(p) * (viewerSize.h / EYE_BASE_CM);
-  }
-  /* 좌석·관 유형이 눈높이에 주는 차이(m) — 좌판이 낮은 빈백·소파, 모션베이스 위 4DX 좌석.
+  /* 이 사람의 앉은 눈높이(m) — 좌석 열 바닥 기준 (표준값) */
+  function eyeMeters(p) { return baseEye(p); }
+  /* 좌석·관 유형이 눈높이에 주는 차이(m) — 좌판이 낮은 반백·소파, 모션베이스 위 4DX 좌석.
      리클라이너 관의 높은 단차(0.40 m)는 params.riser로 이미 반영되고, 여기서는 좌판 높이만 본다.
      (값은 유형별 추정치 — 표에서 '추정' 배지로 보인다) */
   function seatEyeShift(p, seat) {
@@ -5080,122 +5062,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     c.eye = eyeMeters(p) + shift;
     c.seatEyeShift = shift;
     c.eyeDelta = c.eye - baseEye(p);
-    c.eyeFor = viewerSize.h;
+    c.eyeFor = EYE_BASE_CM;
     return c;
   }
-  /* 내 키·눈높이 입력 카드 — 시야 분석 맨 위 */
-  function eyeCtlHtml(p) {
-    const eyeCm = Math.round(eyeMeters(p) * 100);
-    return `<div class="eyectl" id="eyeCtl">
-      <div class="eyectl-hd"><b>내 키로 계산했어요</b><span>키를 바꾸면 시야·앞사람 가림이 바로 다시 계산돼요</span></div>
-      <div class="eyectl-row">
-        <span class="eyectl-lb">내 키</span>
-        <button type="button" class="eyectl-step" data-eye="-5" aria-label="키 5cm 줄이기">−</button>
-        <input id="eyeHeight" class="eyectl-h eyectl-num" type="number" inputmode="numeric" pattern="[0-9]*" step="1" min="120" max="210" value="${viewerSize.h}" aria-label="내 키(cm, 정수)" title="키를 직접 입력하세요(정수 cm)">
-        <span class="eyectl-cm">cm</span>
-        <button type="button" class="eyectl-step" data-eye="5" aria-label="키 5cm 늘리기">+</button>
-        <span class="eyectl-eye">앉은 눈높이 <b>${(eyeCm / 100).toFixed(2)} m</b>${viewerSize.eye ? ' · 직접 입력' : ''}</span>
-      </div>
-      <div class="eyectl-row2">
-        <label for="eyeSeat">앉은 눈높이 직접 입력</label>
-        <input id="eyeSeat" type="number" inputmode="numeric" min="70" max="160" step="1" placeholder="${eyeCm}" value="${viewerSize.eye || ''}">
-        <span class="eyectl-cm">cm</span>
-        <button type="button" class="eyectl-save" data-eyesave="1">적용</button>
-        ${viewerSize.eye ? '<button type="button" class="eyectl-reset" data-eyereset="1">키 기준</button>' : ''}
-      </div>
-      <p class="eyectl-note">앉은 눈높이는 키 170 cm를 1.05 m로 보고 키에 비례해 계산했어요. 실제 좌석 높이·자세에 따라 달라질 수 있어요.</p>
-    </div>`;
-  }
-  /* 눈높이를 바꾸고 패널만 다시 그린다 — 보던 위치는 그대로 */
-  function repaintForEye() {
-    const sel = ['#seatPanel', '#sheetBody'];
-    const tops = sel.map((s) => { const el = document.querySelector(s); return el ? el.scrollTop || 0 : 0; });
-    /* 아직 안 보낸 후기 글은 다시 그릴 때도 살린다 */
-    const ta = document.getElementById('reviewText');
-    const txt = ta ? ta.value : '';
-    try { paintSeatPanel(); } catch (e) {}
-    if (txt) { const t2 = document.getElementById('reviewText'); if (t2) t2.value = txt; }
-    sel.forEach((s, i) => {
-      const el = document.querySelector(s);
-      if (el) el.scrollTop = tops[i] || 0;
-    });
-  }
-  document.addEventListener('click', (e) => {
-    const b = e.target.closest && e.target.closest('[data-eye], [data-eyesave], [data-eyereset]');
-    if (!b) return;
-    if (b.hasAttribute('data-eyereset')) {
-      viewerSize.eye = null;
-    } else if (b.hasAttribute('data-eyesave')) {
-      const inp = document.getElementById('eyeSeat');
-      const v = Math.round(Number(inp && inp.value));
-      if (!inp || !inp.value || !isFinite(v) || v < 70 || v > 160) {
-        toast('앉은 눈높이를 70~160 cm 사이 숫자로 넣어주세요');
-        return;
-      }
-      viewerSize.eye = clamp(v, 70, 160);
-    } else {
-      const d = Number(b.getAttribute('data-eye')) || 0;
-      viewerSize.h = clamp(viewerSize.h + d, 120, 210);
-      viewerSize.eye = null;          /* 키를 다시 만지면 키 기준으로 돌아간다 */
-    }
-    saveViewerSize();
-    repaintForEye();
-  });
-
-  /* 내 키 직접 입력(2026-11-19 사용자 요청) — 정수 cm만. 소수점·쉼표·지수는 입력 단계에서 막고,
-     숫자만 남기며, 120~210 cm 밖은 버튼과 같은 범위로 당긴다. 입력하는 즉시(380ms 디바운스) 시야·
-     앞사람 가림을 다시 계산하고, 다시 그린 뒤에도 입력 초점과 커서를 그 자리에 돌려놓는다. */
-  function heightDigits(el) {
-    const digits = String((el && el.value) || '').replace(/[^0-9]/g, '').slice(0, 3);
-    if (el && el.value !== digits) el.value = digits;
-    return digits;
-  }
-  function applyHeightInput(el, refocus) {
-    const digits = heightDigits(el);
-    const n = digits ? Number(digits) : NaN;
-    if (!isFinite(n)) return false;
-    const v = clamp(n, HEIGHT_MIN, HEIGHT_MAX);
-    if (v !== viewerSize.h || viewerSize.eye !== null) {
-      viewerSize.h = v;
-      viewerSize.eye = null;            /* 키를 직접 넣으면 키 기준으로 돌아간다 */
-      saveViewerSize();
-      repaintForEye();
-    }
-    if (refocus) {
-      const again = document.getElementById('eyeHeight');
-      if (again) {
-        try {
-          again.value = String(viewerSize.h);
-          again.focus();
-          again.setSelectionRange(again.value.length, again.value.length);
-        } catch (e) {}
-      }
-    }
-    return true;
-  }
-  let hInputT = 0;
-  document.addEventListener('input', (e) => {
-    const el = e.target;
-    if (!el || el.id !== 'eyeHeight') return;
-    heightDigits(el);
-    clearTimeout(hInputT);
-    const n = Number(el.value || '');
-    if (!el.value || !isFinite(n) || n < HEIGHT_MIN || n > HEIGHT_MAX) return;   /* 아직 짧게 치는 중이면 기다린다 */
-    hInputT = setTimeout(() => { applyHeightInput(el, true); }, 380);
-  });
-  document.addEventListener('change', (e) => {
-    const el = e.target;
-    if (!el || el.id !== 'eyeHeight') return;
-    clearTimeout(hInputT);
-    applyHeightInput(el, false);       /* 범위 밖 값을 창 밖을 떠날 때 당겨 준다 */
-  });
-  document.addEventListener('keydown', (e) => {
-    const el = e.target;
-    if (!el || el.id !== 'eyeHeight') return;
-    if (e.key === '.' || e.key === ',' || e.key === 'e' || e.key === 'E' || e.key === '-' || e.key === '+') { e.preventDefault(); return; }
-    if (e.key === 'Enter') { e.preventDefault(); clearTimeout(hInputT); applyHeightInput(el, true); if (el.blur) {} }
-  });
-
   /* ---------- 물리 계산 ---------- */
   function metrics(p, seat) {
     /* IMAX는 3D로 그릴 때 정면 체감에 맞춰 화면을 조금 작게 그린다(renderScale).
@@ -5366,12 +5235,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       resetCompare();
     }
     stopMedia();
-    const tb = document.getElementById('topBadge');
-    if (tb) {
-      /* 2026-11-20 사용자 요청 — 기본(전국)에서는 '전국' 대신 '영화관 177개 지점'으로. 지역을 골랐을 때는 지역 이름 그대로. */
-      const scope = areaScopeLabel();
-      tb.textContent = (scope === '전국' ? '영화관' : scope) + ' ' + DATA.meta.theaterCount + '개 지점';
-    }
+    /* 상단 바의 '영화관 N개 지점' 배지는 2026-11-21 사용자 요청으로 없앴다 */
     /* 하단 탭바: 지금 보고 있는 화면을 표시(지점 / 내 기록) */
     document.querySelectorAll('.tabbar .tabbtn').forEach((b) => {
       const on = (b.getAttribute('data-go') === 'my') === (state.view === 'my');
@@ -5621,15 +5485,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }).join('') + (list.length === 0 ? `<div class="card empty-state" style="grid-column:1/-1"><div class="empty-ic">🔍</div><h3>조건에 맞는 지점이 없어요</h3><p>지역 탭이나 검색어를 바꿔 보세요.</p></div>` : '');
   }
 
-  /* 헤로 제목에 쓸 지역 범위 문구 — 지금 데이터에 있는 지역만 이어 붙인다 */
-  function areaScopeLabel() {
-    const order = AREA_TABS.filter(([k]) => k !== 'all' && AREA_SET.has(k)).map(([, label]) => label);
-    if (!order.length) return 'CGV';
-    /* 전국 단위로 다 들어오면 지역 이름을 죽 나열하는 대신 '전국' 한 단어로 */
-    if (AREA_TABS.filter(([k]) => k !== 'all').every(([k]) => AREA_SET.has(k))) return '전국';
-    return order.join('·');
-  }
-
   /* ---------------------------------------------------------------
      버그·정보 오류 제보 (요청 #7)
      · 방문자가 사이트 안에서 바로 적어 보내면 khanyokim@naver.com으로 메일이 간다.
@@ -5821,7 +5676,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const open = guideOpen();
     const items = [
       ['지점·상영관 고르기', '특별관은 IMAX·4DX·ULTRA 4DX·SCREENX·DOLBY ATMOS 필터로 바로 찾을 수 있어요.'],
-      ['좌석을 눌러 3D로 보기', '그 자리에 앉으면 화면이 얼마나 크게 보이는지 3D로 보여드려요. 내 키(눈높이)를 넣으면 앞사람에 얼마나 가리는지 계산해서 알려드려요.'],
+      ['좌석을 눌러 3D로 보기', '그 자리에 앉으면 화면이 얼마나 크게 보이는지 3D로 보여드려요. 앞사람에 얼마나 가리는지도 이어서 계산해 알려드려요.'],
       ['두 자리 이상 비교하기', '⚖️ 좌석 비교를 켜고 최대 4석을 담으면 같은 화각으로 나란히 놓고 볼 수 있어요.'],
       ['사진·한마디 남기기', '그 자리에서 찍은 사진과 한마디를 남기면 다음 사람에게 가장 큰 도움이 돼요.']
     ];
@@ -5857,8 +5712,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const pctReady = st.halls ? Math.round((st.ready / st.halls) * 100) : 0;
     return `
     <section class="hero">
-      <h1>영화관 ${st.theaters}개 지점,<br>예매 전에 내 자리 시야부터</h1>
-      <p><span class="hero-p-full">명당을 찾기보다 나에게 맞는 자리를 찾으세요. 실제 예매 좌석표를 그대로 옮겨, 그 자리에 앉았을 때 화면이 어떻게 보이는지 3D로 미리 확인하세요. 좌석을 고르면 시야·거리·단차를 한 화면에서 보여드려요.</span><span class="hero-p-short">명당을 찾기보다 나에게 맞는 자리를 찾으세요. 실제 예매 좌석표 그대로, 앉은 자리에서 보이는 화면을 3D로 미리 확인하세요.</span></p>
+      <h1>명당을 찾기보다<br>나에게 맞는 자리를 찾으세요</h1>
+      <p><span class="hero-p-full">어떤 자리를 고르든, 그 자리에서 화면이 어떻게 보이는지 미리 확인하세요. 실제 예매 좌석표를 그대로 옮겨 앉았을 때의 시야·거리·단차를 3D로 보여드려요.</span><span class="hero-p-short">실제 예매 좌석표 그대로, 앉은 자리에서 보이는 화면을 3D로 미리 확인하세요.</span></p>
       <div class="hero-stats">
         <div class="hstat"><b class="num">${st.theaters}</b><span>지점</span></div>
         <div class="hstat"><b class="num">${st.halls.toLocaleString()}</b><span>상영관</span></div>
@@ -6892,7 +6747,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       : '');
     return `<section class="ana">
       <div class="ana-head"><h4>시야 분석</h4><span>${esc(seatDisp(seat))} · ${esc(h.name)}</span></div>
-      ${eyeCtlHtml(p)}
       <div class="ana-rows">
         ${rows.map(([k, v, lv]) => `<div class="ana-row"><span>${k}</span><span class="ana-v">${v}</span>${cfBadge(lv)}</div>`).join('')}
       </div>
@@ -6956,7 +6810,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <div class="dsec-head"><h4>${photoHead[0]}</h4><span>${photoHead[1]}</span></div>
           ${arr.length ? photoTabHtml(seat, arr, idx) : '<p class="sub dsec-empty">이 자리 사진은 아직 없어요. 아래 <b>이 자리, 한마디</b>에서 올리면 이 자리에 바로 붙어요.</p>'}
         </section>`;
-      const simSec = `<section class="dsec"><div class="dsec-head"><h4>3D 시야</h4><span>시뮬레이션 · 가로 ${fmt(m.hFov, 1)}°</span></div>${simHtml(h, seat, m)}</section>`;
+      const simSec = `<section class="dsec"><div class="dsec-head"><h4>3D 시야</h4></div>${simHtml(h, seat, m)}</section>`;
       const profSec = `<section class="dsec">
           <div class="dsec-head"><h4>단면도</h4><span>스크린·단차를 옆에서 본 그림</span></div>
           <div class="profile-card"><canvas class="profile-canvas" width="720" height="230"></canvas></div>
@@ -7453,7 +7307,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function seatActionsHtml(h, seat) {
     const key = 'seat:' + h.id + '/' + seat.key;
     return `<div class="seatfun">
-      <span>이 좌석 정보가 도움이 됐나요?</span>
       ${helpBtnHtml(key, 0)}
       <button class="fixbtn" type="button" data-fix="${esc(key)}" data-fixlabel="${esc(seatDisp(seat) + ' 좌석 정보')}" data-hall="${esc(h.id)}" data-seat="${esc(seat.key)}">⚠️ 정보 수정 요청</button>
     </div>`;
@@ -9033,7 +8886,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   });
 
   /* ======================================================================
-     로그인 — Supabase Auth (이메일·비밀번호 + 구글 소셜) + public.profiles 동기화
+     로그인 — Supabase Auth (구글·카카오 소셜) + public.profiles 동기화
      · 프로젝트의 공개(publishable) 키만 쓴다. 비밀 키·서비스 키는 쓰지 않는다.
      · 세션(access/refresh token)만 이 기기에 남기고, 만료 1분 전에 스스로 갱신한다.
      · profiles 테이블이나 seat_reviews.user_id 가 아직 없어도(404/400) 앱은 멈추지 않고
@@ -9044,12 +8897,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   const SEEN_KEY = 'cgv_seen_v1';
   const AGE_KEY = 'cgv_age_v1';
   const AGE_OPTS = ['10대', '20대', '30대', '40대 이상'];
-  const PROV_MSG = '구글 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요.';
+  const PROV_MSG = '로그인이 아직 연결 설정 중이에요. 잠시 뒤 다시 시도해 주세요.';
+  const OAUTH_NAME = { google: '구글', kakao: '카카오' };
+  function provMsg(nm) { return (nm || '소셜') + ' 로그인이 아직 연결 설정 중이에요. 잠시 뒤 다시 시도해 주세요.'; }
   const AUTH = {
     session: null, user: null, profile: null,
     profOff: false,        /* profiles 테이블이 없거나 권한이 없어 서버 저장을 못 하는 상태 */
-    ready: false, busy: false, tab: 'login',
-    prov: { google: false },   /* provider 미등록을 이미 확인했는지 */
+    ready: false, busy: false,
+    prov: { google: false, kakao: false },   /* provider 미등록을 이미 확인했는지 */
     applying: false, _tm: 0
   };
 
@@ -9155,9 +9010,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (nm && nm !== nickname) { try { setNickname(nm); } catch (e) {} }
     const age = p.age_group || p.ageGroup;
     if (age && AGE_OPTS.indexOf(age) >= 0) lsSet(AGE_KEY, age);
-    if (typeof p.height_cm === 'number' && p.height_cm >= 120 && p.height_cm <= 210) viewerSize.h = Math.round(p.height_cm);
-    if (typeof p.eye_cm === 'number' && p.eye_cm >= 70 && p.eye_cm <= 160) viewerSize.eye = Math.round(p.eye_cm);
-    try { saveViewerSize(); } catch (e) {}
+    /* 키·눈높이 입력 UI는 2026-11-21 없앴다 — 계산은 관 데이터의 표준값으로 한다 */
     if (Array.isArray(p.favorites)) {
       let changed = false;
       p.favorites.forEach((f) => {
@@ -9203,8 +9056,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       id: AUTH.user.id,
       nickname: nickname || null,
       age_group: lsGet(AGE_KEY, null),
-      height_cm: viewerSize.h,
-      eye_cm: viewerSize.eye || null,
+      height_cm: (AUTH.profile && typeof AUTH.profile.height_cm === 'number') ? AUTH.profile.height_cm : null,
+      eye_cm: (AUTH.profile && typeof AUTH.profile.eye_cm === 'number') ? AUTH.profile.eye_cm : null,
       favorites: Object.values(favs || {}),
       seen_movies: seenAll(),
       updated_at: new Date().toISOString()
@@ -9276,10 +9129,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }
     return `<div class="card card-pad authcard">
       <b class="auth-title">로그인하고 내 기록을 이어서</b>
-      <p class="auth-lead">즐겨찾기·내 키·본 영화가 다른 기기에서도 그대로 열려요. 로그인 없이도 좌석 보기와 후기는 지금처럼 쓸 수 있어요.</p>
+      <p class="auth-lead">즐겨찾기와 본 영화가 다른 기기에서도 그대로 열려요. 로그인 없이도 좌석 보기와 후기는 지금처럼 쓸 수 있어요.</p>
       <p class="auth-warn">⚠️ 로그인하지 않고 이용하면 저장한 내 기록이 지워질 수 있어요.</p>
       <div class="authbtns">
-        <button class="btn" id="authLoginBtn" type="button">로그인 / 회원가입</button>
+        <button class="btn" id="authLoginBtn" type="button">로그인</button>
       </div>
     </div>`;
   }
@@ -9294,43 +9147,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
   const G_ICON = '<svg class="social-ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4z"/><path fill="#34A853" d="M12 22c2.7 0 4.9-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4.1 5.6-4.1z"/></svg>';
 
-  function authFormHtml() {
-    const su = AUTH.tab === 'signup';
-    return `
-      <div class="authfields">
-        <input id="authEmail" class="authinput" type="email" inputmode="email" autocomplete="email" placeholder="이메일 (예: name@example.com)" value="">
-        <input id="authPw" class="authinput" type="password" autocomplete="${su ? 'new-password' : 'current-password'}" placeholder="비밀번호${su ? ' (6자 이상)' : ''}">
-        ${su ? `<label class="consent"><input type="checkbox" id="authAgree"><span><b>[필수]</b> 이메일·닉네임·연령대를 <b>회원 구분과 기록 동기화</b> 목적으로 수집·이용하는 데 동의해요. 서버에 저장되며, 지우고 싶을 때는 아래 '제보' 메일로 알려 주시면 계정과 함께 지워 드려요. 후기에 남긴 닉네임은 후기와 함께 표시돼요.</span></label>` : ''}
-      </div>
-      <button class="btn" id="authSubmit" type="button" style="width:100%;margin-top:12px">${su ? '가입하기' : '로그인'}</button>
-      ${su ? '' : `<button class="authlink" id="authForgot" type="button">비밀번호를 잊었어요</button>`}`;
-  }
+  /* 로그인은 소셜만 — 2026-11-21 사용자가 '구글 + 카카오 둘 다, 이메일 가입은 삭제'를 골랐다.
+     이메일·비밀번호 입력과 회원가입 탭은 화면에서 없앴다. */
+  const K_ICON = '<svg class="social-ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#191600" d="M12 3.1c-5.3 0-9.7 3.3-9.7 7.5 0 2.7 1.8 5 4.4 6.3-.2.8-.7 2.7-.8 3.1-.1.5.2.5.4.4.3-.1 3.2-2.2 3.7-2.6.6.1 1.3.2 2 .2 5.3 0 9.7-3.3 9.7-7.4S17.3 3.1 12 3.1z"/></svg>';
 
-  function bindAuthForm() {
-    const sub = document.getElementById('authSubmit');
-    if (sub) sub.onclick = () => authPassword(AUTH.tab);
-    const em = document.getElementById('authEmail');
-    const pw = document.getElementById('authPw');
-    const key = (e) => { if (e.key === 'Enter') { e.preventDefault(); authPassword(AUTH.tab); } };
-    if (em) em.onkeydown = key;
-    if (pw) pw.onkeydown = key;
-    const fg = document.getElementById('authForgot');
-    if (fg) fg.onclick = () => authReset();
-  }
-  function paintAuthTabs() {
-    document.querySelectorAll('#authModal [data-atab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.atab === AUTH.tab)));
-    document.querySelectorAll('#authModal [data-oauth]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
-  }
-  function setAuthTab(tab) {
-    AUTH.tab = tab === 'signup' ? 'signup' : 'login';
-    const box = document.getElementById('authForm');
-    if (box) box.innerHTML = authFormHtml();
-    paintAuthTabs(); bindAuthForm(); authMsg('');
-  }
-  function openAuth(tab) {
+  function openAuth() {
     if (AUTH.user) { if (state.view !== 'my') { state.view = 'my'; syncHash(true); render(); } return; }
     if (document.getElementById('authModal')) return;
-    AUTH.tab = tab === 'signup' ? 'signup' : 'login';
     const wrap = document.createElement('div');
     wrap.id = 'authModal';
     wrap.className = 'modal';
@@ -9339,121 +9162,29 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       <div class="modal-card auth-card">
         <div class="modal-grab"></div>
         <h3>영시미 로그인</h3>
-        <p class="sub">로그인하면 즐겨찾기·키·본 영화가 다른 기기에서도 이어져요.<br>로그인 없이도 좌석 보기와 후기는 그대로 쓸 수 있어요.</p>
+        <p class="sub">로그인하면 즐겨찾기·본 영화가 다른 기기에서도 이어져요.<br>로그인 없이도 좌석 보기와 후기는 그대로 쓸 수 있어요.</p>
         <p class="auth-warn">⚠️ 로그인하지 않고 이용하면 저장한 내 기록이 지워질 수 있어요.</p>
         <div class="auth-social">
           <button class="btn social google" type="button" data-oauth="google" id="authGoogle">${G_ICON}<span>구글로 계속하기</span></button>
+          <button class="btn social kakao" type="button" data-oauth="kakao" id="authKakao">${K_ICON}<span>카카오로 계속하기</span></button>
         </div>
-        <div class="auth-or"><span>또는 이메일로</span></div>
-        <div class="authtabs" role="tablist">
-          <button class="authtab" type="button" role="tab" data-atab="login">로그인</button>
-          <button class="authtab" type="button" role="tab" data-atab="signup">회원가입</button>
-        </div>
-        <div id="authForm"></div>
         <p class="authmsg" id="authMsg" hidden></p>
         <button class="btn ghost" id="authGuest" type="button" style="width:100%;margin-top:10px;background:#fff;color:#6B7684;border:1px solid var(--line)">비회원으로 계속하기</button>
       </div>`;
     document.body.appendChild(wrap);
     wrap.querySelector('.modal-scrim').onclick = closeAuth;
     wrap.querySelector('#authGuest').onclick = () => { setGuestOk(); closeAuth(); };
-    wrap.querySelectorAll('[data-atab]').forEach((b) => { b.onclick = () => setAuthTab(b.dataset.atab); });
     wrap.querySelector('#authGoogle').onclick = () => authOAuth('google');
-    setAuthTab(AUTH.tab);
-    setTimeout(() => { const e = document.getElementById('authEmail'); if (e) try { e.focus(); } catch (_) {} }, 150);
+    wrap.querySelector('#authKakao').onclick = () => authOAuth('kakao');
   }
   function closeAuth() { const m = document.getElementById('authModal'); if (m) m.remove(); }
 
-  /* 확인 메일 안내(가입 직후) */
-  function authSignedUp(email) {
-    const box = document.getElementById('authForm');
-    if (!box) return;
-    box.innerHTML = `<div class="authdone">
-      <b>확인 메일을 보냈어요</b>
-      <p>${esc(email)} 앞으로 보낸 메일에서 <b>인증 링크</b>를 누르면 가입이 끝나요. 메일이 안 보이면 스팸함도 확인해 주세요.</p>
-      <button class="btn ghost" id="authResend" type="button">메일 다시 받기</button>
-    </div>`;
-    const rs = document.getElementById('authResend');
-    if (rs) rs.onclick = async () => {
-      rs.disabled = true; rs.textContent = '보내는 중…';
-      try {
-        const r = await fetch(SB_URL + '/auth/v1/resend', {
-          method: 'POST', cache: 'no-store',
-          headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'signup', email })
-        });
-        if (r.ok) authMsg('메일을 다시 보냈어요.', 'ok');
-        else { const j = await r.json().catch(() => null); authMsg(authErrText((j && (j.msg || j.message || j.error_description)) || 'HTTP ' + r.status), 'bad'); }
-      } catch (e) { authMsg(authErrText(e && e.message), 'bad'); }
-      rs.disabled = false; rs.textContent = '메일 다시 받기';
-    };
-    authMsg('');
-  }
-
-  async function authPassword(mode) {
-    const em = (document.getElementById('authEmail') || {}).value || '';
-    const pw = (document.getElementById('authPw') || {}).value || '';
-    const email = em.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { authMsg('이메일 주소를 확인해 주세요.', 'bad'); return; }
-    if (pw.length < 6) { authMsg('비밀번호는 6자 이상으로 넣어 주세요.', 'bad'); return; }
-    if (mode === 'signup') {
-      const cb = document.getElementById('authAgree');
-      if (!cb || !cb.checked) { authMsg('개인정보 수집·이용 동의에 체크해 주세요.', 'bad'); return; }
-    }
-    const btn = document.getElementById('authSubmit');
-    if (btn) { btn.disabled = true; btn.textContent = mode === 'signup' ? '가입 중…' : '로그인 중…'; }
-    authMsg('');
-    try {
-      const url = SB_URL + (mode === 'signup' ? '/auth/v1/signup' : '/auth/v1/token?grant_type=password');
-      const r = await fetch(url, {
-        method: 'POST', cache: 'no-store',
-        headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pw })
-      });
-      const j = await r.json().catch(() => null);
-      if (!r.ok) throw new Error((j && (j.error_description || j.msg || j.message)) || ('HTTP ' + r.status));
-      if (mode === 'signup') {
-        if (j && j.access_token) {           /* 이메일 확인이 꺼져 있는 프로젝트면 바로 로그인된다 */
-          authStore(j);
-          closeAuth();
-          await authAfterLogin();
-        } else {
-          authSignedUp(email);
-        }
-        return;
-      }
-      authStore(j);
-      closeAuth();
-      await authAfterLogin();
-    } catch (e) {
-      const msg = String((e && e.message) || e);
-      authMsg(authErrText(msg), 'bad');
-      if (/not enabled|Unsupported provider/i.test(msg)) toast(PROV_MSG, 6000);
-    } finally {
-      const b = document.getElementById('authSubmit');
-      if (b) { b.disabled = false; b.textContent = mode === 'signup' ? '가입하기' : '로그인'; }
-    }
-  }
-
-  async function authReset() {
-    const em = ((document.getElementById('authEmail') || {}).value || '').trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { authMsg('먼저 이메일 주소를 넣어 주세요. 그 주소로 재설정 링크를 보내 드려요.', 'bad'); return; }
-    try {
-      const r = await fetch(SB_URL + '/auth/v1/recover', {
-        method: 'POST', cache: 'no-store',
-        headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: em })
-      });
-      if (!r.ok) { const j = await r.json().catch(() => null); throw new Error((j && (j.msg || j.message || j.error_description)) || ('HTTP ' + r.status)); }
-      authMsg('재설정 링크를 보냈어요. 메일함을 확인해 주세요.', 'ok');
-    } catch (e) { authMsg(authErrText(e && e.message), 'bad'); }
-  }
-
-  /* 소셜 로그인 — provider 가 아직 등록 전이면 페이지를 떠나지 않고 안내만 한다 */
+  /* 소셜 로그인(구글·카카오) — provider 가 아직 등록 전이면 페이지를 떠나지 않고 안내만 한다 */
   async function authOAuth(provider) {
-    const nm = '구글';   /* 소셜 로그인은 구글만 쓴다(카카오는 2026-11-19 제외) */
+    const nm = OAUTH_NAME[provider] || '소셜';
     if (AUTH.prov[provider]) {
-      authMsg(PROV_MSG, 'bad');
-      toast(nm + ' 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요.', 6000);
+      authMsg(provMsg(nm), 'bad');
+      toast(provMsg(nm), 6000);
       return;
     }
     const url = SB_URL + '/auth/v1/authorize?provider=' + provider + '&redirect_to=' + encodeURIComponent(authRedirectUrl());
@@ -9466,8 +9197,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         const msg = String((j && (j.msg || j.message || j.error_description)) || '');
         if (/not enabled|Unsupported provider/i.test(msg)) {
           AUTH.prov[provider] = true; go = false;
-          authMsg(PROV_MSG, 'bad');
-          toast(nm + ' 로그인이 아직 연결 설정 중이에요. 아래 이메일로 먼저 가입할 수 있어요.', 6000);
+          authMsg(provMsg(nm), 'bad');
+          toast(provMsg(nm), 6000);
         }
       }
     } catch (e) {}   /* 확인만 실패했으면 그대로 이동해 본다 */
