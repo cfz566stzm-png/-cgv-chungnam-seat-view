@@ -6453,6 +6453,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           const centerX = () => { sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) / 2; };
           centerX();
           requestAnimationFrame(centerX);
+          /* 세로 스크롤바·하단 바가 붙어 폭이 늦게 줄어드는 기기(모바일)가 있어,
+             사둡이 손대지 않았을 때만 150ms 뒤에 한 번 더 맞춘다. */
+          const first = sc.scrollLeft;
+          setTimeout(() => { if (Math.abs(sc.scrollLeft - first) < 12) centerX(); }, 150);
         }
       }
     }
