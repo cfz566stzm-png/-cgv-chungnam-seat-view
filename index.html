@@ -2444,6 +2444,8 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
     this.vpitch = 0;
     this.drag = null;
     this.raf = 0;
+    this.destroyed = false;                 /* destroy() 뒤에 늦게 도착한 프레임이 그리지 않게 */
+    this._loopErr = 0;                      /* 연속으로 실패한 프레임 수 — 루프 예외 방어용 */
     this.hallKey = (opts && opts.hallKey) || null;
     this.rot = (opts && opts.rot) || 0;      /* 90이면 캔버스가 가로로 회전된 상태 */
     this.allowRecline = !(opts && opts.allowRecline === false);
@@ -2621,55 +2623,96 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
     if (!this.raf) this._loop();
   };
 
+  /* 애니메이션 루프 — 여기서 지켜야 할 두 가지 (2026-11-21 코드 검수 반영)
+     ① 프레임 안에서 무슨 일이 나도 다음 프레임은 반드시 다시 걸린다.
+        예전에는 requestAnimationFrame 약속을 잡은 뒤 그 안에서 트윈 계산·버튼 갱신 같은 코드가
+        한 번 터지면 다음 프레임을 거는 줄에 닿지 못해 루프가 영영 멈췄다(영상은 흐르는데 화면만
+        멈춘 정지 그림 — 사용자 제보: ▶ 영상이 재생되지 않음).
+     ② 한 번의 일시 오류(영상 첫 프레임 미도착·캔버스 상태 변화 등)로 바로 포기하지 않는다.
+        몇 프레임은 이어서 그려 회복을 기다리고, 연속 LOOP_MAX_ERR 프레임(약 0.5초) 동안 계속
+        터지면 그때만 안전하게 멈춘 뒤 콘솔에 한 줄 남긴다. 멈춘 뒤에도 드래그·영상·리셋 같은
+        다음 조작이 루프를 다시 걸면 그때 새로 시도한다. */
+  var LOOP_MAX_ERR = 30;
+
   Viewer.prototype._loop = function () {
     var self = this;
-    if (this.raf) return;                 /* 이미 돌고 있으면 새로 걸지 않는다 */
-    this.raf = requestAnimationFrame(function () {
-      self.raf = 0;
-      /* 비교창(light)처럼 여러 화면을 동시에 띄울 때는 드래그 중 프레임을 30fps 선으로 묶어
-         끊김을 줄인다. 손을 떼면 바로 전체 프레임으로 돌아간다. */
-      if (self.drag && self.o && self.o.light) {
-        var now0 = performance.now();
-        if (self._lastPaint && now0 - self._lastPaint < 28) { self._loop(); return; }
-      }
-      var moved = false;
-      if (self._tween) {
-        var k = (performance.now() - self._tween.t0) / 320;
-        if (k >= 1) { k = 1; }
-        var e = 1 - Math.pow(1 - k, 3);
-        self.yaw = self._tween.y0 + (self._tween.y1 - self._tween.y0) * e;
-        self.pitch = self._tween.p0 + (self._tween.p1 - self._tween.p0) * e;
-        moved = true;
-        if (k === 1) self._tween = null;
-      } else {
-        self.yaw += self.vyaw; self.pitch += self.vpitch;
-        self.vyaw *= 0.90; self.vpitch *= 0.90;
-        if (Math.abs(self.vyaw) < 0.02 && Math.abs(self.vpitch) < 0.02) { self.vyaw = self.vpitch = 0; }
-        else moved = true;
-      }
-      if (self._recTween) {
-        var rk = (performance.now() - self._recTween.t0) / self._recTween.dur;
-        if (rk > 1) rk = 1;
-        /* 선형(등속) — 중간에 가속하지 않고 전동 모터처럼 일정한 속도로 */
-        var re = rk;
-        self._rec = self._recTween.from + (self._recTween.to - self._recTween.from) * re;
-        self._paintRecBtn();
-        moved = true;
-        if (rk === 1) { self._rec = self._recTween.to; self._recTween = null; self._paintRecBtn(); }
-      }
-      /* 드래그 중이거나 영상이 재생 중이면 매 프레임 계속 그린다 */
-      if (self.drag) moved = true;
-      if (self.video && !self.video.paused) moved = true;
-      self.yaw = clamp(self.yaw, YAW_MIN, YAW_MAX);
-      self.pitch = clamp(self.pitch, PITCH_MIN, PITCH_MAX);
-      self.dirty = false;
-      self._inVid = true;
-      /* 그리기 중 예외가 나도 루프를 죽이지 않는다 — 루프가 끊기면 영상은 재생되는데 화면은
-         정지 화면에 멈춘 것처럼 보인다(사용자 제보: ▶ 영상이 재생되지 않음). */
-      try { self.render(); } catch (err) { moved = false; }
-      finally { self._inVid = false; self._lastPaint = performance.now(); }
-      if (moved) self._loop();
-    });
+    if (this.raf || this.destroyed) return;      /* 이미 돌고 있으면 새로 걸지 않는다 */
+    this.raf = requestAnimationFrame(function () { self._tick(); });
+  };
+
+  /* 프레임 한 장 — 예외는 모두 여기서 받아 내고, 다음 프레임 스케줄은 이 함수가 책임진다 */
+  Viewer.prototype._tick = function () {
+    var self = this;
+    self.raf = 0;
+    if (self.destroyed) return;
+    var again = false;
+    try {
+      again = self._frame();
+      self._loopErr = 0;                  /* 끝까지 그렸으면 연속 오류 횟수 초기화 */
+    } catch (err) {
+      again = self._frameErr(err);
+    } finally {
+      self._inVid = false;
+      self._lastPaint = performance.now();
+    }
+    if (again && !self.destroyed) self._loop();
+  };
+
+  /* 프레임이 터졌을 때 — 계속 이어 그릴지(true) 멈출지(false)를 정한다 */
+  Viewer.prototype._frameErr = function (err) {
+    var n = (this._loopErr = (this._loopErr || 0) + 1);
+    if (n === 1) {
+      console.warn('[영시미 3D] 프레임을 그리지 못했어요 — 다음 프레임에서 다시 시도합니다.', err);
+    } else if (n === LOOP_MAX_ERR) {
+      console.warn('[영시미 3D] 그리기 오류가 ' + n + '프레임 이어져 애니메이션을 잠시 멈춥니다. 화면을 다시 만지면 새로 시작합니다.', err);
+    }
+    return n < LOOP_MAX_ERR;
+  };
+
+  /* 한 프레임의 계산과 그리기 — 다음 프레임이 필요하면 true */
+  Viewer.prototype._frame = function () {
+    var self = this;
+    /* 비교창(light)처럼 여러 화면을 동시에 띄울 때는 드래그 중 프레임을 30fps 선으로 묶어
+       끊김을 줄인다. 손을 떼면 바로 전체 프레임으로 돌아간다. */
+    if (self.drag && self.o && self.o.light) {
+      var now0 = performance.now();
+      if (self._lastPaint && now0 - self._lastPaint < 28) return true;
+    }
+    var moved = false;
+    if (self._tween) {
+      var k = (performance.now() - self._tween.t0) / 320;
+      if (k >= 1) { k = 1; }
+      var e = 1 - Math.pow(1 - k, 3);
+      self.yaw = self._tween.y0 + (self._tween.y1 - self._tween.y0) * e;
+      self.pitch = self._tween.p0 + (self._tween.p1 - self._tween.p0) * e;
+      moved = true;
+      if (k === 1) self._tween = null;
+    } else {
+      self.yaw += self.vyaw; self.pitch += self.vpitch;
+      self.vyaw *= 0.90; self.vpitch *= 0.90;
+      if (Math.abs(self.vyaw) < 0.02 && Math.abs(self.vpitch) < 0.02) { self.vyaw = self.vpitch = 0; }
+      else moved = true;
+    }
+    if (self._recTween) {
+      var rk = (performance.now() - self._recTween.t0) / self._recTween.dur;
+      if (rk > 1) rk = 1;
+      /* 선형(등속) — 중간에 가속하지 않고 전동 모터처럼 일정한 속도로 */
+      var re = rk;
+      self._rec = self._recTween.from + (self._recTween.to - self._recTween.from) * re;
+      self._paintRecBtn();
+      moved = true;
+      if (rk === 1) { self._rec = self._recTween.to; self._recTween = null; self._paintRecBtn(); }
+    }
+    /* 드래그 중이거나 영상이 재생 중이면 매 프레임 계속 그린다 */
+    if (self.drag) moved = true;
+    if (self.video && !self.video.paused) moved = true;
+    self.yaw = clamp(self.yaw, YAW_MIN, YAW_MAX);
+    self.pitch = clamp(self.pitch, PITCH_MIN, PITCH_MAX);
+    self.dirty = false;
+    self._inVid = true;
+    try { self.render(); }
+    finally { self._inVid = false; }
+    return moved;
   };
 
   Viewer.prototype._bindControls = function () {
@@ -3726,6 +3769,7 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 
   Viewer.prototype.destroy = function () {
     var cv = this.cv;
+    this.destroyed = true;
     if (this.raf) { cancelAnimationFrame(this.raf); this.raf = 0; }
     /* 화면에서 사라지는 뷰어는 영상도 멈춘다(다른 화면에서 소리·재생이 남지 않게) */
     if (this.video) { try { this.video.pause(); } catch (e) {} }
@@ -6009,7 +6053,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     <div class="scrim mobile-only" id="scrim"></div>`;
   }
 
-  function legendHtml(h) {
+  function legendHtml(h, doorFail) {
     const c = h._types || {};
     const items = [];
     if (c.n) items.push(['일반석', 'background:#DCEDE4']);
@@ -6021,9 +6065,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (c.p) items.push(['장애인석', 'background:#BFE3FA']);
     if (c.v) items.push(['PRIVATE BOX', 'background:#FFE3B0;border:1px solid #E0A33A']);
     items.push(['통로', 'background:transparent;border:1px dashed #C9CFD6']);
-    const doorLg = hallDoors(h) ? `<span><i class="lg-door">${DOOR_SVG}</i>출입문</span>` : '';
+    const hasDoorMarks = !doorFail && doorPlan(h).length > 0;
+    const doorLg = hasDoorMarks ? `<span><i class="lg-door">${DOOR_SVG}</i>출입문</span>` : '';
     const notes = [];
     if (c.r && isReclinerHall(h)) notes.push('이 관은 <b>리클라이너</b> 관이에요 — 등받이를 110°~160°까지 젖힐 수 있어요.');
+    /* 출입문 위치를 아직 확인하지 못한 관 — 아무 표시 없이 비워 두면 '이 관은 출입문이 없는 관인가?'
+       하고 오해하기 쉬워서, 범례에 조용히 한 줄로 남긴다(2026-11-21 검수: 미확보 상태 표시 개선). */
+    if (!hasDoorMarks) notes.push('이 관은 <b>출입문 위치</b>를 아직 확인하지 못했어요. 확인되는 대로 배치도에 표시해 드릴게요.');
     return `<div class="lg-items">${items.map(([l, st]) => `<span><i style="${st}"></i>${l}</span>`).join('')}${doorLg}</div>` +      notes.map((n) => `<div class="lg-note">${n}</div>`).join('');
   }
 
@@ -6157,7 +6205,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
   /* ---------- 출입문(doors) — CGV 미니맵에서 뽑은 (col,row) 위치에 배지로 그린다 ---------- */
   const DOOR_SVG = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.6 1.3h6.2a.5.5 0 0 1 .5.5v8.4a.5.5 0 0 1-.5.5H2.6a.5.5 0 0 1-.5-.5V1.8a.5.5 0 0 1 .5-.5Z" fill="none" stroke="currentColor" stroke-width="1.15"/><circle cx="7.5" cy="6" r=".85" fill="currentColor"/></svg>';
-  function hallDoors(h) { return (h && h.doors && h.doors.length) ? h.doors : null; }
+  function hallDoors(h) {
+    if (!h || !h.doors || !h.doors.length) return null;
+    /* col·row 는 CGV 미니맵의 칸 좌표다. 숫자가 아닌 값이 섞여 있으면 그 문만 버리고,
+       하나도 남지 않으면 '아직 확인하지 못한 문'으로 본다 — 좌표 하나가 이상하다고
+       좌석 배치도 전체가 그려지지 않는 일을 막는다. */
+    const ok = h.doors.filter((d) => d && typeof d.col === 'number' && isFinite(d.col) &&
+      typeof d.row === 'number' && isFinite(d.row));
+    return ok.length ? ok : null;
+  }
   /* ---------- 출입문 배지가 붙을 벽 정하기 ----------
      CGV 미니맵 좌표는 좌석표 '칸' 단위(col=열, row=행)라 문이 격자 안쪽(가로 통로가 지나는 자리)이나
      반 칸 어긋난 곳에 찍히기도 한다. 그래서 좌석이 실제로 있는 격자(첫·끝 열/행)까지의 거리를 재서
@@ -6201,9 +6257,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       return { side, col: d.col, row: d.row };
     });
   }
-  function doorSides(h) {
+  function doorSides(h, plan) {
     const s = {};
-    doorPlan(h).forEach((p) => { s[p.side] = 1; });
+    (plan || doorPlan(h)).forEach((p) => { s[p.side] = 1; });
     return s;
   }
   function layoutDoors(h) {
@@ -6290,8 +6346,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       el.style.top = Math.round(got.cy * 2) / 2 + 'px';
     }
   }
-  function doorLayerHtml(h) {
-    const plan = doorPlan(h);
+  function doorLayerHtml(h, plan) {
+    plan = plan || doorPlan(h);
     if (!plan.length) return '';
     return `<div class="door-layer">${plan.map((p, i) => `<span class="door" data-side="${p.side}" data-di="${i}" role="img" aria-label="출입문" title="출입문">${DOOR_SVG}<i>출입문</i></span>`).join('')}</div>`;
   }
@@ -6366,19 +6422,30 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const pbbox = rooms.map((r) => `<div class="pbbox" style="left:${padW(0, r[0])};right:${padW(r[1], cols)}"></div>`).join('');
       return `${band}<div class="srow${row.gapBefore ? ' gap-before' : ''}${isBoxRow ? ' boxrow' : ''}${pbbox ? ' tight' : ''}">${lab}<div class="rcells" style="grid-template-columns:${tpl}">${pbbox}${cells}</div></div>`;
     }).join('');
-    /* 출입문이 있는 관은 좌석판을 여백 띠로 감싸고, 배지는 그 띠 안에만 놓는다(좌석·글자 위 금지) */
-    if (hallDoors(h)) {
-      const sides = doorSides(h);
+    /* 출입문이 있는 관은 좌석판을 여백 띠로 감싸고, 배지는 그 띠 안에만 놓는다(좌석·글자 위 금지)
+       미확보 관은 띠 없이 그린다 — 범례 쪽에서 '출입문 위치를 아직 확인하지 못했어요'를 안내한다. */
+    const dplan = doorPlan(h);
+    if (dplan.length) {
+      const sides = doorSides(h, dplan);
       const padT = sides.top ? 30 : 0, padB = sides.bottom ? 34 : 0;
       const padL = sides.left ? 30 : 0, padR = sides.right ? 30 : 0;
-      box.innerHTML = `<div class="smwrap" style="padding:${padT}px ${padR}px ${padB}px ${padL}px">${rowsHtml}${doorLayerHtml(h)}</div>`;
+      box.innerHTML = `<div class="smwrap" style="padding:${padT}px ${padR}px ${padB}px ${padL}px">${rowsHtml}${doorLayerHtml(h, dplan)}</div>`;
     } else {
       box.innerHTML = rowsHtml;   /* 열 번호 머리말 줄은 두지 않는다(2026-11-19 사용자 요청) */
     }
     applyMapSize(h, mapScroll());
-    layoutDoors(h);
+    /* 배지 배치(치수 측정)가 실패해도 좌석표는 그대로 보여야 한다 — 배지는 덧그림일 뿐이다.
+       배지를 제자리에 못 놓았으면 지우고, 범례에 '위치를 확인하지 못했다'는 안내만 남긴다. */
+    let doorFail = false;
+    try { layoutDoors(h); }
+    catch (e) {
+      doorFail = true;
+      const dl = box.querySelector('.door-layer');
+      if (dl) dl.parentNode.removeChild(dl);
+      if (window.console) console.warn('[배치도] 출입문 배지 배치를 건너뜁니다', e);
+    }
     const lg = $('#legend');
-    if (lg) lg.innerHTML = legendHtml(h);
+    if (lg) lg.innerHTML = legendHtml(h, doorFail);
     /* 넓은 관은 관에 처음 들어올 때 가운데부터, 주소로 들어온 좌석은 그 좌석이 보이게 */
     const sc = mapScroll();
     if (sc && sc.clientWidth > 0) {
