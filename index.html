@@ -185,10 +185,6 @@ h1,h2,h3,h4,p{margin:0}
 .hero:after{content:"";position:absolute;width:180px;height:180px;right:40px;bottom:-110px;border-radius:50%;background:rgba(255,255,255,.09)}
 .hero h1{font-size:26px;line-height:1.32;font-weight:850;letter-spacing:-.04em;position:relative}
 .hero p{margin-top:8px;font-size:14px;color:rgba(255,255,255,.86);font-weight:600;position:relative}
-.hero-stats{display:flex;gap:10px;margin-top:22px;position:relative}
-.hstat{flex:1;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:12px 13px;backdrop-filter:blur(4px)}
-.hstat b{display:block;font-size:20px;font-weight:850;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.hstat span{font-size:11.5px;font-weight:700;color:rgba(255,255,255,.8)}
 
 /* ---------- theater cards ---------- */
 .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:14px}
@@ -748,7 +744,6 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 
 /* --- 개수 라벨 명확화 (지점 수 vs 상영관 수) --- */
 .section-title h2 .cnt{font-style:normal;font-size:13px;font-weight:800;color:var(--green-d);background:var(--green-l);border-radius:8px;padding:3px 8px;margin-left:4px;vertical-align:middle}
-.hero-stats .hstat span{white-space:nowrap}
 
 /* --- 티켓 OCR --- */
 .ticketscan{display:flex;align-items:center;gap:10px;margin:14px 0;padding:12px 13px;border-radius:16px;background:linear-gradient(135deg,#0F766E,#047857);color:#fff;cursor:pointer;box-shadow:0 8px 20px rgba(4,120,87,.22)}
@@ -781,7 +776,6 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .toc-note{margin:10px 0 0 !important;font-size:11px !important;line-height:1.5;color:#9AA3AE !important}
 
 /* --- 좌석표 진행 카운트 --- */
-.hero-stats .hstat b.num small{font-size:13px;font-weight:800;color:var(--mute);letter-spacing:0}
 .section-title h2 .cnt{font-size:12px}
 
 /* --- IMAX 화면비·스크린 제원 안내 --- */
@@ -1359,7 +1353,7 @@ input,select,textarea,
 .tkm,.geoline .geotag,.geoline .geocap,.pe-src,.pe-reco>span,.v3d-vid,.v3d-recline,.v3d-recline-step,
 .v3d-big,.v3d-fov,.v3d-disc,.cmp-table thead th i,.mask-tools span,.toc-priv>b,
 .pcred-note,.anax,.nickrow span,.favgo span,.tdate,.tmain i,.dstat-head span,
-.dstat-grid span,.maphelp,.lg-note,.sflag,.big-tag,.badge,.cbadge,.hstat span,
+.dstat-grid span,.maphelp,.lg-note,.sflag,.big-tag,.badge,.cbadge,
 .screenbar span,.topseat b,.metric b i,.canvas-head span,.review .rts span,
 .helpful,.helpbtn,.fixbtn,.regline,.seatfun span,.rego,.fixsel,.fixdetail{
   font-size:12px}
@@ -1671,12 +1665,6 @@ button.hero-ticket{text-align:center}
   .hero p{font-size:12.8px;line-height:1.5;margin-top:8px}
   .hero-p-full{display:none}
   .hero-p-short{display:inline}
-  .hero-stats{margin-top:14px;gap:0;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:9px 2px}
-  .hstat{background:none;border:0;border-radius:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:0;
-    -webkit-backdrop-filter:none;backdrop-filter:none}
-  .hstat+.hstat{border-left:1px solid rgba(255,255,255,.16)}
-  .hstat b{font-size:17px;line-height:1.2;letter-spacing:-.02em}
-  .hstat span{font-size:10px;font-weight:800;color:rgba(255,255,255,.82);letter-spacing:-.01em}
   .hero-ticket{margin-top:12px;height:40px;padding:0 14px;font-size:12.5px;align-self:flex-start}
 
   /* 탭·검색·필터를 한 장의 도구 카드로 묶고, 중복 동선(내 좌석 기록)은 하단 탭바에 맡긴다 */
@@ -6269,11 +6257,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     <section class="hero">
       <h1>명당을 찾기보다<br>나에게 맞는 자리를 찾으세요</h1>
       <p><span class="hero-p-full">어떤 자리를 고르든, 그 자리에서 화면이 어떻게 보이는지 미리 확인하세요. 실제 예매 좌석표를 그대로 옮겨 앉았을 때의 시야·거리·단차를 3D로 보여드려요.</span><span class="hero-p-short">실제 예매 좌석표 그대로, 앉은 자리에서 보이는 화면을 3D로 미리 확인하세요.</span></p>
-      <div class="hero-stats">
-        <div class="hstat"><b class="num">${st.theaters}</b><span>지점</span></div>
-        <div class="hstat"><b class="num">${st.halls.toLocaleString()}</b><span>상영관</span></div>
-        <div class="hstat"><b class="num">${st.seats.toLocaleString()}</b><span>총 좌석</span></div>
-      </div>
       <button class="hero-ticket soon" type="button" data-ticket-soon="1" title="준비 중인 기능이에요"><span class="htx">🎟️ 티켓 자동 입력</span><span class="soonb">준비 중</span></button>
     </section>
 
