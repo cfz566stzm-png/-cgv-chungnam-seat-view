@@ -90,7 +90,7 @@
   <url><loc>https://yeongsimi.kr/?t=0307</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://yeongsimi.kr/?t=0271</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
   <url><loc>https://yeongsimi.kr/?t=0113</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://yeongsimi.kr/?t=0205</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://yeongsimi.kr/?t=0205</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://yeongsimi.kr/?t=0054</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://yeongsimi.kr/?t=0148</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
   <url><loc>https://yeongsimi.kr/?t=0371</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
@@ -106,10 +106,10 @@
   <url><loc>https://yeongsimi.kr/?t=0021</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://yeongsimi.kr/?t=0325</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://yeongsimi.kr/?t=0002</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://yeongsimi.kr/?t=0296</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://yeongsimi.kr/?t=0340</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://yeongsimi.kr/?t=0352</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://yeongsimi.kr/?t=0258</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://yeongsimi.kr/?t=0296</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://yeongsimi.kr/?t=0340</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://yeongsimi.kr/?t=0352</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://yeongsimi.kr/?t=0258</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://yeongsimi.kr/?t=0269</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
   <url><loc>https://yeongsimi.kr/?t=0308</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
   <url><loc>https://yeongsimi.kr/?t=0235</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
