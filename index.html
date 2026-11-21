@@ -6,6 +6,22 @@
 <title>영시미 — 영화관 177개 지점 좌석 시야 평점</title>
 <meta name="description" content="CGV 영화관 177개 지점의 실제 예매 좌석표로 좌석별 시야·거리·단차·앞사람 가림을 계산해 예매 전에 미리 보는 서비스. 서울·경기·인천·강원·대전·충청·부산·울산·대구·경상·광주·전라·제주. IMAX·4DX·SCREENX·씨네드쉐프까지.">
 <meta name="theme-color" content="#F2F4F6">
+<script>
+/* 화면 테마 — 첫 페인트 전에 적용해 다크 모드에서 흰 화면이 번쩍이지 않게 한다.
+   저장값: 'system'(기본) · 'light' · 'dark'.  실제 적용값은 <html data-theme="light|dark">. */
+(function () {
+  try {
+    var m = localStorage.getItem('yeongsimi_theme');
+    if (m !== 'light' && m !== 'dark') m = 'system';
+    var dark = m === 'dark' || (m === 'system' && !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
+    var d = document.documentElement;
+    d.setAttribute('data-theme', dark ? 'dark' : 'light');
+    d.setAttribute('data-theme-mode', m);
+    var tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.setAttribute('content', dark ? '#0F1115' : '#F2F4F6');
+  } catch (e) {}
+})();
+</script>
 <link rel="canonical" href="https://yeongsimi.kr/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="icon-180.png" sizes="180x180" type="image/png">
@@ -2072,6 +2088,434 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
   .wcard .wtag{font-size:16px}
 }
 
+/* ===== 화면 테마 (다크·화이트·기기 설정) + 설정 칸 ===== */
+/* =====================================================================
+   2026-11-21 · 화면 테마(다크 · 화이트 · 기기 설정) + 설정 칸
+   ─────────────────────────────────────────────────────────────────────
+   사용자 요청: "다크모드와 화이트모드 기기설정값으로 (변경)설정할수있게
+   만들어줘 설정칸 따로 만들어서" / "좌석색깔 등 건들디말고" / "너무 화려하게 하지말고"
+   · 적용값은 <html data-theme="light|dark">, 저장값은 data-theme-mode 에 남는다.
+   · 좌석 타입별 색(일반석·장애인석·리클라이너·릴렉스시트·SWEETBOX·WIDEBOX·카바나·빈백·PRIVATE BOX)은
+     라이트·다크 모두 그대로 둔다. 배경·헤더·카드·창·입력창·글자·구분선만 바꾼다.
+   ===================================================================== */
+
+/* ---------- 1. 설정 버튼 (상단 헤더) ---------- */
+.setbtn{display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.setbtn .setico{flex:0 0 auto;display:block}
+.setbtn[aria-expanded="true"]{border-color:var(--green-soft);background:var(--green-l);color:var(--green-dd)}
+@media (max-width:959px){
+  .topbar-in{padding:11px 16px;gap:8px}
+}
+/* 390px 폰: 브랜드 부제를 접어 '설정'까지 한 줄에 들어가게 한다(겹침·줄바꿈 없음) */
+@media (max-width:480px){
+  .brand-sub{display:none}
+  .topbar-in{gap:6px}
+  .topbar-in .chip.sm{padding:0 11px}
+}
+/* 320~360px 아주 좁은 폰: 브랜드 이름이 잘리지 않게 설정 버튼을 톱니바퀴만 남긴다 */
+@media (max-width:360px){
+  .setbtn .setbtn-tx{display:none}
+  .setbtn{padding:0 9px;gap:0}
+  .brand{gap:9px}
+  .topbar-in .chip.sm{padding:0 10px;font-size:12px}
+}
+
+/* ---------- 2. 설정 창 ---------- */
+.setmodal .setcard{max-width:460px}
+/* 데스크톱은 가운데 창, 폰은 사이트 다른 창처럼 아래에서 올라오는 시트 */
+@media (min-width:641px){
+  .setmodal{align-items:center;justify-content:center;padding:18px}
+  .setmodal .setcard{max-width:440px;border-radius:24px;padding:22px 22px 24px;box-shadow:0 18px 50px rgba(25,31,40,.28)}
+  .setmodal .modal-grab{display:none}
+}
+html[data-theme="dark"] .setmodal .setcard{box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.setcard .wclose{position:absolute;top:14px;right:14px;width:34px;height:34px;line-height:1;z-index:2}
+.setgroup{margin-top:18px}
+.setlabel{font-size:12.5px;font-weight:850;color:var(--sub);margin:0 2px 8px;letter-spacing:-.01em}
+.setopts{display:flex;flex-direction:column;gap:8px}
+.setopt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  padding:12px 13px;border-radius:14px;border:1px solid var(--line);background:#F7F9FA;
+  transition:border-color .16s var(--ease),background .16s var(--ease)}
+.setopt:hover{border-color:#D3D9DF}
+.setopt:active{transform:scale(.996)}
+.set-ic{flex:0 0 auto;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+  background:#fff;color:var(--sub);border:1px solid var(--line)}
+.set-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.set-tx b{font-size:14.5px;font-weight:850;letter-spacing:-.02em;color:var(--ink)}
+.set-tx i{font-style:normal;font-size:12.5px;font-weight:650;color:var(--mute);line-height:1.45;word-break:keep-all}
+.set-check{flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+  border:1.5px solid var(--line);color:transparent;background:transparent}
+.setopt.on{border-color:var(--green-soft);background:var(--green-l)}
+.setopt.on .set-ic{background:var(--green);color:#fff;border-color:var(--green)}
+.setopt.on .set-tx b{color:var(--green-dd)}
+.setopt.on .set-check{background:var(--green);border-color:var(--green);color:#fff}
+.set-eff{margin:11px 2px 0;font-size:12px;font-weight:700;color:var(--mute);line-height:1.5;word-break:keep-all}
+@media (max-width:640px){
+  .setcard .modal-grab{margin-bottom:12px}
+  .setopt{padding:12px 12px}
+}
+
+/* =====================================================================
+   3. 다크 테마
+   ===================================================================== */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1115;
+  --card:#181B20;
+  --ink:#F3F4F6;
+  --ink-2:#D9DEE7;
+  --sub:#B6BECC;
+  --mute:#9CA3AF;
+  --line:#2A2F3A;
+  --line-2:#232730;
+  --green-d:#34D399;
+  --green-dd:#6EE7B7;
+  --green-l:#12251D;
+  --green-soft:#1F4636;
+  --mint:#121F19;
+  --amber-l:#33260F;
+  --rose-l:#3A1A1E;
+  --sh-1:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.35);
+  --sh-2:0 2px 8px rgba(0,0,0,.45),0 12px 32px rgba(0,0,0,.5);
+  --sh-sheet:0 -8px 40px rgba(0,0,0,.55);
+}
+html[data-theme="dark"] body{background:var(--bg);color:var(--ink)}
+
+/* --- 상단 막대·하단 탭·지점 막대 --- */
+html[data-theme="dark"] .topbar{background:rgba(15,17,21,.88);border-bottom-color:rgba(42,47,58,.85)}
+html[data-theme="dark"] .brand-sub{color:var(--mute)}
+html[data-theme="dark"] .tabbar{background:rgba(20,23,28,.94);border-top-color:var(--line)}
+html[data-theme="dark"] .tabbar .tabbtn{color:var(--mute)}
+html[data-theme="dark"] .tabbar .tabbtn[aria-current="page"]{color:var(--green-dd);background:var(--green-l)}
+html[data-theme="dark"] .ctxbar{background:rgba(24,27,32,.94);border-color:var(--line);box-shadow:0 2px 10px rgba(0,0,0,.4)}
+html[data-theme="dark"] .ctx-back{background:#22262F;color:var(--ink-2)}
+html[data-theme="dark"] .ctx-back:active{background:#2A2F3A}
+html[data-theme="dark"] .ctx-t span{color:var(--mute)}
+html[data-theme="dark"] .top-badge{background:#1C2027;border-color:var(--line);color:var(--ink-2)}
+
+/* --- 공통 칩·버튼 --- */
+html[data-theme="dark"] .chip{background:#1C2027;color:var(--sub);border-color:var(--line)}
+html[data-theme="dark"] .chip:hover{border-color:#3A424F}
+html[data-theme="dark"] .chip[aria-pressed="true"]{background:var(--ink);color:#0F1115;border-color:var(--ink)}
+html[data-theme="dark"] .chip.green[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+html[data-theme="dark"] .btn.ghost{background:#1C2027;color:var(--ink);border-color:var(--line)}
+html[data-theme="dark"] .back{background:#1C2027;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .back:active{background:#2A2F3A}
+html[data-theme="dark"] .badgepill.off{background:#22262F;border-color:var(--line);color:var(--mute)}
+html[data-theme="dark"] .topseat{background:var(--green-l);border-color:var(--green-soft)}
+html[data-theme="dark"] .topseat span{color:var(--green-dd)}
+html[data-theme="dark"] .topseat i{color:var(--green-d)}
+
+/* --- 카드·표면 --- */
+html[data-theme="dark"] .tcard,
+html[data-theme="dark"] .hcard,
+html[data-theme="dark"] .notice,
+html[data-theme="dark"] .favitem,
+html[data-theme="dark"] .titem,
+html[data-theme="dark"] .cbadge,
+html[data-theme="dark"] .ana,
+html[data-theme="dark"] .modal-card,
+html[data-theme="dark"] .sheet,
+html[data-theme="dark"] .sheet-head,
+html[data-theme="dark"] .report-inner,
+html[data-theme="dark"] .mask-card,
+html[data-theme="dark"] .toc-card,
+html[data-theme="dark"] .v3d-bar{background:var(--card);color:var(--ink)}
+html[data-theme="dark"] .tcard{border-color:var(--line);box-shadow:none}
+html[data-theme="dark"] .tcard:hover{border-color:#2A5741}
+html[data-theme="dark"] .hcard:hover{border-color:#2A5741}
+html[data-theme="dark"] .notice{border-color:var(--line)}
+html[data-theme="dark"] .cbadge{border-color:var(--line)}
+html[data-theme="dark"] .tlogo{background:#16211B;border-color:#22352A;color:var(--green-dd)}
+html[data-theme="dark"] .metric,
+html[data-theme="dark"] .profile-card,
+html[data-theme="dark"] .review,
+html[data-theme="dark"] .pcred,
+html[data-theme="dark"] .emptyphoto,
+html[data-theme="dark"] .extphoto,
+html[data-theme="dark"] .calcn,
+html[data-theme="dark"] .ana-src,
+html[data-theme="dark"] .ugc-more,
+html[data-theme="dark"] .ugc-top,
+html[data-theme="dark"] .dstat-grid>div,
+html[data-theme="dark"] .toc-row,
+html[data-theme="dark"] .fixdetail,
+html[data-theme="dark"] .eyectl,
+html[data-theme="dark"] .seatfun,
+html[data-theme="dark"] .nickrow.fixed,
+html[data-theme="dark"] .consent,
+html[data-theme="dark"] .authtabs{background:#14171C;border-color:var(--line-2)}
+html[data-theme="dark"] .ana-row:nth-child(odd){background:#14171C}
+html[data-theme="dark"] .review p{color:var(--ink-2)}
+
+/* --- 입력창 --- */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea{color:var(--ink)}
+html[data-theme="dark"] .qinput,
+html[data-theme="dark"] .movieinput,
+html[data-theme="dark"] .nickinput,
+html[data-theme="dark"] .authinput,
+html[data-theme="dark"] textarea.review,
+html[data-theme="dark"] .fixsel,
+html[data-theme="dark"] .nickrow input,
+html[data-theme="dark"] .eyectl-step,
+html[data-theme="dark"] .eyectl-h.eyectl-num,
+html[data-theme="dark"] .eyectl-row2 input,
+html[data-theme="dark"] .eyectl-reset,
+html[data-theme="dark"] .rf select,
+html[data-theme="dark"] .rf input,
+html[data-theme="dark"] .rf textarea,
+html[data-theme="dark"] .report-fld textarea,
+html[data-theme="dark"] .report-fld input[type=email],
+html[data-theme="dark"] .rf-file-btn{background:#14171C;border-color:var(--line);color:var(--ink)}
+html[data-theme="dark"] .nickinput:focus,
+html[data-theme="dark"] .authinput:focus,
+html[data-theme="dark"] textarea.review:focus{background:#14171C}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder{color:var(--mute)}
+html[data-theme="dark"] select.moviesel{background:#14171C;border-color:var(--line);color:var(--ink)}
+html[data-theme="dark"] .eyectl-step:active{background:#2A2F3A}
+html[data-theme="dark"] .qinput{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='11' cy='11' r='7' stroke='%239CA3AF' stroke-width='2'/%3E%3Cpath d='M16.5 16.5L21 21' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")}
+
+/* --- 글자색 (하드코딩된 어두운 회색들) --- */
+html[data-theme="dark"] .foot{color:var(--mute)}
+html[data-theme="dark"] .foot b{color:var(--sub)}
+html[data-theme="dark"] .maphelp{color:var(--mute)}
+html[data-theme="dark"] .maphelp b{color:var(--green-d)}
+html[data-theme="dark"] .lg-note{color:var(--mute)}
+html[data-theme="dark"] .lg-note b{color:var(--ink-2)}
+html[data-theme="dark"] .guide-body li{color:var(--sub)}
+html[data-theme="dark"] .dstat-sub,
+html[data-theme="dark"] .stat-sub,
+html[data-theme="dark"] .emptyfav span,
+html[data-theme="dark"] .favdel,
+html[data-theme="dark"] .favgo span,
+html[data-theme="dark"] .tdate,
+html[data-theme="dark"] .tmain i,
+html[data-theme="dark"] .nickrow label,
+html[data-theme="dark"] .nickrow span,
+html[data-theme="dark"] .ana-key span,
+html[data-theme="dark"] .ana-foot span{color:var(--mute)}
+html[data-theme="dark"] .ana-foot span b{color:var(--ink)}
+html[data-theme="dark"] .favgo b,
+html[data-theme="dark"] .helpbtn b{color:var(--green-d)}
+html[data-theme="dark"] .helpbtn{background:#1C2027;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .helpbtn[aria-pressed="true"]{background:var(--green-l);border-color:var(--green-soft);color:var(--green-dd)}
+html[data-theme="dark"] .seatfun>span{color:var(--sub)}
+html[data-theme="dark"] .cruler .cnum{color:var(--mute)}
+
+/* --- 알림·안내 상자 --- */
+html[data-theme="dark"] .auth-warn{background:#2C2410;border-color:#5A4A1A;color:#FCD34D}
+html[data-theme="dark"] .storagenote{background:var(--green-l);border-color:var(--green-soft);color:#A7C4B6}
+html[data-theme="dark"] .storagenote b{color:var(--green-dd)}
+html[data-theme="dark"] .regline{background:#141A17;border-color:var(--line-2);color:var(--sub)}
+html[data-theme="dark"] .regline>b{color:var(--green-dd)}
+html[data-theme="dark"] .regline .rdate{color:var(--mute)}
+html[data-theme="dark"] .ana-eye-note{background:#171E1A;color:var(--sub)}
+html[data-theme="dark"] .ana-eye-note b{color:var(--ink)}
+html[data-theme="dark"] .ana-src>b{color:var(--sub)}
+html[data-theme="dark"] .structnote{background:#141B26;border-color:#24334A}
+html[data-theme="dark"] .structnote b{color:#93C5FD}
+html[data-theme="dark"] .imaxnote{background:#14201A;border-color:#22352A;color:var(--sub)}
+html[data-theme="dark"] .imaxnote b{color:var(--green-dd)}
+html[data-theme="dark"] .sysmini{background:#22262F;color:#B6BECC}
+html[data-theme="dark"] .mask-priv{background:var(--green-l);border-color:var(--green-soft);color:#A7C4B6}
+html[data-theme="dark"] .mask-priv b{color:var(--green-dd)}
+html[data-theme="dark"] .toc-priv{background:#14171C;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .toc-priv>b{color:var(--ink-2)}
+html[data-theme="dark"] .toc-priv b{color:var(--green-dd)}
+html[data-theme="dark"] .authmsg{color:#FB923C}
+html[data-theme="dark"] .authmsg.ok,
+html[data-theme="dark"] .nickdup.free{color:var(--green-d)}
+html[data-theme="dark"] .nickdup.taken,
+html[data-theme="dark"] .nickdup.short{color:#FB923C}
+html[data-theme="dark"] .nickinput.bad,
+html[data-theme="dark"] .nickrow input.bad{background:#2A2415 !important;border-color:#F59E0B !important}
+html[data-theme="dark"] .helpful.del{background:#2A1A1C;border-color:#5A2A30;color:#FCA5A5}
+html[data-theme="dark"] .report-status.err{color:#F87171}
+
+/* --- 기능 배지 (IMAX·4DX·SCREENX …) : 다크에서는 어두운 바탕의 옅은 색으로 --- */
+html[data-theme="dark"] .badge.imax{background:rgba(49,130,246,.16);color:#8CB8FF}
+html[data-theme="dark"] .badge.fourdx{background:rgba(99,102,241,.20);color:#B4B8FF}
+html[data-theme="dark"] .badge.screenx{background:rgba(249,115,22,.16);color:#FFB27A}
+html[data-theme="dark"] .badge.recliner{background:var(--green-l);color:var(--green-dd)}
+html[data-theme="dark"] .badge.laser{background:#242932;color:#C3CAD4}
+html[data-theme="dark"] .badge.box{background:rgba(236,72,153,.16);color:#F9A8C8}
+html[data-theme="dark"] .badge.art{background:rgba(139,92,246,.20);color:#C4B5FD}
+html[data-theme="dark"] .badge.bean{background:rgba(245,158,11,.16);color:#FCD34D}
+html[data-theme="dark"] .badge.plain{background:#22262F;color:var(--sub)}
+html[data-theme="dark"] .badge.ok{background:var(--green-l);color:var(--green-dd)}
+html[data-theme="dark"] .badge.soon{background:rgba(245,158,11,.14);color:#FBC46B}
+html[data-theme="dark"] .badge.work{background:#242932;color:var(--mute)}
+html[data-theme="dark"] .badge.dolby{background:rgba(59,130,246,.16);color:#93C5FD}
+html[data-theme="dark"] .badge.pbin{background:rgba(245,158,11,.16);color:#FBC46B;border-color:rgba(245,158,11,.3)}
+html[data-theme="dark"] .boxline.pbin{background:#2A2213;border-color:#5A4A1A;color:#FBC46B}
+
+/* --- 평점 등급·근거 배지·느낌 태그 --- */
+html[data-theme="dark"] .grade.g2{background:#12251D;color:#4ADE80}
+html[data-theme="dark"] .grade.g3{background:#22262F;color:#C3CAD4}
+html[data-theme="dark"] .grade.g4{background:#33260F;color:#FBBF24}
+html[data-theme="dark"] .grade.g5{background:#3A1A1E;color:#FCA5A5}
+html[data-theme="dark"] .cfb.p{background:rgba(59,130,246,.16);color:#93C5FD;box-shadow:inset 0 0 0 1px rgba(59,130,246,.3)}
+html[data-theme="dark"] .cfb.e{background:rgba(245,158,11,.18);color:#FCD34D;box-shadow:inset 0 0 0 1px rgba(245,158,11,.35)}
+html[data-theme="dark"] .cfb.u{background:#242932;color:#C3CAD4}
+html[data-theme="dark"] .cbadge.c{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.35);color:#FCD34D}
+html[data-theme="dark"] .feel-tag{background:#202A24;color:var(--green-d)}
+html[data-theme="dark"] .feel-tag.warn{background:#33260F;color:#FBBF24}
+html[data-theme="dark"] .feel-tag.mid{background:rgba(99,102,241,.20);color:#B4B8FF}
+html[data-theme="dark"] .review .movie,
+html[data-theme="dark"] .review .movie span{background:rgba(99,102,241,.18);color:#B4B8FF}
+html[data-theme="dark"] .review .ticketbadge.unverified{background:#33260F;color:#FBC46B}
+html[data-theme="dark"] .starpick-tx,
+html[data-theme="dark"] .avgstar b{color:#FBBF24}
+html[data-theme="dark"] .stars button{color:#525C69}
+
+/* --- 좌석판: 좌석 색은 그대로, 판 주변(행 라벨·스크린·도구)만 다크로 --- */
+html[data-theme="dark"] .rlab,
+html[data-theme="dark"] .seatmap .rlab{background:var(--card);box-shadow:0 0 0 3px var(--card);color:var(--sub)}
+html[data-theme="dark"] .rlab{box-shadow:0 0 0 2px var(--card)}
+html[data-theme="dark"] .screenbar{background:linear-gradient(180deg,#15251E,#121A16);border-color:var(--green-soft)}
+html[data-theme="dark"] .screenbar span{color:var(--green-d)}
+html[data-theme="dark"] .seat.empty.aisle{background:rgba(148,163,184,.13)}
+html[data-theme="dark"] .mapzoom{background:#1C2027;border-color:var(--line)}
+html[data-theme="dark"] .mapzoom span{color:var(--ink-2)}
+html[data-theme="dark"] .mapzoom button:last-child{background:#22262F;color:var(--ink-2)}
+html[data-theme="dark"] .minimap{background:rgba(24,27,32,.94);border-color:var(--line);box-shadow:0 6px 18px rgba(0,0,0,.45)}
+html[data-theme="dark"] .minimap canvas{background:var(--card)}
+html[data-theme="dark"] .minimap span{color:var(--mute)}
+html[data-theme="dark"] .ptabs button[aria-pressed="true"]{background:#2C323C;color:var(--ink);box-shadow:none}
+html[data-theme="dark"] .door{background:#20242C;border-color:#39404C;color:#B6BECC;box-shadow:0 1px 3px rgba(0,0,0,.45)}
+html[data-theme="dark"] .door[data-side="inner"]{background:rgba(32,36,44,.95)}
+html[data-theme="dark"] .legend i.lg-door{background:#20242C;border-color:#39404C;color:#B6BECC}
+html[data-theme="dark"] .srow.boxrow{background:linear-gradient(90deg,rgba(255,227,176,.10),rgba(255,227,176,.04));box-shadow:inset 0 0 0 1px rgba(216,155,52,.35)}
+html[data-theme="dark"] .srow.boxrow.tight .rcells>.pbbox{background:rgba(255,227,176,.08);box-shadow:inset 0 0 0 1px rgba(216,155,52,.35)}
+html[data-theme="dark"] .srow.boxrow .rlab{color:#F0C978}
+html[data-theme="dark"] .pbnote{color:#F0C978}
+html[data-theme="dark"] .occmini,
+html[data-theme="dark"] .dstat-bar,
+html[data-theme="dark"] .toc-bar{background:#242932}
+
+/* --- 지점 탭·필터 힌트 --- */
+html[data-theme="dark"] .rtabs{background:#1B1F26}
+html[data-theme="dark"] .rtab{color:var(--sub)}
+html[data-theme="dark"] .rtab[aria-selected="true"]{background:#2C323C;color:var(--green-d);box-shadow:none}
+html[data-theme="dark"] .rtabs-hint{background:linear-gradient(90deg,rgba(15,17,21,0) 42%,rgba(15,17,21,.86) 78%,#0F1115 96%)}
+html[data-theme="dark"] .fchips-hint{background:linear-gradient(90deg,rgba(24,27,32,0) 0%,rgba(24,27,32,.9) 46%,#181B20 80%)}
+html[data-theme="dark"] .fchips-hint b{background:#20242C;color:var(--green-d);box-shadow:0 1px 3px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06)}
+
+/* --- 영화 자동완성 --- */
+html[data-theme="dark"] .mvsug{background:#1C2027;border-color:var(--line);box-shadow:0 10px 26px rgba(0,0,0,.5)}
+html[data-theme="dark"] .mvsug button{background:#1C2027;border-top-color:var(--line-2)}
+html[data-theme="dark"] .mvsug button:hover,
+html[data-theme="dark"] .mvsug button:focus{background:#232A24}
+html[data-theme="dark"] .mvsug-head{background:#16211B;color:var(--green-d);border-bottom-color:var(--line-2)}
+html[data-theme="dark"] .mvdrop{background:#22262F;color:var(--ink-2)}
+html[data-theme="dark"] .gal-noimg{background:linear-gradient(140deg,#16211B,#12171A);color:var(--green-dd)}
+
+/* --- 3D 조작 바 (캔버스 밖에 놓인 것만 / 크게 보기는 원래 어두운 그대로) --- */
+html[data-theme="dark"] .v3d-bar{border-color:var(--line);box-shadow:none}
+html[data-theme="dark"] .v3d-bar>button,
+html[data-theme="dark"] .v3d-bar .v3d-recline-step{background:#22262F;color:var(--ink-2);border-color:var(--line)}
+html[data-theme="dark"] .v3d-bar>button:active{background:#2A2F3A}
+html[data-theme="dark"] .v3d-bar .v3d-reset,
+html[data-theme="dark"] .v3d-bar .v3d-big{background:#22262F;color:var(--ink-2)}
+html[data-theme="dark"] .v3d-bar .v3d-recline{background:var(--green-l);color:var(--green-dd);border-color:var(--green-soft)}
+html[data-theme="dark"] .v3d-bar .v3d-zoom{background:#14171C;border-color:var(--line)}
+html[data-theme="dark"] .v3d-bar .v3d-zoom button{color:var(--sub)}
+html[data-theme="dark"] .v3d-bar .v3d-zoom button[aria-pressed="true"]{background:var(--green);color:#fff}
+html[data-theme="dark"] .v3d-bar .v3d-recval{color:var(--mute)}
+html[data-theme="dark"] .v3d-bar .v3d-vid{background:var(--green);color:#fff;border-color:var(--green)}
+html[data-theme="dark"] .v3d-bar .v3d-vid[aria-pressed="true"]{background:#065F46;border-color:#065F46;color:#fff}
+html[data-theme="dark"] .v3d-disc{color:var(--mute)}
+html[data-theme="dark"] .v3d-disc b{color:var(--ink-2)}
+/* 크게 보기(전체 화면)는 테마와 상관없이 검은 화면 위 흰 버튼 — 원래 값을 되살린다 */
+html[data-theme="dark"] .big-inner .v3d-bar{background:transparent;border:0;box-shadow:none}
+html[data-theme="dark"] .big-inner .v3d-bar>button,
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-recline,
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-recline-step{background:rgba(255,255,255,.16);color:#fff;border:0}
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-vid{background:rgba(0,168,98,.88);color:#fff}
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-vid[aria-pressed="true"]{background:rgba(255,255,255,.92);color:#0B1210}
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-recline[aria-pressed="true"]{background:#FDB44B;color:#3A2100}
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-zoom{background:rgba(8,16,13,.62);border:0}
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-zoom button{background:transparent;color:rgba(255,255,255,.72)}
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-zoom button[aria-pressed="true"]{background:#fff;color:#0B3A2A}
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-reset,
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-big{background:rgba(255,255,255,.16);color:#fff;border:0}
+html[data-theme="dark"] .big-inner .v3d-bar .v3d-recval{color:rgba(255,255,255,.72)}
+
+/* --- 비교 모드 --- */
+html[data-theme="dark"] .cmpchip[aria-pressed="false"]{background:#1C2027;color:var(--sub)}
+html[data-theme="dark"] .pv-switch button{background:#1C2027;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .pv-switch button[aria-pressed="true"]{background:var(--ink);color:#0F1115;border-color:var(--ink)}
+html[data-theme="dark"] .seenchip{background:#1C2027;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .agechip{background:#1C2027;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .agechip[aria-checked="true"]{background:var(--green-l);border-color:var(--green-soft);color:var(--green-dd)}
+html[data-theme="dark"] .authtab[aria-selected="true"]{background:#2C323C;color:var(--ink);box-shadow:none}
+html[data-theme="dark"] #authModal .btn.ghost{background:#1C2027 !important;color:var(--sub) !important;border-color:var(--line) !important}
+html[data-theme="dark"] .modal-grab{background:#39404C}
+html[data-theme="dark"] .modal-scrim{background:rgba(5,7,10,.6)}
+html[data-theme="dark"] .modal-card{box-shadow:0 -10px 40px rgba(0,0,0,.6)}
+html[data-theme="dark"] .sheet-x{background:#22262F;color:var(--ink-2)}
+html[data-theme="dark"] .sheet-x:active{background:#2A2F3A}
+html[data-theme="dark"] .sh-cam.link{background:#22262F;color:var(--sub)}
+
+/* --- 제보·수정 요청 폼 --- */
+html[data-theme="dark"] .fixbtn{background:#2A2415;border-color:#5A4A1A;color:#FCD34D}
+html[data-theme="dark"] .fixsel{background:#14171C;border-color:var(--line);color:var(--ink)}
+html[data-theme="dark"] .fixreason-list button{background:#1C2027;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .fixreason-list button[aria-pressed="true"]{background:#33260F;border-color:#F59E0B;color:#FCD34D}
+html[data-theme="dark"] .reportbtn{background:#1C2027;border-color:var(--line);color:var(--ink)}
+html[data-theme="dark"] .reportbtn:active{background:#2A2F3A}
+html[data-theme="dark"] .report-x{background:#1C2027;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .report-send{background:var(--ink);color:#0F1115}
+html[data-theme="dark"] .report-alt{background:#1C2027;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .report-disc{color:var(--mute)}
+
+/* --- 내 기록 --- */
+html[data-theme="dark"] .favdel{background:#22262F;color:var(--mute)}
+html[data-theme="dark"] .dstat-grid b,
+html[data-theme="dark"] .dstat-head b{color:var(--ink)}
+
+/* --- 설정 창 (다크) --- */
+html[data-theme="dark"] .setopt{background:#1C2027;border-color:var(--line)}
+html[data-theme="dark"] .setopt:hover{border-color:#3A424F}
+html[data-theme="dark"] .set-ic{background:#22262F;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .setopt.on{background:var(--green-l);border-color:var(--green-soft)}
+html[data-theme="dark"] .setopt.on .set-ic{background:var(--green);color:#fff;border-color:var(--green)}
+html[data-theme="dark"] .setopt.on .set-tx b{color:var(--green-dd)}
+html[data-theme="dark"] .set-check{border-color:#39404C}
+html[data-theme="dark"] .setopt.on .set-check{background:var(--green);border-color:var(--green);color:#fff}
+
+/* --- 보완: 위 목록에서 빠진 표면·글자 --- */
+html[data-theme="dark"] .hometools{background:var(--card);border-color:var(--line);box-shadow:none}
+html[data-theme="dark"] .starpick{background:#14171C;border-color:var(--line)}
+html[data-theme="dark"] .starpick-lb{color:var(--sub)}
+html[data-theme="dark"] .geoline{background:#1C2027;border-color:var(--line);color:var(--ink-2)}
+html[data-theme="dark"] .favbtn{background:#1C2027;border-color:var(--line);color:var(--sub)}
+html[data-theme="dark"] .favbtn[aria-pressed="true"]{background:#33260F;border-color:#8A6A1A;color:#FCD34D}
+html[data-theme="dark"] .toc-x{background:#22262F;color:var(--ink-2)}
+html[data-theme="dark"] .toc-row.off{background:#2A2415;border-color:#5A4A1A}
+html[data-theme="dark"] .toc-row.off>span{color:#FCD34D}
+html[data-theme="dark"] .sflag:not(.t):not(.x):not(.r):not(.p):not(.s):not(.w):not(.c):not(.b){background:#22262F;color:var(--sub)}
+html[data-theme="dark"] .nearnote.err{background:#2A2415;border-color:#5A4A1A;color:#FCD34D}
+html[data-theme="dark"] .shotup:active{background:#16352A}
+html[data-theme="dark"] .ugc-more>summary{color:var(--sub)}
+html[data-theme="dark"] .ugc-note,
+html[data-theme="dark"] .mask-sub{color:var(--mute)}
+html[data-theme="dark"] .pcred-note,
+html[data-theme="dark"] .anax,
+html[data-theme="dark"] .imax-scale,
+html[data-theme="dark"] .rego{color:var(--mute)}
+html[data-theme="dark"] .nickrow.fixed .nicklabel{color:var(--sub)}
+html[data-theme="dark"] .ana-row b.fit.mid{color:#FBBF24}
+html[data-theme="dark"] .ugc-note a{color:var(--green-d)}
+/* 넓은 기본 규칙이 덮어쓴 칩 변형을 되살린다(사진 있음 칩·내 주변 칩·보조 분류 배지) */
+html[data-theme="dark"] .photochip{background:var(--green-l);border-color:var(--green-soft);color:var(--green-dd)}
+html[data-theme="dark"] .photochip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+html[data-theme="dark"] .nearchip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+html[data-theme="dark"] .cbadge.a{background:#047857;color:#fff;border-color:#047857}
+
 </style>
 </head>
 <body>
@@ -2096,6 +2540,10 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
     <span class="topbar-spacer"></span>
     <button class="chip sm" data-go="my" style="margin-left:8px">내 기록</button>
     <button class="chip sm" id="authTopBtn" type="button" data-auth="out" style="margin-left:6px">로그인</button>
+    <button class="chip sm setbtn" id="settingBtn" type="button" aria-label="설정" title="설정" aria-haspopup="dialog" style="margin-left:6px">
+      <svg class="setico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 12.9a7.8 7.8 0 0 0 0-1.8l1.7-1.3-1.8-3.1-2 .8a7.6 7.6 0 0 0-1.6-.9l-.3-2.1h-3.6l-.3 2.1c-.6.2-1.1.5-1.6.9l-2-.8L4.1 9.8l1.7 1.3a7.8 7.8 0 0 0 0 1.8l-1.7 1.3 1.8 3.1 2-.8c.5.4 1 .7 1.6.9l.3 2.1h3.6l.3-2.1c.6-.2 1.1-.5 1.6-.9l2 .8 1.8-3.1-1.7-1.3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <span class="setbtn-tx">설정</span>
+    </button>
   </div>
 </header>
 
@@ -6564,6 +7012,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     }
     const ctx = cv.getContext('2d');
     if (!ctx) return;
+    const dk = document.documentElement.getAttribute('data-theme') === 'dark';
     /* 전체가 한눈에 들어오면 미니맵은 군더더기다 — 확대·이동이 필요할 때만 보여 준다 */
     const need = sc.scrollWidth > sc.clientWidth + 2 || sc.scrollHeight > sc.clientHeight + 2 || mapZoomNow() > 1.001;
     mm.classList.toggle('on', need);
@@ -6587,7 +7036,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const y = g.rowY[i] * sca + oy;
       const xa = g.off[x0] * sca + ox;
       const xb = (g.off[x1] + g.w) * sca + ox;
-      ctx.fillStyle = 'rgba(62,86,76,.55)';
+      ctx.fillStyle = dk ? 'rgba(196,214,205,.5)' : 'rgba(62,86,76,.55)';
       ctx.fillRect(xa, y, Math.max(1, xb - xa), Math.max(0.8, g.w * sca));
     });
     /* 고른 좌석 */
@@ -8714,8 +9163,19 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     rec = (rec == null ? (window.Viewer3D && window.Viewer3D.reclineOf ? window.Viewer3D.reclineOf().rec : 0) : rec) || 0;
     const W = canvas.width, H = canvas.height;
     const ctx = canvas.getContext('2d');
+    const dk = document.documentElement.getAttribute('data-theme') === 'dark';
+    /* 단면도 종이색·선색도 화면 테마를 따른다(다크 모드에서 흰 종이가 번쩍이지 않게) */
+    const PAL = dk ? {
+      bg: '#12151A', grid: '#2A2F3A', screen: '#34D399', label: '#9CA3AF', stage: '#232833',
+      stageEdge: '#39404C', dot: '#4B5563', back: '#6B7280', cushion: '#9CA3AF',
+      body: '#34D399', eye: '#4ADE80', ray: 'rgba(52,211,153,.8)', text: '#9CA3AF'
+    } : {
+      bg: '#FAFBFC', grid: '#DDE2E6', screen: '#047857', label: '#8B95A1', stage: '#E4E9ED',
+      stageEdge: '#C7CDD3', dot: '#C7CDD3', back: '#B4BDC6', cushion: '#8B95A1',
+      body: '#047857', eye: '#00A862', ray: 'rgba(0,168,98,.75)', text: '#6B7684'
+    };
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = '#FAFBFC'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = PAL.bg; ctx.fillRect(0, 0, W, H);
 
     const maxD = p.firstRow + (p.rows - 1) * p.rowGap + 2;
     const maxY = Math.max(p.screenBottom + p.screenH, p.eye + (p.rows - 1) * p.riser + 1.2) + 0.8;
@@ -8723,7 +9183,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const X = (mtr) => padL + (mtr / maxD) * (W - padL - padR);
     const Y = (h) => H - padB - (h / maxY) * (H - padT - padB);
 
-    ctx.strokeStyle = '#DDE2E6'; ctx.lineWidth = 1;
+    ctx.strokeStyle = PAL.grid; ctx.lineWidth = 1;
     for (let i = 0; i < p.rows; i++) {
       const d0 = p.firstRow + i * p.rowGap - p.rowGap * 0.35;
       const d1 = p.firstRow + i * p.rowGap + p.rowGap * 0.35;
@@ -8732,20 +9192,20 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       ctx.beginPath(); ctx.moveTo(X(d1), y); ctx.lineTo(X(d1), Y((i + 1) * p.riser)); ctx.stroke();
     }
 
-    ctx.fillStyle = '#047857';
+    ctx.fillStyle = PAL.screen;
     ctx.fillRect(X(0) - 4, Y(p.screenBottom + p.screenH), 4, Y(p.screenBottom) - Y(p.screenBottom + p.screenH));
-    ctx.fillStyle = '#8B95A1'; ctx.font = '10px Pretendard, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillStyle = PAL.label; ctx.font = '10px Pretendard, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText('SCREEN', X(0) + 2, Y(p.screenBottom + p.screenH) - 6);
 
     /* 단상이 있는 관은 단면에도 단상 높이를 표시 */
     if (p.stage && p.stage.h > 0.1) {
-      ctx.fillStyle = '#E4E9ED';
+      ctx.fillStyle = PAL.stage;
       ctx.fillRect(X(0), Y(p.stage.h), X(Math.min(maxD, p.stage.d || 1.4)) - X(0), Y(0) - Y(p.stage.h));
-      ctx.strokeStyle = '#C7CDD3'; ctx.strokeRect(X(0) + 0.5, Y(p.stage.h) + 0.5, X(Math.min(maxD, p.stage.d || 1.4)) - X(0) - 1, Y(0) - Y(p.stage.h) - 1);
+      ctx.strokeStyle = PAL.stageEdge; ctx.strokeRect(X(0) + 0.5, Y(p.stage.h) + 0.5, X(Math.min(maxD, p.stage.d || 1.4)) - X(0) - 1, Y(0) - Y(p.stage.h) - 1);
     }
 
     const centerX = (p.minx + p.maxx) / 2;
-    ctx.fillStyle = '#C7CDD3';
+    ctx.fillStyle = PAL.dot;
     for (let i = 0; i < p.rows; i++) {
       ctx.beginPath(); ctx.arc(X(p.firstRow + i * p.rowGap), Y(p.eye + i * p.riser), 2.4, 0, Math.PI * 2); ctx.fill();
     }
@@ -8766,20 +9226,20 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const shoulder = [hip[0] + bx * backL * 0.62, hip[1] + by * backL * 0.62];
     const head = [hip[0] + bx * (backL + 5.5), hip[1] + by * (backL + 5.5)];
     /* 좌석 등받이(회색 막대)와 쿠션 — 등받이 막대는 회전만 한다 */
-    ctx.strokeStyle = '#B4BDC6'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.strokeStyle = PAL.back; ctx.lineWidth = 5; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(backTop[0], backTop[1]); ctx.stroke();
-    ctx.strokeStyle = '#8B95A1'; ctx.lineWidth = 4;
+    ctx.strokeStyle = PAL.cushion; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(hip[0] - (X(0.42) - X(0)), hip[1] + 2); ctx.stroke();
     /* 몸통·머리 — 머리는 늘 같은 크기(반지름 5.6px)의 원 */
-    ctx.strokeStyle = '#047857'; ctx.lineWidth = 3.2;
+    ctx.strokeStyle = PAL.body; ctx.lineWidth = 3.2;
     ctx.beginPath(); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(shoulder[0], shoulder[1]); ctx.stroke();
-    ctx.beginPath(); ctx.arc(head[0], head[1], 5.6, 0, Math.PI * 2); ctx.fillStyle = '#047857'; ctx.fill();
+    ctx.beginPath(); ctx.arc(head[0], head[1], 5.6, 0, Math.PI * 2); ctx.fillStyle = PAL.body; ctx.fill();
     /* 눈 — 머리 안쪽 스크린 쪽에 붙은 시선 기준점(머리와 따로 움직이지 않는다) */
     const eyePx = [head[0] - 1.8, head[1] - 0.6];
-    ctx.fillStyle = '#00A862';
+    ctx.fillStyle = PAL.eye;
     ctx.beginPath(); ctx.arc(eyePx[0], eyePx[1], 3.0, 0, Math.PI * 2); ctx.fill();
 
-    ctx.strokeStyle = 'rgba(0,168,98,.75)'; ctx.lineWidth = 1.4; ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = PAL.ray; ctx.lineWidth = 1.4; ctx.setLineDash([4, 3]);
     [[p.screenBottom + p.screenH], [p.screenBottom], [p.screenBottom + p.screenH / 2]].forEach(([yy]) => {
       ctx.beginPath(); ctx.moveTo(eyePx[0], eyePx[1]); ctx.lineTo(X(0), Y(yy)); ctx.stroke();
     });
@@ -8787,7 +9247,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
     /* 상단 지표 — 고개(시선) 각도는 등받이를 젖히면 머리와 함께 움직이는 리클라이너석에서만 보여 준다.
        일반석·특별석은 단차·거리만 (사용자 요청: "리클라이너석만 그 고개각도가 보이게"). */
-    ctx.fillStyle = '#6B7684'; ctx.font = '11px Pretendard, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillStyle = PAL.text; ctx.font = '11px Pretendard, sans-serif'; ctx.textAlign = 'left';
     const recl = canRecline(findHall(state.theaterId, state.hallId), seat);
     const neckTxt = `${m.neck >= 0 ? '+' : '−'}${fmt(Math.abs(m.neck), 1)}°`;
     const headTxt = recl
@@ -9027,6 +9487,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (e.target.closest('[data-big]')) { openBigView(); return; }
     if (e.target.closest('#bigClose')) { closeBigView(); return; }
     if (e.target.closest('#editNick')) { nicknameModal(true); return; }
+    if (e.target.closest('#settingBtn')) { openSettings(); return; }
     if (e.target.closest('#authTopBtn')) { if (AUTH.user) { state.view = 'my'; syncHash(true); render(); } else openAuth('login'); return; }
     if (e.target.closest('#authLoginBtn')) { openAuth('login'); return; }
     if (e.target.closest('#authEdit')) { openProfileSetup(false); return; }
@@ -9501,6 +9962,125 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     } catch (e) { return false; }
   }
 
+  /* ---------- 화면 테마 · 설정 칸 (2026-11-21 사용자 요청) ----------
+     "다크모드와 화이트모드 기기설정값으로 (변경)설정할수있게 만들어줘 설정칸 따로 만들어서"
+     · 값은 system(기기 설정, 기본) / light(화이트 모드) / dark(다크 모드) 세 가지.
+     · localStorage['yeongsimi_theme'] 에 남겨 새로고침·페이지 이동 후에도 유지한다.
+     · 첫 페인트 전 적용은 index.html <head> 의 짧은 스크립트가 한다(흰 화면 깜빡임 방지).
+     · 좌석 타입별 색(일반석·장애인석·리클라이너 등)은 테마와 상관없이 그대로 두고,
+       배경·헤더·카드·입력창·글자·구분선만 바꾼다. */
+  const THEME_KEY = 'yeongsimi_theme';
+  const THEME_MQ = (window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null);
+  const THEME_OPTS = [
+    { v: 'system', t: '기기 설정', d: '기기의 다크·라이트 설정을 따라가요' },
+    { v: 'light', t: '화이트 모드', d: '밝은 화면으로 봐요' },
+    { v: 'dark', t: '다크 모드', d: '어두운 화면으로 봐요' }
+  ];
+  const THEME_ICON = {
+    system: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="4" width="18.4" height="12.4" rx="2.2"/><path d="M9 20h6M12 16.4V20"/></svg>',
+    light: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4 17 7M7 17l-1.6 1.6"/></svg>',
+    dark: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.2 14.4A8.6 8.6 0 0 1 9.6 3.8 8.7 8.7 0 1 0 20.2 14.4Z"/></svg>'
+  };
+  const THEME_CHECK = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg>';
+
+  function themeMode() {
+    try { const v = localStorage.getItem(THEME_KEY); return (v === 'light' || v === 'dark') ? v : 'system'; } catch (e) { return 'system'; }
+  }
+  function themeEff(m) {
+    return (m === 'dark' || (m === 'system' && THEME_MQ && THEME_MQ.matches)) ? 'dark' : 'light';
+  }
+  function themeApply(mode, save) {
+    const m = (mode === 'light' || mode === 'dark') ? mode : 'system';
+    const eff = themeEff(m);
+    const d = document.documentElement;
+    const prev = d.getAttribute('data-theme');
+    d.setAttribute('data-theme', eff);
+    d.setAttribute('data-theme-mode', m);
+    const tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.setAttribute('content', eff === 'dark' ? '#0F1115' : '#F2F4F6');
+    if (save) { try { localStorage.setItem(THEME_KEY, m); } catch (e) {} }
+    paintThemeOpts(m);
+    if (prev && prev !== eff) themeRepaint();
+  }
+  /* 캔버스(미니맵·단면도)는 CSS 가 아니라 코드로 그려서, 테마가 바뀌면 그 부분을 다시 그린다 */
+  function themeRepaint() {
+    try {
+      if (state.view === 'hall') { paintSeatPanel(); drawMinimap(); }
+    } catch (e) {}
+  }
+  function paintThemeOpts(m) {
+    const box = document.getElementById('setOpts');
+    if (!box) return;
+    box.querySelectorAll('[data-theme-mode]').forEach((b) => {
+      const on = b.getAttribute('data-theme-mode') === m;
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.classList.toggle('on', on);
+    });
+    const cap = document.getElementById('setEff');
+    if (cap) {
+      const eff = themeEff(m);
+      cap.textContent = m === 'system'
+        ? '지금 이 기기는 ' + (eff === 'dark' ? '다크' : '화이트') + ' 화면이에요. 기기 설정을 바꾸면 바로 따라가요.'
+        : (eff === 'dark' ? '다크' : '화이트') + ' 화면으로 보고 있어요.';
+    }
+  }
+  function openSettings() {
+    if (document.getElementById('settingsModal')) return;
+    const wrap = document.createElement('div');
+    wrap.id = 'settingsModal';
+    wrap.className = 'modal setmodal';
+    wrap.innerHTML = `
+      <div class="modal-scrim" data-sclose="1"></div>
+      <div class="modal-card setcard" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+        <div class="modal-grab"></div>
+        <button class="report-x wclose" type="button" data-sclose="1" aria-label="닫기">✕</button>
+        <h3 id="setTitle">설정</h3>
+        <p class="sub">화면 테마를 고르면 이 기기에 저장돼요. 다음에 들어와도 그대로 적용돼요.</p>
+        <div class="setgroup">
+          <div class="setlabel">화면 테마</div>
+          <div class="setopts" id="setOpts" role="radiogroup" aria-label="화면 테마">
+            ${THEME_OPTS.map((o) => `
+              <button class="setopt" type="button" role="radio" aria-checked="false" data-theme-mode="${o.v}">
+                <span class="set-ic" aria-hidden="true">${THEME_ICON[o.v]}</span>
+                <span class="set-tx"><b>${o.t}</b><i>${o.d}</i></span>
+                <span class="set-check" aria-hidden="true">${THEME_CHECK}</span>
+              </button>`).join('')}
+          </div>
+          <p class="set-eff" id="setEff"></p>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
+    wrap.querySelectorAll('[data-sclose]').forEach((el) => el.addEventListener('click', closeSettings));
+    wrap.querySelectorAll('[data-theme-mode]').forEach((b) => {
+      b.addEventListener('click', () => { themeApply(b.dataset.themeMode, true); });
+    });
+    document.addEventListener('keydown', settingsEsc);
+    const btn = document.getElementById('settingBtn');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+    paintThemeOpts(themeMode());
+    const x = wrap.querySelector('.wclose');
+    if (x) { try { x.focus({ preventScroll: true }); } catch (e) { try { x.focus(); } catch (e2) {} } }
+  }
+  function settingsEsc(e) { if (e && (e.key === 'Escape' || e.keyCode === 27)) closeSettings(); }
+  function closeSettings() {
+    const m = document.getElementById('settingsModal');
+    if (m) m.remove();
+    document.removeEventListener('keydown', settingsEsc);
+    const btn = document.getElementById('settingBtn');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+  /* 시작 시 한 번 — head 스크립트가 이미 적용했지만 저장값·meta·이벤트를 여기서 맞춘다 */
+  function themeInit() {
+    themeApply(themeMode(), false);
+    if (THEME_MQ) {
+      const onChange = () => { if (themeMode() === 'system') themeApply('system', false); };
+      if (THEME_MQ.addEventListener) THEME_MQ.addEventListener('change', onChange);
+      else if (THEME_MQ.addListener) THEME_MQ.addListener(onChange);
+    }
+    window.addEventListener('storage', (e) => { if (e && e.key === THEME_KEY) themeApply(themeMode(), false); });
+  }
+  themeInit();
+
   /* ---------- 프로필 설정(온보딩) 모달 ---------- */
   function openProfileSetup(force) {
     if (!AUTH.user) { openAuth('login'); return; }
@@ -9715,7 +10295,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (tb) ro.observe(tb);
     if (cb) ro.observe(cb);
   }
-  window.__APP__ = { state, metrics, render, setNickname, setNear, clearNear, toggleNear, toChoseong, distKm, homeList, openCompare, toggleCompare, mapZoomBy, dataStatus, openMask, favToggle, auth: AUTH, openAuth, openProfileSetup, authSignOut, profilePush };
+  window.__APP__ = { state, metrics, render, setNickname, setNear, clearNear, toggleNear, toChoseong, distKm, homeList, openCompare, toggleCompare, mapZoomBy, dataStatus, openMask, favToggle, auth: AUTH, openAuth, openProfileSetup, authSignOut, profilePush, theme: { get: themeMode, set: themeApply, eff: themeEff, open: openSettings, close: closeSettings } };
   /* 첫 방문 때 닉네임을 묻는 팝업은 두지 않는다 — 처음엔 그냥 좌석을 보러 온 사람이 대부분이다.
      닉네임은 후기를 남길 때 입력란에서만 받는다. */
   if (nickname) {
