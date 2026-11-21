@@ -9654,7 +9654,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           render();
         }
         if (/[?&]qa=welcome/.test(q)) {
-          AUTH.user = { id: 'qa-welcome-test', email: 'qa@yeongsimi.kr', provider: 'qa' };
+          AUTH.user = { id: 'qa-' + Date.now(), email: 'qa@yeongsimi.kr', provider: 'qa' };
           AUTH.ready = true;
           maybeWelcome(true);
         }
