@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>영시미 — 영화관 175개 지점 좌석 시야 평점</title>
+<title>영시미 — 나에게 맞는 영화관 좌석 시야</title>
 <meta name="description" content="CGV 영화관 175개 지점의 실제 예매 좌석표로 좌석별 시야·거리·단차·앞사람 가림을 계산해 예매 전에 미리 보는 서비스. 서울·경기·인천·강원·대전·충청·부산·울산·대구·경상·광주·전라·제주. IMAX·4DX·SCREENX·씨네드쉐프까지.">
 <meta name="theme-color" content="#F2F4F6">
 <script>
@@ -31,7 +31,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="영시미">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" content="영시미 — 영화관 175개 지점 좌석 시야 평점">
+<meta property="og:title" content="영시미 — 나에게 맞는 영화관 좌석 시야">
 <meta property="og:description" content="CGV 영화관 175개 지점 실제 예매 좌석표로 좌석마다 시야·거리·단차·앞사람 가림을 3D로 미리 확인하는 서비스.">
 <meta property="og:url" content="https://yeongsimi.kr/">
 <meta property="og:image" content="https://yeongsimi.kr/media/og-image.png">
@@ -40,7 +40,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="영시미 — 좌석마다 시야를 미리 봅니다">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="영시미 — 영화관 175개 지점 좌석 시야 평점">
+<meta name="twitter:title" content="영시미 — 나에게 맞는 영화관 좌석 시야">
 <meta name="twitter:description" content="CGV 영화관 175개 지점 실제 예매 좌석표로 좌석마다 시야·거리·단차·앞사람 가림을 3D로 미리 확인하는 서비스.">
 <meta name="twitter:image" content="https://yeongsimi.kr/media/og-image.png">
 <script>
@@ -2910,8 +2910,15 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
         vprobe.bad = 0; vprobe.broken = false; vprobe.at = 0;
         if (activeViewer && activeViewer.video === vd) {
           activeViewer._vidButton(true);
+          activeViewer._setHouse(0, 650);      /* 상영 시작 — 관 조명 서서히 꺼짐 */
           if (!activeViewer.raf) activeViewer._loop();
         }
+      });
+      vd.addEventListener('pause', function () {
+        if (activeViewer && activeViewer.video === vd) activeViewer._setHouse(1, 700);
+      });
+      vd.addEventListener('ended', function () {
+        if (activeViewer && activeViewer.video === vd) activeViewer._setHouse(1, 700);
       });
       vd.addEventListener('seeked', function () { vprobe.bad = 0; vprobe.broken = false; });
       sharedVideo = vd;
@@ -2946,6 +2953,10 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
     this.allowRecline = !(opts && opts.allowRecline === false);
     this._rec = (recState.key && recState.key === this.hallKey) ? recState.v : 0;
     this._recTween = null;
+    /* 하우스 조명 세기 — 1 = 정지 화면의 은은한 예비 조명, 0 = 상영 중(불을 꺼 화면 빛만)
+       2026-11-21 사용자 요청: "조명이 너무 밝아 영상이 재생될땐 조명 꺼주고 화면 불빛으로만 비치는걸로" */
+    this._house = 1;
+    this._houseTween = null;
     this.videoSrc = (opts && opts.videoSrc) || 'media/preview.mp4';
     this.video = getVideo(this.videoSrc);
     this._bindControls();
@@ -3045,6 +3056,14 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
     this._paintRecBtn();
   };
 
+  /* 하우스 조명을 부드럽게 바꾼다 — 영상을 켜면 천천히 꺼지고, 끄면 다시 은은하게 올라온다 */
+  Viewer.prototype._setHouse = function (to, dur) {
+    var from = (this._house == null ? 1 : this._house);
+    if (Math.abs(from - to) < 0.001) { this._house = to; this._houseTween = null; return; }
+    this._houseTween = { t0: performance.now(), dur: dur || 650, from: from, to: to };
+    if (!this.raf) this._loop();
+  };
+
   Viewer.prototype.toggleVideo = function () {
     var self = this, v = this.video;
     if (!v) return;
@@ -3066,6 +3085,7 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
       try { v.preload = 'auto'; } catch (e) {}
       var pr = v.play();
       this._vidButton(true);
+      this._setHouse(0, 650);        /* 영상이 시작되면 관 조명이 서서히 꺼진다 */
       this._loop();
       if (pr && pr.then) {
         pr.then(function () { self._vidButton(true); self._loop(); })
@@ -3074,6 +3094,7 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
     } else {
       try { v.pause(); } catch (e) {}
       this._vidButton(false);
+      this._setHouse(1, 700);        /* 정지하면 예비 조명이 다시 은은하게 */
       this.render();
     }
   };
@@ -3197,6 +3218,15 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
       self._paintRecBtn();
       moved = true;
       if (rk === 1) { self._rec = self._recTween.to; self._recTween = null; self._paintRecBtn(); }
+    }
+    /* 하우스 조명 페이드 — 영상을 케고 끌 때 끊기지 않고 서서히 */
+    if (self._houseTween) {
+      var hk = (performance.now() - self._houseTween.t0) / self._houseTween.dur;
+      if (hk > 1) hk = 1;
+      var he = 1 - Math.pow(1 - hk, 3);
+      self._house = self._houseTween.from + (self._houseTween.to - self._houseTween.from) * he;
+      moved = true;
+      if (hk === 1) { self._house = self._houseTween.to; self._houseTween = null; }
     }
     /* 드래그 중이거나 영상이 재생 중이면 매 프레임 계속 그린다 */
     if (self.drag) moved = true;
@@ -3425,6 +3455,16 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
        그래서 영상이 준비되지 않았으면 영상 대신 그라데이션 정지 화면을 쓴다. */
     var vplay = !!(this.video && !this.video.paused && this.video.readyState >= 2
       && this.video.videoWidth > 0 && !vprobe.broken);
+    /* ---- 하우스 조명 (2026-11-21 사용자 요청) ----
+       "조명이 너무 밝아 영상이 재생될땐 조명 꺼주고 화면 불빛으로만 비치는걸로"
+       · houseFrac 1 = 정지 화면의 은은한 예비 조명, 0 = 상영 중(조명 꺼짐)
+       · roomDim: 벽·천장·바닥·좌석의 기본 톤을 어둡게 깔아 관이 어두침침해지는 느낌을 준다
+       · lampA  : 천장 다운라이트·벽 빛용 세기 (상영 중에는 0)
+       · 영상이 준비되지 않았을 때도(vplay=false) 조명은 켜진 상태 = 정지 화면은 예고편 전 분위기 */
+    var houseFrac = (self._house == null ? 1 : self._house);
+    var roomDim = 0.56 + 0.44 * houseFrac;
+    var lampA = houseFrac * houseFrac;              /* 끌 때는 더 빨리 사라지게 */
+    var glowUp = 1 + 0.45 * (1 - houseFrac);        /* 상영 중에는 화면 빛 번짐을 조금 더 */
     var still = movieFrame(o.aspect || s.p.aspect);
     var img = vplay ? this.video : still;
     if (vplay && !this._inVid && !this.raf) this._loop();
@@ -3572,9 +3612,9 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
     /* ---- 천장 ---- */
-    face([toCam(-wallX, ceilY, 0), toCam(wallX, ceilY, 0), toCam(wallX, ceilY, -rearD), toCam(-wallX, ceilY, -rearD)], '#0B0C0D');
+    face([toCam(-wallX, ceilY, 0), toCam(wallX, ceilY, 0), toCam(wallX, ceilY, -rearD), toCam(-wallX, ceilY, -rearD)], shade('#0B0C0D', roomDim));
     for (var cz = -2.0; cz > -rearD; cz -= 3.0) {
-      seg(toCam(-wallX, ceilY, cz), toCam(wallX, ceilY, cz), 'rgba(150,158,162,0.045)', 1);
+      seg(toCam(-wallX, ceilY, cz), toCam(wallX, ceilY, cz), 'rgba(150,158,162,' + (0.045 * roomDim).toFixed(3) + ')', 1);
     }
 
     /* ---- 옆벽: 차콜 음향 패널 + 이음매 ---- */
@@ -3582,9 +3622,9 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
       var xw = sgn * wallX;
       /* 벽면 기본 톤은 위쪽이 아주 약간 밝다(천장 반사) */
       var g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, '#15171A');
-      g.addColorStop(0.45, '#0F1113');
-      g.addColorStop(1, '#0B0C0E');
+      g.addColorStop(0, shade('#15171A', roomDim));
+      g.addColorStop(0.45, shade('#0F1113', roomDim));
+      g.addColorStop(1, shade('#0B0C0E', roomDim));
       face([toCam(xw, 0, 0), toCam(xw, 0, -rearD), toCam(xw, ceilY, -rearD), toCam(xw, ceilY, 0)], null);
       if (path([toCam(xw, 0, 0), toCam(xw, 0, -rearD), toCam(xw, ceilY, -rearD), toCam(xw, ceilY, 0)])) {
         ctx.fillStyle = g; ctx.fill();
@@ -3607,12 +3647,12 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
     });
 
     /* ---- 뒷벽 + 출입문 ---- */
-    face([toCam(-wallX, 0, -rearD), toCam(wallX, 0, -rearD), toCam(wallX, ceilY, -rearD), toCam(-wallX, ceilY, -rearD)], '#0C0D0F');
+    face([toCam(-wallX, 0, -rearD), toCam(wallX, 0, -rearD), toCam(wallX, ceilY, -rearD), toCam(-wallX, ceilY, -rearD)], shade('#0C0D0F', roomDim));
     face([toCam(-1.15, 0, -rearD + 0.02), toCam(1.15, 0, -rearD + 0.02),
           toCam(1.15, 2.35, -rearD + 0.02), toCam(-1.15, 2.35, -rearD + 0.02)], '#050607');
 
     /* ---- 앞벽 (스크린 둘레) ---- */
-    face([toCam(-wallX, 0, 0), toCam(wallX, 0, 0), toCam(wallX, ceilY, 0), toCam(-wallX, ceilY, 0)], '#0B0D0F');
+    face([toCam(-wallX, 0, 0), toCam(wallX, 0, 0), toCam(wallX, ceilY, 0), toCam(-wallX, ceilY, 0)], shade('#0B0D0F', roomDim));
     /* 앞벽도 세로 패널 이음매 — 스크린 뒤(검은 마스킹)는 매끈하게 둔다 */
     for (var wx = -wallX + 0.8; wx < wallX - 0.5; wx += 0.8) {
       if (Math.abs(wx) < scrW / 2 + 0.5) continue;
@@ -4049,20 +4089,21 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
     var lampZ = [-0.9];
     for (var lz = -2.6; lz > -rearD; lz -= 3.6) lampZ.push(lz);
     lampZ.forEach(function (z, idx) {
+      if (lampA < 0.02) return;                 /* 상영 중에는 천장·벽 조명을 그리지 않는다 */
       [-1, 1].forEach(function (sgn) {
         var lx = sgn * wallX * 0.55;
         var c0 = toCam(lx, ceilY - 0.10, z);
         if (c0[2] > NEAR) {
           var rr = Math.max(1.1, f * 0.07 / c0[2]);
-          ctx.fillStyle = 'rgba(255,246,226,0.97)';
+          ctx.fillStyle = 'rgba(255,246,226,' + (0.97 * lampA).toFixed(3) + ')';
           ctx.beginPath(); ctx.arc(sx(c0), sy(c0), rr, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = 'rgba(255,228,184,0.13)';
+          ctx.fillStyle = 'rgba(255,228,184,' + (0.13 * lampA).toFixed(3) + ')';
           ctx.beginPath(); ctx.arc(sx(c0), sy(c0), rr * 3.0, 0, Math.PI * 2); ctx.fill();
         }
         /* 벽면에 떨어지는 빛 웅덩이 */
-        pool(toCam(sgn * (wallX - 0.02), ceilY - 0.95, z), 2.1, '255,226,180', idx === 0 ? 0.10 : 0.065, 1.4);
+        pool(toCam(sgn * (wallX - 0.02), ceilY - 0.95, z), 2.1, '255,226,180', (idx === 0 ? 0.085 : 0.055) * lampA, 1.4);
         /* 천장 자체 번짐 */
-        pool(toCam(lx, ceilY - 0.02, z), 1.2, '255,224,180', 0.09, 1);
+        pool(toCam(lx, ceilY - 0.02, z), 1.2, '255,224,180', 0.075 * lampA, 1);
       });
     });
 
@@ -4071,9 +4112,9 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
 
     /* 스크린 앞 바닥(스테이지) */
     face([toCam(-wallX, 0.01, 0), toCam(wallX, 0.01, 0),
-          toCam(wallX, 0.01, -(p.firstRow - p.rowGap * 0.5)), toCam(-wallX, 0.01, -(p.firstRow - p.rowGap * 0.5))], '#0A0C0E');
+          toCam(wallX, 0.01, -(p.firstRow - p.rowGap * 0.5)), toCam(-wallX, 0.01, -(p.firstRow - p.rowGap * 0.5))], shade('#0A0C0E', roomDim));
     /* 스크린 빛을 받아 살짝 빛나는 스테이지 앞쪽 */
-    pool(toCam(0, 0.02, -1.2), Math.max(3.5, p.screenW * 0.35), '255,232,205', 0.05, 0.35);
+    pool(toCam(0, 0.02, -1.2), Math.max(3.5, p.screenW * 0.35), '255,232,205', 0.05 * glowUp, 0.35);
 
     /* ---- 맨 앞 단상(왕십리 SCREENX like) ----
        스크린이 상단에 붙은 관은 무대(단상)가 앞에 설치되어 그 위로 화면이 떠 보인다. */
@@ -4088,7 +4129,7 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
             toCam(stW, stH, 0.05), toCam(-stW, stH, 0.05)], '#0C0D0D');
       seg(toCam(-stW, stH - 0.015, 0.06), toCam(stW, stH - 0.015, 0.06), 'rgba(232,240,244,0.16)', 1.4);
       /* 단상 위 스크린 빛 반사 */
-      pool(toCam(0, stH + 0.02, -stD * 0.5), Math.max(2.5, scrW * 0.30), '255,236,210', 0.05, 0.22);
+      pool(toCam(0, stH + 0.02, -stD * 0.5), Math.max(2.5, scrW * 0.30), '255,236,210', 0.05 * glowUp, 0.22);
     }
 
     /* 앞열 앞 크롬 난간 (사진의 스테이지 끝 가드레일) */
@@ -4146,6 +4187,38 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
       A(x0 + rTop, yHi - rTop, Math.PI * 0.5, Math.PI, rTop);
       return pts;
     }
+    /* 등받이 — 아래는 살짝 좁고 위로 갈수록 넓어지는, 네 모서리가 둥근 한 장의 패널.
+       예전에는 등받이 위에 머리받침 패드를 한 겹 더 얹어서 두 윤곽이 만나는 자리에
+       뾰족한 지붕 모양(/\\)이 생겼고, 폭이 좁고 등이 높아 비석처럼 보였다(2026-11-21 제보:
+       "좌석이 너무 별론데"). 이제 패드를 없애고 · 위를 넓히고 · 키를 낮춘 한 장의 실루엣. */
+    function backPts(x0, x1, yBot, yTop, z0, z1, rTop, rBot, inset, segs) {
+      var pts = [];
+      var dy = Math.abs(yTop - yBot);
+      inset = Math.min(inset || 0, (Math.abs(x1 - x0)) * 0.3);
+      rTop = Math.max(0.001, Math.min(rTop, (x1 - x0) / 2 - inset * 0.5, dy / 2));
+      rBot = Math.max(0.001, Math.min(rBot == null ? rTop : rBot, (x1 - x0) / 2 - inset, dy / 2));
+      segs = segs || 3;
+      var yLo = Math.min(yBot, yTop), yHi = Math.max(yBot, yTop);
+      var zLo = yBot <= yTop ? z0 : z1, zHi = yBot <= yTop ? z1 : z0;
+      function Z(y) { return zLo + (zHi - zLo) * ((y - yLo) / ((yHi - yLo) || 1)); }
+      function P(x, y) { pts.push(toCam(x, y, Z(y))); }
+      function A(cx2, cy2, a0, a1, r) {
+        if (r < 0.006) { P(cx2, cy2); return; }
+        for (var q2 = 1; q2 <= segs; q2++) { var a = a0 + (a1 - a0) * (q2 / segs); P(cx2 + Math.cos(a) * r, cy2 + Math.sin(a) * r); }
+      }
+      var bl = x0 + inset, br = x1 - inset;          /* 아래 폭(살짝 좁게) */
+      var tl = x0, tr = x1;                          /* 위 폭 */
+      P(bl + rBot, yLo);
+      P(br - rBot, yLo);
+      A(br - rBot, yLo + rBot, -Math.PI * 0.5, 0, rBot);
+      P(tr, yHi - rTop);
+      A(tr - rTop, yHi - rTop, 0, Math.PI * 0.5, rTop);
+      P(tl + rTop, yHi);
+      A(tl + rTop, yHi - rTop, Math.PI * 0.5, Math.PI, rTop);
+      P(tl, yHi - rTop);
+      P(bl, yLo + rBot);
+      return pts;
+    }
     function slabPts(x0, x1, zA, zB, y, rX, rZ, segs) {
       var pts = [], dxs = Math.abs(x1 - x0), dzs = Math.abs(zB - zA);
       rX = Math.max(0.001, Math.min(rX, dxs / 2, dzs / 2));
@@ -4182,11 +4255,11 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
          2026-11-21 «클린 미니멀 3D»(style-2.png): 바닥은 무광 차콜, 단차 코와 통로에는
          은은한 에메랄드 유도선만 얇게 깐다. 밝은 회색 선은 화면보다 눈에 띄어 걷어냈다. */
       var rowLit = clamp(1.02 - Math.abs(s.dCam - dc) / Math.max(8, p.rows * p.rowGap * 1.4), 0.42, 1);
-      face([toCam(-wallX, hz, zf), toCam(wallX, hz, zf), toCam(wallX, hz, zb), toCam(-wallX, hz, zb)], '#12161C');
+      face([toCam(-wallX, hz, zf), toCam(wallX, hz, zf), toCam(wallX, hz, zb), toCam(-wallX, hz, zb)], shade('#12161C', roomDim));
       /* 단차(앞면) */
       if (i > 0) {
         face([toCam(-wallX, (i - 1) * riser, zf), toCam(wallX, (i - 1) * riser, zf),
-              toCam(wallX, hz, zf), toCam(-wallX, hz, zf)], '#0A0E13');
+              toCam(wallX, hz, zf), toCam(-wallX, hz, zf)], shade('#0A0E13', roomDim));
         /* 단차 코의 에메랄드 유도선 — 폭 넓은 흐림 한 줄 + 얇은 선 한 줄로 은은한 발광 */
         var emA = (0.075 * rowLit).toFixed(3), emB = (0.30 * rowLit).toFixed(3);
         seg(toCam(-wallX, hz - 0.014, zf), toCam(wallX, hz - 0.014, zf), 'rgba(16,185,129,' + emA + ')', 4.5);
@@ -4216,13 +4289,16 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
               형태와 위쪽 림라이트로 3D로 읽히게 한다 — 좌석이 화면보다 튀지 않게. ---- */
       var zBack = -(dc + 0.20), zFront = -(dc - 0.05);
       var bed = !!s.isBed;
-      var lit = rowLit;
+      /* 상영 중에는 좌석을 실루엣처럼 어둡게 — 화면 빛만 앞가장자리에 얹힌다 */
+      var lit = rowLit * (0.38 + 0.62 * houseFrac);
       var recLean = 0.22 * rec;                     /* 등받이를 젖히면 어깨가 뒤로 눕는다 */
       var bBot = hz + (bed ? 0.26 : 0.34);
-      var bTop = hz + (bed ? 0.84 : (s.recliner ? 0.99 : 0.92));
+      var bTop = hz + (bed ? 0.84 : (s.recliner ? 0.92 : 0.86));
+      var backRise = 0;                             /* 등받이 위는 둥근 모서리로만 처리 */
       var cTop = hz + (bed ? 0.34 : (s.recliner ? 0.46 : 0.44));
       var cEdge = hz + (s.recliner ? 0.26 : 0.30);
-      var seatW = pitch * (bed ? 0.90 : (s.recliner ? 0.50 : 0.47));
+      /* 좌석 폭 — 줄 간격(pitch)에 거의 차게. 예전 폭(0.47)은 의자가 아니라 기립판처럼 보였다. */
+      var seatW = pitch * (bed ? 0.90 : (s.recliner ? 0.56 : 0.82));
       var zTop = zBack - recLean;
       function zbk(y) { return (bTop - bBot) < 0.001 ? zBack : zBack + (zTop - zBack) * ((y - bBot) / (bTop - bBot)); }
       var MATC = {};
@@ -4289,28 +4365,26 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
           continue;
         }
 
-        /* 등받이 — 둥근 어깨의 매끈한 패널 (젖히면 어깨가 뒤로 눕는다) */
-        put(tt, 'back', panelPts(xc - hw, xc + hw, bBot, bTop, zBack, zTop, Math.min(0.11, hw * 0.34), 0.0, 3));
-        /* 머리·목 받침 — 등받이보다 한 겹 앞에 얇게 얹는 둥근 패드 */
-        var py0 = bTop - 0.29, py1 = bTop - 0.05;
-        put(tt, 'pad', panelPts(xc - hw * 0.78, xc + hw * 0.78, py0, py1, zbk(py0) + 0.02, zbk(py1) + 0.02, Math.min(0.09, hw * 0.26), 0.0, 3));
+        /* 등받이 — 네 모서리가 둥글고 위가 살짝 넓은 한 장의 부드러운 패널 */
+        put(tt, 'back', backPts(xc - hw, xc + hw, bBot, bTop, zBack, zTop,
+          Math.min(0.10, hw * 0.42), Math.min(0.05, hw * 0.20), hw * 0.10, 3));
         /* 좌판 윗면 — 뒤쪽이 살짝 높은 오목한 쿠션 */
         put(tt, 'cush', slabPts(xc - hw * 0.93, xc + hw * 0.93, zBack + 0.13, zFront, cTop + 0.05, 0.10, 0.10, 2));
         /* 좌판 앞면(둥근 두께) */
         put(tt, 'edge', panelPts(xc - hw * 0.93, xc + hw * 0.93, cEdge, cTop + 0.03, zFront, zFront, 0.035, 0.035, 2));
-        /* 팔걸이 — 오른쪽 하나씩, 줄의 맨 왼쪽 좌석에만 왼쪽 하나 더. 끝이 둥근 캡슐 형태 */
-        var armY = cTop + (s.recliner ? 0.19 : 0.16), aw = s.recliner ? 0.095 : 0.075;
-        var ax = [xc + hw * 0.98];
-        if (xc === firstSeatX) ax.push(xc - hw * 0.98);
+        /* 팔걸이 — 오른쪽 하나씩, 줄의 맨 왼쪽 좌석에만 왼쪽 하나 더.
+           길고 높은 바퀴 모양으로 세우면 의자 사이에 비석 같은 검은 판이 서 보였다 —
+           낮고 짧은 둥근 팔걸이 하나만 놓는다(2026-11-21). */
+        var armY = cTop + (s.recliner ? 0.15 : 0.12), aw = s.recliner ? 0.10 : 0.08;
+        var az0 = zBack + 0.18, az1 = zFront - 0.06;    /* 길이를 줄여 좌판 앞까지만 */
+        var ax = [xc + hw * 0.94];
+        if (xc === firstSeatX) ax.push(xc - hw * 0.94);
         for (var ai = 0; ai < ax.length; ai++) {
           var axc = ax[ai];
           /* 팔걸이 윗면(캡슐) */
-          put(tt, 'arm', slabPts(axc - aw / 2, axc + aw / 2, zBack + 0.12, zFront - 0.03, armY, aw * 0.46, 0.05, 3));
+          put(tt, 'arm', slabPts(axc - aw / 2, axc + aw / 2, az0, az1, armY, aw * 0.48, 0.06, 3));
           /* 팔걸이 앞쪽 끝면(둥글게 감긴 끝) */
-          put(tt, 'arm2', panelPts(axc - aw / 2, axc + aw / 2, cTop - 0.02, armY - 0.012, zFront - 0.03, zFront - 0.03, aw * 0.46, aw * 0.34, 3));
-          /* 팔걸이 바깥 옆면 — 가장 어두운 면 */
-          var sideX = axc + (axc > xc ? aw / 2 : -aw / 2);
-          put(tt, 'arm2', panelPts(sideX, sideX, cTop - 0.02, armY, zBack + 0.12, zFront - 0.03, 0.012, 0.012, 2));
+          put(tt, 'arm2', panelPts(axc - aw / 2, axc + aw / 2, cTop + 0.02, armY - 0.01, az1, az1, aw * 0.48, aw * 0.4, 3));
         }
         /* 리클라이너 — 발판이 앞으로 펼쳐진 모습 */
         if (s.recliner) {
@@ -4483,7 +4557,7 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
       var hz2 = ctx.createRadialGradient(sxp, syp, rad * 0.30, sxp, syp, rad);
-      hz2.addColorStop(0, 'rgba(255,222,190,0.055)');
+      hz2.addColorStop(0, 'rgba(255,222,190,' + (0.055 * glowUp).toFixed(3) + ')');
       hz2.addColorStop(1, 'rgba(255,205,165,0)');
       ctx.fillStyle = hz2; ctx.fillRect(0, 0, W, H);
       ctx.restore();
@@ -5621,7 +5695,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   const HELP_VOTED = 'cgv_helpful_voted_v1';
   const HELP_SRV = 'cgv_helpful_srv_v1';   /* 내 표가 서버에 올라가 있는 대상 */
   const FIX_LOCAL = 'cgv_fix_requests_v1';
-  const HELP = { counts: Object.create(null), at: 0, busy: false, off: false, lock: Object.create(null), again: Object.create(null) };
+  const HELP = { counts: Object.create(null), at: 0, busy: false, off: false, lock: Object.create(null), again: Object.create(null), tap: Object.create(null) };
   const FIXQ = { off: false };
   const SB_MISS = 'cgv_sb_miss_v1';   /* 테이블이 없다고 확인된 시각 — 하루에 한 번만 다시 확인한다 */
   function sbMissing(tbl) {
@@ -5852,10 +5926,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         if (!Array.isArray(rows)) return;
         const m = Object.create(null);
         const mine = {};
+        /* 같은 사람의 표는 몇 줄이 쌓였든 '한 표'로 센다 — 예전 연타 버그로 남은 중복 행이
+           숫자를 부풀리지 않게(2026-11-21). 행 수가 아니라 사람(voter_id) 수를 센다. */
+        const seen = Object.create(null);
         rows.forEach((r) => {
           const k = r && r.target_key; if (!k) return;
-          m[k] = (m[k] || 0) + 1;
-          if (me && r.voter_id && String(r.voter_id) === me) mine[k] = 1;
+          const v = r.voter_id ? String(r.voter_id) : ('#' + (r.id || Math.random()));
+          const uk = k + '|' + v;
+          if (!seen[uk]) { seen[uk] = 1; m[k] = (m[k] || 0) + 1; }
+          if (me && r.voter_id && v === me) mine[k] = 1;
         });
         HELP.counts = m;
         lsPut(HELP_SRV, mine);
@@ -5878,8 +5957,10 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
      서버 반영은 대상마다 한 번에 하나만 보내고, 그 사이 더 누른 것은 마지막 상태로 한 번 더 맞춘다. */
   function voteHelp(btn, key) {
     if (!key) return;
-    /* 연타 방어 — 이 키의 서버 반영이 끝나기 전에는 요청을 겹쳐 보내지 않는다.
-       화면 숫자는 이 기기의 선택(0/1)만 바뀌므로 +1을 넘지 않는다. */
+    /* 연타 방어 — 같은 버튼을 250ms 안에 또 누르면 무시한다(요청·집계가 겹치지 않게). */
+    const now = Date.now();
+    if (HELP.tap[key] && now - HELP.tap[key] < 250) return;
+    HELP.tap[key] = now;
     const voted = helpVoted();
     const on = !voted[key];
     if (on) voted[key] = 1; else delete voted[key];
@@ -5888,7 +5969,65 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     toast(on ? '도움돼요로 남겼어요' : '도움돼요를 취소했어요');
     helpSync(key);
   }
-  /* 이 기기의 선택(voted)과 서버에 올라간 내 행(HELP_SRV)을 맞춘다 — 대상마다 잠금 하나 */
+  /* 같은 기기·같은 대상의 표는 늘 같은 uuid — 두 번 넣어도 유니크 키 충돌(409)로 한 줄만 남는다. */
+  function helpVoteId(key) {
+    const s = 'v1|' + String(key) + '|' + deviceId();
+    let h1 = 0x811c9dc5, h2 = 0x01000193, h3 = 0x27d4eb2f, h4 = 0x165667b1;
+    for (let i = 0; i < s.length; i++) {
+      const c = s.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+      h2 = Math.imul(h2 + c * (i + 3), 2246822519) >>> 0;
+      h3 = Math.imul(h3 ^ (c + i * 31), 2654435761) >>> 0;
+      h4 = Math.imul(h4 + (c << (i % 13)), 33) >>> 0;
+      h4 = (h4 ^ (h4 >>> 15)) >>> 0;
+    }
+    const hx = (n) => ('00000000' + n.toString(16)).slice(-8);
+    const t = (hx(h1) + hx(h2) + hx(h3) + hx(h4)).split('');
+    t[12] = '4'; t[16] = '8';                     /* uuid v4 모양 */
+    const u = t.join('');
+    return u.slice(0, 8) + '-' + u.slice(8, 12) + '-' + u.slice(12, 16) + '-' + u.slice(16, 20) + '-' + u.slice(20, 32);
+  }
+  /* 서버에 내 표가 있는지 — true / false / 확인 실패면 null */
+  function helpHasRow(key) {
+    const url = SB_URL + '/rest/v1/seat_review_helpful?select=id&limit=1&target_key=eq.'
+      + encodeURIComponent(key) + '&voter_id=eq.' + encodeURIComponent(deviceId());
+    return fetch(url, { headers: sbHeaders(), cache: 'no-store' })
+      .then((r) => {
+        if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); return false; }
+        if (!r.ok) return null;
+        return r.json();
+      })
+      .then((rows) => (rows === null ? null : (Array.isArray(rows) && rows.length > 0)))
+      .catch(() => null);
+  }
+  /* 내 표 한 줄 넣기 — 409(이미 있음)도 성공으로 본다 */
+  function helpInsertRow(key) {
+    return fetch(SB_URL + '/rest/v1/seat_review_helpful', {
+      method: 'POST',
+      headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
+      body: JSON.stringify({ id: helpVoteId(key), target_key: String(key).slice(0, 120), voter_id: deviceId() })
+    }).then((r) => {
+      if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); return false; }
+      if (r.status === 409) return true;              /* 같은 표가 이미 있었다 */
+      return r.ok;
+    }).catch(() => false);
+  }
+  /* 내 표 지우기 시도 — 지웠는지는 서버에 다시 물어 확인한다 */
+  function helpDeleteRow(key) {
+    const q = SB_URL + '/rest/v1/seat_review_helpful?target_key=eq.' + encodeURIComponent(key)
+      + '&voter_id=eq.' + encodeURIComponent(deviceId());
+    return fetch(q, { method: 'DELETE', headers: sbHeaders({ 'Prefer': 'return=representation' }) })
+      .then((r) => {
+        if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); return false; }
+        return r.ok;
+      })
+      .catch(() => false);
+  }
+  /* 이 기기의 선택(voted)과 서버에 올라간 내 행(HELP_SRV)을 맞춘다 — 대상마다 잠금 하나.
+     2026-11-21 제보("도움돼요 연타하면 1씩 계속 추가"): 서버의 지우기(DELETE)가 RLS 정책에 막혀
+     HTTP 200/204 로 답하면서도 행을 남겨 둔다(실제 확인). 그런데 앱은 지워졌다고 믿고 다음에 또
+     넣어서 표가 한 줄씩 쌓였다. 이제는 ① 넣기 전에 내 표가 있는지 먼저 확인하고
+     ② 지운 뒤 정말 지워졌는지 다시 확인하며 ③ 같은 기기·대상은 같은 id 라 두 번 넣어도 한 줄이다. */
   function helpSync(key) {
     if (HELP.lock[key]) { HELP.again[key] = 1; return; }
     if (HELP.off || sbMissing('seat_review_helpful')) { toast(LOCAL_ONLY_MSG, 4600); return; }
@@ -5896,47 +6035,30 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const has = helpSrv()[key] ? 1 : 0;
     if (want === has) return;
     HELP.lock[key] = 1;
-    const tm = sbTimer(12000);
+    const tm = sbTimer(15000);
+    const markSrv = (v) => { const m = helpSrv(); if (v) m[key] = 1; else delete m[key]; lsPut(HELP_SRV, m); };
     const done = () => {
-      delete HELP.lock[key];
-      repaintHelp(key);
+      tm.done(); delete HELP.lock[key]; repaintHelp(key);
       if (HELP.again[key]) { delete HELP.again[key]; helpSync(key); }
     };
-    if (want) {
-      fetch(SB_URL + '/rest/v1/seat_review_helpful', {
-        method: 'POST', signal: tm.signal,
-        headers: sbHeaders({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
-        body: JSON.stringify({ target_key: String(key).slice(0, 120), voter_id: deviceId() })
-      }).then((r) => {
-        tm.done();
-        if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); throw new Error('missing'); }
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const m = helpSrv(); m[key] = 1; lsPut(HELP_SRV, m);
-        helpRefreshSoon();
-      }).catch(() => {
-        /* 서버에 못 올렸어도 이 기기에서는 눌린 상태 그대로 둔다 */
-        if (!HELP.off) toast(LOCAL_ONLY_MSG, 4600);
-      }).then(done, done);
-    } else {
-      const q = SB_URL + '/rest/v1/seat_review_helpful?target_key=eq.' + encodeURIComponent(key)
-        + '&voter_id=eq.' + encodeURIComponent(deviceId());
-      fetch(q, { method: 'DELETE', signal: tm.signal, headers: sbHeaders({ 'Prefer': 'return=representation' }) })
-        .then((r) => {
-          tm.done();
-          if (r.status === 404) { HELP.off = true; sbMarkMissing('seat_review_helpful'); throw new Error('missing'); }
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          return r.json().catch(() => []);
-        })
-        .then(() => {
-          const m = helpSrv(); delete m[key]; lsPut(HELP_SRV, m);
-          repaintHelp(key);
+    const run = () => {
+      if (!want) {
+        /* 취소 — 지운 뒤 서버에 묻는다. 못 지웠으면(정책 차단) 내 행은 남은 것으로 두고 다시 넣지 않는다. */
+        return helpDeleteRow(key).then(() => helpHasRow(key)).then((still) => {
+          markSrv(still === true ? 1 : 0);
           helpRefreshSoon();
-        })
-        .catch(() => {
-          /* 서버에서 못 지웠어도(정책 차단) 화면은 취소 상태 그대로 — 내 몫은 0으로 센다 */
-        })
-        .then(done, done);
-    }
+        });
+      }
+      /* 남기기 — 이미 있으면 넣지 않는다 */
+      return helpHasRow(key).then((exists) => {
+        if (exists === true) { markSrv(1); helpRefreshSoon(); return; }
+        return helpInsertRow(key).then((ok) => {
+          if (ok) { markSrv(1); helpRefreshSoon(); }
+          else if (!HELP.off) toast(LOCAL_ONLY_MSG, 4600);
+        });
+      });
+    };
+    run().catch(() => { if (!HELP.off) toast(LOCAL_ONLY_MSG, 4600); }).then(done, done);
   }
 
   /* 정보 수정 요청을 메일로도 받는다(FormSubmit) — DB 저장과 별개로 보내고 결과를 기다리지 않는다.
@@ -6244,6 +6366,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (state._cmpHallKey !== curHallKey) {
       state._cmpHallKey = curHallKey;
       resetCompare();
+      /* 관이 바뀌면 이전 관에서 고른 좌석·열린 시트를 같이 접는다 —
+         다른 관에 들어갔는데 앞 관의 좌석 평점 카드가 남아 보이던 문제(2026-11-21 제보:
+         "다른관 들어갔을때 좌석평점이 그대로 남아있어"). */
+      state._sheetSeat = null;
+      state._panelKey = null;
+      const sh = $('#sheet');
+      if (sh && sh.classList.contains('open')) openSheet(false);
+      document.body.style.overflow = '';
     }
     stopMedia();
     /* 상단 바의 '영화관 N개 지점' 배지는 2026-11-21 사용자 요청으로 없앴다 */
@@ -6496,7 +6626,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         ${t.halls.length === 0 ? `<div class="tregion" style="margin-top:8px;color:#6B7684;font-weight:700">상영관 정보·좌석표 준비 중</div>` : `<div class="tmeta">
           <div><b class="num">${t.halls.length}</b>상영관</div>
           <div><b class="num">${seats.toLocaleString()}</b>좌석</div>
-          <div><b class="num">${ok}</b>좌석표</div>
         </div>`}
         ${ph ? `<div class="progress" style="background:var(--green-l)"><i style="width:100%;background:var(--green)"></i></div><div class="tregion" style="margin-top:6px;color:var(--green-d);font-weight:800">📷 사진 있는 좌석 ${ph}석</div>` : ''}
       </button>`;
@@ -6779,9 +6908,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     <div class="tgrid" id="tgrid" style="margin-top:14px">${theaterCardsHtml(list)}</div>
 
     <div class="foot">
-      <b>영시미</b>는 CGV·CJ 4DPLEX와 제휴하지 않은 비공식 좌석 시야 정보 사이트입니다. 좌석표·상영관 정보는 CGV 예매 화면에서 확인한 값이며, 리뉴얼·좌석 교체로 달라질 수 있습니다.<br>
-      좌석수는 CGV 예매 화면을 기준으로 정리했고, 상표는 설명 목적으로만 사용합니다.<br>
-      좌석 시야 사진은 <b>직접 제보 사진</b>과 <b>원문 링크</b>로만 연결하며, 타인 사진을 무단 재게시하지 않습니다.
+      <b>영시미</b>는 CGV·CJ 4DPLEX와 무관한 비공식 좌석 시야 가이드입니다.<br>
+      좌석 정보는 극장 리뉴얼에 따라 달라질 수 있으며, 실사 사진은 제보와 원문 링크로만 연결합니다.
       ${reportFootHtml()}
     </div>`;
   }
@@ -8903,6 +9031,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     root.querySelectorAll('[data-delreview]').forEach((b) => {
       b.onclick = () => {
         if (b._busy) return;
+        /* 후기 삭제도 묻고 나서 — 한 번 누르자마자 사라지지 않게(2026-11-21 사용자 요청) */
+        askConfirm({ title: '정말 삭제하시겠습니까?', body: '내가 남긴 이 좌석 후기를 지웁니다.\n다른 사람 화면에서도 보이지 않게 돼요.', ok: '삭제', danger: true })
+          .then((yes) => { if (yes) doDeleteReview(); });
+      };
+      const doDeleteReview = () => {
         const bucket2 = ugcBucket();
         const cur = (bucket2.seats || {})[seat.key] || null;
         const rid = (cur && cur.rid) || null;
@@ -9731,7 +9864,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     <div class="section-title" style="margin-top:2px">
       <h2>설정</h2>
       <span class="cap" style="display:flex;align-items:center;gap:8px">
-        <button class="chip sm" type="button" data-setback="1">← 뒤로</button>계정 · 화면
+        <button class="chip sm" type="button" data-setback="1">← 뒤로</button>
       </span>
     </div>
 
@@ -9846,6 +9979,36 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
   /* ---------- 이벤트 ---------- */
+  /* 공통 확인 창 — 되돌릴 수 없는 삭제 앞에 한 번 묻는다(2026-11-21 사용자 요청:
+     "삭제할때는 정말 삭제 하시겠습니까 물어보는것도 해줘"). 사이트의 다른 창과 같은 모양이고,
+     다크·라이트 테마를 그대로 따른다. */
+  function askConfirm(o) {
+    return new Promise((resolve) => {
+      const old = document.getElementById('cfmModal');
+      if (old) old.remove();
+      const wrap = document.createElement('div');
+      wrap.id = 'cfmModal';
+      wrap.className = 'modal';
+      wrap.innerHTML = `
+        <div class="modal-scrim"></div>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="cfmTitle">
+          <div class="modal-grab"></div>
+          <h3 id="cfmTitle">${esc(o.title || '정말 삭제하시겠습니까?')}</h3>
+          ${o.body ? `<p class="sub" style="white-space:pre-line">${esc(o.body)}</p>` : ''}
+          <button class="btn" id="cfmOk" type="button" style="width:100%;margin-top:14px${o.danger ? ';background:#E5484D' : ''}">${esc(o.ok || '삭제')}</button>
+          <button class="btn ghost" id="cfmNo" type="button" style="width:100%;margin-top:8px;background:#F2F4F6;color:#6B7684;border:0">취소</button>
+        </div>`;
+      document.body.appendChild(wrap);
+      const close = (v) => { document.removeEventListener('keydown', onKey); wrap.remove(); resolve(v); };
+      const onKey = (ev) => { if (ev.key === 'Escape') close(false); };
+      wrap.querySelector('#cfmOk').onclick = () => close(true);
+      wrap.querySelector('#cfmNo').onclick = () => close(false);
+      wrap.querySelector('.modal-scrim').onclick = () => close(false);
+      document.addEventListener('keydown', onKey);
+      try { wrap.querySelector('#cfmOk').focus(); } catch (e) {}
+    });
+  }
+
   /* 검색창: 입력 중에는 검색창을 건드리지 않고 '지점 카드 목록'만 갈아끼운다.
      (전체 render()를 돌리면 input DOM이 매 타건마다 재생성되어 iOS에서 화면이 튀고
       한글 조합이 'ㄷㅐㅈㅓㄴ'처럼 꺠진다.) 한글 조합 중에도 목록만 갱신해 그대로 이어진다. */
@@ -9985,7 +10148,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (soon) { toast('이 상영관은 좌석표를 아직 확인하지 못했어요'); return; }
     if (e.target.closest('[data-report]')) { openReport(); return; }
     if (e.target.closest('[data-guide]')) { toggleGuide(); return; }
-    const thm = e.target.closest('[data-theme-mode]');
+    /* 화면 테마 칸 — 반드시 '설정 창 안의 옵션 버튼'만 잡는다.
+       <html> 에도 같은 이름(data-theme-mode)이 붙어 있어서, 예전 selector 로는 화면 어디를 눌러도
+       이 갈래가 먼저 걸려 그 뒤의 위임 처리(뒤로·크게·닉네임 변경·프로필 사진·로그아웃·시트 닫기·
+       아래 탭 이동)가 전부 죽었다(2026-11-21 제보: "뒤로버튼이 작동안해" "크게버튼 작동안해"
+       "닉네임 변경이랑 프로필사진변경이 작동안해"). */
+    const thm = e.target.closest('.setopt[data-theme-mode]');
     if (thm) { themeApply(thm.dataset.themeMode, true); return; }
     if (e.target.closest('[data-big]')) { openBigView(); return; }
     if (e.target.closest('#bigClose')) { closeBigView(); return; }
@@ -10001,7 +10169,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const uf = e.target.closest('[data-unfav]');
     if (uf) {
       const k = uf.dataset.unfav;
-      if (favs[k]) { delete favs[k]; saveFavs(); render(); toast('즐겨찾기에서 뺐어요'); }
+      const f = favs[k];
+      const nm = f ? (f.seat + ' · CGV ' + (f.t || '') + (f.h ? ' · ' + f.h : '')) : '이 좌석';
+      /* ✕ 는 묻고 나서 지운다 — 잘못 눌렀을 때 되돌릴 수 없기 때문(2026-11-21 사용자 요청) */
+      askConfirm({ title: '정말 삭제하시겠습니까?', body: nm + '\n즐겨찾기에서 빼면 이 기기의 즐겨찾는 좌석 목록에서 사라져요.', ok: '삭제', danger: true }).then((yes) => {
+        if (!yes) return;
+        if (favs[k]) { delete favs[k]; saveFavs(); }
+        render();
+        toast('즐겨찾기에서 뺐어요');
+      });
       return;
     }
     if (e.target.closest('#myAvatar') || e.target.closest('#avatarChange')) {
@@ -10531,13 +10707,30 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         : (eff === 'dark' ? '다크' : '화이트') + ' 화면으로 보고 있어요.';
     }
   }
-  /* 설정은 모달이 아니라 내 기록과 같은 '화면'이다(2026-11-21 사용자 요청) */
+  /* 설정은 모달이 아니라 내 기록과 같은 '화면'이다(2026-11-21 사용자 요청)
+     ← 뒤로는 '들어오기 전 화면'으로 돌아간다(관·좌석 화면에서 열었으면 그리로).
+     설정 주소는 기록에 쌓고(push), 닫을 때는 그 주소를 이전 화면 주소로 바꿔 넣어(replace)
+     기록이 한 칸만 남게 한다 — 브라우저 뒤로가기와 같은 결과다. */
+  let settingsBack = null;
   function openSettings() {
-    if (state.view !== 'settings') { state.view = 'settings'; syncHash(true); }
+    if (state.view !== 'settings') {
+      settingsBack = { view: state.view, theaterId: state.theaterId, hallId: state.hallId, seatKey: state.seatKey };
+      state.view = 'settings';
+      syncHash(true);
+    }
     render();
+    window.scrollTo(0, 0);
   }
   function closeSettings() {
-    if (state.view === 'settings') { state.view = 'home'; syncHash(true); render(); }
+    if (state.view !== 'settings') return;
+    const b = settingsBack; settingsBack = null;
+    if (b && b.view && b.view !== 'settings') {
+      state.view = b.view; state.theaterId = b.theaterId; state.hallId = b.hallId; state.seatKey = b.seatKey;
+    } else {
+      state.view = 'home'; state.theaterId = null; state.hallId = null; state.seatKey = null;
+    }
+    syncHash(false);
+    render();
   }
   /* 시작 시 한 번 — head 스크립트가 이미 적용했지만 저장값·meta·이벤트를 여기서 맞춘다 */
   function themeInit() {
