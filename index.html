@@ -2053,6 +2053,25 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
   .boxline.pbin{padding:4px 8px;font-size:11.5px}
 }
 
+/* ===== 2026-11-21 · 로그인 후 첫 화면 인사 창 ===== */
+/* 사이트 다른 창(.modal-card)과 같은 재질로, 데스크톱은 가운데·모바일은 아래에서 올라오는 시트 */
+.wmodal{align-items:center;justify-content:center;padding:18px}
+.wcard{position:relative;max-width:440px;border-radius:24px;padding:22px 22px 24px;
+  padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 18px 50px rgba(25,31,40,.28)}
+.wcard .wclose{position:absolute;top:12px;right:12px;width:34px;height:34px;line-height:1;z-index:2}
+.whead{display:flex;align-items:center;gap:9px;padding-right:40px}
+.whead svg{flex:none;display:block;border-radius:8px}
+.whead h3{font-size:17px;font-weight:850;letter-spacing:-.02em;color:var(--ink)}
+.wcard .wtag{margin:13px 0 0;font-size:17px;line-height:1.5;font-weight:850;letter-spacing:-.035em;color:var(--ink);word-break:keep-all}
+.wcard .wbody{margin-top:13px;display:flex;flex-direction:column;gap:8px}
+.wcard .wbody p{margin:0;font-size:13.5px;line-height:1.75;font-weight:600;color:var(--sub);word-break:keep-all}
+.wcard .wbody p.wlast{margin-top:3px;padding-top:13px;border-top:1px solid var(--line);color:var(--ink-2);font-weight:750}
+@media (max-width:640px){
+  .wmodal{align-items:flex-end;padding:0}
+  .wcard{max-width:none;border-radius:26px 26px 0 0;padding:20px 20px 24px}
+  .wcard .wtag{font-size:16px}
+}
+
 </style>
 </head>
 <body>
@@ -5342,7 +5361,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       if (state.seatKey && state._deepSeat && !isDesk()) { state._deepSeat = false; openSheet(true); }
     }
     else { const b = document.getElementById('cmpBar'); if (b) b.remove(); }
-    if (state.view === 'home') { paintRegionHint(); regionTabIntoView(); paintRegionHint(); paintFilterHint(); dstatPaint(); dstatLoad(); }
+    if (state.view === 'home') { paintRegionHint(); regionTabIntoView(); paintRegionHint(); paintFilterHint(); dstatPaint(); dstatLoad();
+      /* 로그인한 채로 메인 화면에 들어오면 인사 창을 한 번(계정 당 한 번) */
+      try { maybeWelcome(); } catch (e) {} }
     /* 상영관에 들어올 때마다 공용 실사·후기를 한 번씩 새로 받아온다(1분 스로틀) */
     if (state.view === 'hall') refreshShared();
   }
@@ -9396,6 +9417,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const age = authAge();
     if (!nickname || nickKey(nickname).length < 2 || !age) openProfileSetup(true);
     else { toast('로그인했어요 · ' + (AUTH.user && AUTH.user.email ? AUTH.user.email : ''), 3400); profileSchedule(); }
+    setTimeout(() => maybeWelcome(false), 900);
     if (state.view === 'my') render({ keepScroll: true });
   }
 
@@ -9412,6 +9434,71 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     if (tok) {
       try { await fetch(SB_URL + '/auth/v1/logout', { method: 'POST', cache: 'no-store', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + tok } }); } catch (e) {}
     }
+  }
+
+  /* ---------- 로그인 후 첫 화면 인사 창 (2026-11-21 사용자 요청) ----------
+     · 로그인한 사람에게만, 메인 화면에 들어왔을 때 한 번 보여 준다(비회원·로그인 전에는 뜨지 않는다).
+     · 오른쪽 위 X(또는 바깥을 누르거나 Esc)로 닫으면 이 기기에서는 다시 뜨지 않는다.
+       계정 id 별로 기억하므로 같은 기기에서 다른 계정으로 로그인하면 그 계정에는 한 번 보인다. */
+  const WELCOME_KEY = 'cgv_welcome_v1';
+  const WELCOME_MEM = {};                 /* localStorage 를 못 쓰는 브라우저(사생활 보호 모드)용 */
+  function welcomeSeen(uid) {
+    if (WELCOME_MEM[uid]) return true;
+    const v = lsGet(WELCOME_KEY, []);
+    return Array.isArray(v) && v.indexOf(uid) >= 0;
+  }
+  function welcomeMark(uid) {
+    WELCOME_MEM[uid] = 1;
+    const v = lsGet(WELCOME_KEY, []);
+    const arr = (Array.isArray(v) ? v : []).filter((x) => x !== uid);
+    arr.push(uid);
+    lsSet(WELCOME_KEY, arr.slice(-12));   /* 최근 12개 계정까지만 기억 */
+  }
+  const WELCOME_MARK = '<svg viewBox="0 0 48 48" width="30" height="30" focusable="false" aria-hidden="true"><rect width="48" height="48" rx="11" fill="#00A862"/><g transform="translate(24 24) scale(1.3585) translate(-12.00 -13.20)" fill="none"><path d="M12 17.3 8.5 10.55h7z" fill="#fff" fill-opacity=".35"/><path d="M2.7 9.35Q12 4.35 21.3 9.35" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="18.8" r="2.05" fill="#fff"/></g></svg>';
+
+  function openWelcome() {
+    if (!AUTH.user || document.getElementById('welcomeModal')) return;
+    const wrap = document.createElement('div');
+    wrap.id = 'welcomeModal';
+    wrap.className = 'modal wmodal';
+    wrap.innerHTML = `
+      <div class="modal-scrim" data-wclose="1"></div>
+      <div class="modal-card wcard" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+        <button class="report-x wclose" type="button" data-wclose="1" aria-label="닫기">✕</button>
+        <div class="whead">${WELCOME_MARK}<h3 id="welcomeTitle">영시미</h3></div>
+        <p class="wtag">명당을 찾기보다, 나에게 맞는 자리를 찾으세요.</p>
+        <div class="wbody">
+          <p>같은 영화관, 같은 상영관이라도 앉는 자리에 따라 영화는 다르게 보입니다.</p>
+          <p>영시미에서 좌석별 시야를 미리 확인하고, 실제 관람객들의 경험을 살펴보세요.</p>
+          <p class="wlast">누군가에게 좋은 자리가 아닌, 당신에게 좋은 자리를 찾을 수 있도록.</p>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
+    wrap.querySelectorAll('[data-wclose]').forEach((el) => { el.addEventListener('click', closeWelcome); });
+    document.addEventListener('keydown', welcomeEsc);
+    /* 키보드·스크린리더: 열리면 닫기 단추로 초점을 옮긴다 */
+    const x = wrap.querySelector('.wclose');
+    if (x) { try { x.focus({ preventScroll: true }); } catch (e) { try { x.focus(); } catch (e2) {} } }
+  }
+  function welcomeEsc(e) { if (e && (e.key === 'Escape' || e.keyCode === 27)) closeWelcome(); }
+  function closeWelcome() {
+    const m = document.getElementById('welcomeModal');
+    if (m) m.remove();
+    document.removeEventListener('keydown', welcomeEsc);
+    if (AUTH.user && AUTH.user.id) welcomeMark(AUTH.user.id);
+  }
+  /* 메인 화면에 들어왔을 때(그리고 로그인을 막 끝냈을 때) 한 번만 — force 면 화면과 상관없이 띄운다 */
+  function maybeWelcome(force) {
+    try {
+      if (!AUTH.user || !AUTH.user.id || !AUTH.ready) return false;
+      if (!force && state.view !== 'home') return false;
+      if (document.getElementById('welcomeModal')) return false;
+      /* 온보딩·로그인 창이 떠 있으면 그게 끝난 뒤에 */
+      if (document.getElementById('profModal') || document.getElementById('authModal')) return false;
+      if (welcomeSeen(AUTH.user.id)) return false;
+      openWelcome();
+      return true;
+    } catch (e) { return false; }
   }
 
   /* ---------- 프로필 설정(온보딩) 모달 ---------- */
@@ -9481,6 +9568,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       paintAuthTop();
       toast(ok ? '프로필을 저장했어요' : '이 기기에 프로필을 저장했어요', 3200);
       if (state.view === 'my') render(); else { state.view = 'my'; syncHash(true); render(); }
+      /* 새로 가입한 사람도 로그인 후 인사 창을 한 번 본다(온보딩이 끝난 뒤) */
+      setTimeout(() => maybeWelcome(true), 700);
     };
   }
 
@@ -9526,6 +9615,11 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
               const age = authAge();
               if (!nickname || nickKey(nickname).length < 2 || !age) openProfileSetup(true);
               else toast('로그인했어요 · ' + (AUTH.user.email || ''), 3400);
+              /* 로그인 직후 인사 창 — 온보딩이 떠 있으면 온보딩 저장 뒤(profSave)에 뜨다 */
+              setTimeout(() => maybeWelcome(false), 900);
+            } else {
+              /* 이미 로그인된 채로 들어온 사람도 이 기기에서 처음이면 \"로그인 후 첫 화면\"으로 본다 */
+              setTimeout(() => maybeWelcome(false), 1200);
             }
           } else if (r.status === 401) {
             await authRefresh();
