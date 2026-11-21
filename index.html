@@ -10661,6 +10661,18 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
   /* 헤더 '설정' 버튼 — 전역 클릭 위임과 별개로 직접 묶는다.
      (2026-11-21 화면형 설정으로 바꾸면서 위임 경로에서 이 버튼만 처리되지 않는 경우가 있어 확실히 건다) */
+  /* 헤더 '로그인/닉네임' 칩 — 로그아웃 상태에서만 로그인 창을 연다(로그인 상태면 아무 일도 없음).
+     설정 버튼과 같은 이유로 직접 묶는다. */
+  (function bindAuthChip() {
+    var b = document.getElementById('authTopBtn');
+    if (!b || b.__authBound) return;
+    b.__authBound = 1;
+    b.addEventListener('click', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (!AUTH.user) openAuth('login');
+    });
+  })();
+
   (function bindSettingBtn() {
     var b = document.getElementById('settingBtn');
     if (!b || b.__setBound) return;
