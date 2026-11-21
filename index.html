@@ -2535,6 +2535,11 @@ html[data-theme="dark"] .nickstatus{color:var(--mute)}
 html[data-theme="dark"] .nickstatus.locked{color:#FCD34D}
 html[data-theme="dark"] .nicklock{color:var(--mute)}
 
+/* 삭제 확인 창 — 취소 버튼은 테마에 맞춘 보조 버튼 (2026-11-21) */
+#cfmModal .btn.ghost{background:#F2F4F6;color:#6B7684;border:0}
+html[data-theme="dark"] #cfmModal .btn.ghost{background:#242A33;color:var(--sub);border:0}
+html[data-theme="dark"] #cfmModal .modal-card{background:var(--card)}
+
 </style>
 </head>
 <body>
@@ -9996,7 +10001,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
           <h3 id="cfmTitle">${esc(o.title || '정말 삭제하시겠습니까?')}</h3>
           ${o.body ? `<p class="sub" style="white-space:pre-line">${esc(o.body)}</p>` : ''}
           <button class="btn" id="cfmOk" type="button" style="width:100%;margin-top:14px${o.danger ? ';background:#E5484D' : ''}">${esc(o.ok || '삭제')}</button>
-          <button class="btn ghost" id="cfmNo" type="button" style="width:100%;margin-top:8px;background:#F2F4F6;color:#6B7684;border:0">취소</button>
+          <button class="btn ghost" id="cfmNo" type="button" style="width:100%;margin-top:8px">취소</button>
         </div>`;
       document.body.appendChild(wrap);
       const close = (v) => { document.removeEventListener('keydown', onKey); wrap.remove(); resolve(v); };
