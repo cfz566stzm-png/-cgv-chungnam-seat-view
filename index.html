@@ -6804,7 +6804,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const fit = fitLabel(m);
     const typeTxt = seatTypeLabel(seat.t, h);
     const recl = canRecline(h, seat);
-    const typeNote = recl ? '리클라이너 · 등받이 110°~160° 조절(젖히면 눈높이 −12 cm)'
+    const typeNote = recl ? '등받이 110°~160° 조절(젖히면 눈높이 −12 cm)'
       : (isReclinerHall(h) ? '리클라이너 관이지만 이 좌석은 ' + typeTxt : seatTypeDesc(seat.t, h));
     const sPct = clamp(m.occ || 0, 0, 100);
     const rows = [
