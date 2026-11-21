@@ -848,6 +848,13 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .seat[data-t="w"]{background:#FFD9A0;border-color:rgba(180,83,9,.28)}
 .seat[data-t="w"] .sn{color:#6B4300}
 
+/* 보라색(r) 좌석 — 이름이 관마다 다르다(리클라이너 / 릴렉스시트).
+   2026-11-21 사용자 요청: "릴렉스시트랑 리클라이너랑 같은 색상이잖아 색상 변경해줘".
+   리클라이너는 보라(#DCD8FB), 릴렉스시트는 좌석판 다른 색(연두·하늘·분홍·베이지·주황)과 겹치지 않는 청록.
+   값은 관 화면에서 --rbg/--rbd 로 내려온다(app_v2.js rColor). */
+.seat[data-t="r"]{background:var(--rbg,#DCD8FB);border-color:var(--rbd,#C7BFF7)}
+.sflag.r{background:var(--rbg,#F3F0FF);color:var(--rfg,#4C3FBF)}
+
 /* --- 헤더 로고: 빛나는 그라데이션/글로우 제거, 플랫한 단색 --- */
 .brand-mark{background:var(--green);background-image:none;box-shadow:none;border-radius:11px}
 .brand-mark svg{width:20px;height:20px}
@@ -3917,6 +3924,14 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     return '릴렉스시트';
   }
   const rDesc = (h) => (rName(h) === '리클라이너' ? '등받이를 젖힐 수 있는 넓은 좌석' : '넓은 좌석');
+  /* 보라색(r) 좌석의 색 — 리클라이너와 릴렉스시트가 같은 보라색이라 구분이 안 된다는 요청(2026-11-21).
+     리클라이너는 그대로 보라, 릴렉스시트는 좌석판 다른 색(연두·하늘·분홍·베이지·주황)과 섞이지 않는 청록으로.
+     좌석판(.seat[data-t=r])·범례 동그라미·좌석 상세 배지가 같은 값을 쓴다. */
+  const R_COLOR = {
+    리클라이너: { bg: '#DCD8FB', bd: '#C3B8F5', fg: '#4B3E8C' },
+    기타: { bg: '#BDEAE4', bd: '#5FAEA4', fg: '#14524B' }   /* 릴렉스시트·PRIME석 등 */
+  };
+  const rColor = (h) => (rName(h) === '리클라이너' ? R_COLOR['리클라이너'] : R_COLOR['기타']);
   /* h를 넘기면 그 관의 이름으로 — 좌석 유형 표기는 관마다 다를 수 있다(보라색 r). */
   const seatTypeLabel = (t, h) => (t === 'r' ? rName(h) : (SEAT_INFO[t] ? SEAT_INFO[t].label : '일반석'));
   const seatTypeDesc = (t, h) => (t === 'r' ? rDesc(h) : (SEAT_INFO[t] ? SEAT_INFO[t].desc : '기본 좌석'));
@@ -5970,7 +5985,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
             </div>
           </div>
           <div class="mapbox">
-            <div class="seatmap-scroll"><div class="seatmap" id="seatmap"></div></div>
+            <div class="seatmap-scroll"><div class="seatmap" id="seatmap" style="--rbg:${rColor(h).bg};--rbd:${rColor(h).bd};--rfg:${rColor(h).fg}"></div></div>
             <div class="minimap" id="minimap" role="img" aria-label="전체 좌석 배치도에서 지금 보는 위치"><canvas></canvas><span>전체</span></div>
           </div>
           <div class="legend" id="legend"></div>
@@ -5996,7 +6011,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const c = h._types || {};
     const items = [];
     if (c.n) items.push(['일반석', 'background:#DCEDE4']);
-    if (c.r) items.push([rName(h), 'background:#DCD8FB']);
+    if (c.r) items.push([rName(h), `background:${rColor(h).bg};box-shadow:inset 0 0 0 1px ${rColor(h).bd}`]);
     if (c.s) items.push(['SWEETBOX', 'background:#FBD5E8']);
     if (c.w) items.push(['WIDEBOX', 'background:#FFD9A0']);
     if (c.c) items.push(['카바나', 'background:#FDE7C3']);
@@ -6874,7 +6889,7 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     else if (seat.t === 'c') extra.push('<span class="sflag c">카바나석 · 개별 공간형</span>');
     else if (seat.t === 'b') extra.push('<span class="sflag b">빈백석 · 쿠션형</span>');
     return `<div class="sflagrow">
-      <span class="sflag t">${esc(seatTypeLabel(seat.t, h))}</span>
+      <span class="sflag t"${seat.t === 'r' ? ` style="background:${rColor(h).bg};color:${rColor(h).fg}"` : ''}>${esc(seatTypeLabel(seat.t, h))}</span>
       ${extra.join('')}
       <button class="favbtn ${fav ? 'on' : ''}" data-fav="1" aria-pressed="${fav}" title="이 좌석을 즐겨찾기에 저장">${fav ? '★ 즐겨찾는 좌석' : '☆ 즐겨찾기'}</button>
     </div>`;
