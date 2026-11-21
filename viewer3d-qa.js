@@ -1696,8 +1696,6 @@
           /* 베개 발치 쪽 단면 */
           put('B', 'bpill2', panelPts(xc - bh * 0.80, xc - bh * 0.10, mTop + 0.012, mTop + 0.095, zHead + 0.30, zHead + 0.30, 0.05, 0.04, 3));
           put('B', 'bpill2', panelPts(xc + bh * 0.10, xc + bh * 0.80, mTop + 0.012, mTop + 0.095, zHead + 0.30, zHead + 0.30, 0.05, 0.04, 3));
-          /* 매트리스와 프레임 사이 그늘 — 판이 아니라 두께가 있는 침대로 읽히게 */
-          put('B', 'bjoint', panelPts(xc - bh * 0.94, xc + bh * 0.94, hz + 0.125, hz + 0.165, zFoot - 0.015, zFoot - 0.015, 0.04, 0.04, 2));
           continue;
         }
 
@@ -1733,7 +1731,7 @@
       /* 부품을 뒤→앞 순서로 채운다(같은 부품은 한 번의 fill) */
       /* 깊이 정렬이 없는 화가算法이라 '나중에 그린 면'이 위로 올라온다.
          베드는 프레임 → 헤드보드 → 매트리스 → 이불·베개 → 발치면 순서로 그려야 매트리스가 가려지지 않는다. */
-      var PART_ORDER = ['bshadow', 'bframe', 'bframeside', 'bhead', 'bmatt', 'bblank', 'bpill', 'bpill2', 'bjoint', 'bfoot',
+      var PART_ORDER = ['bshadow', 'bframe', 'bframeside', 'bhead', 'bmatt', 'bblank', 'bpill', 'bpill2', 'bfoot',
                         'back', 'pad', 'cush', 'foot', 'edge', 'arm', 'arm2'];
       for (var po = 0; po < PART_ORDER.length; po++) {
         var partName = PART_ORDER[po];
