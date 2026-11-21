@@ -4243,9 +4243,9 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
       }
       /* 템퍼 시네마·모션베드 — 다크 슬레이트 프레임 + 무광 슬레이트 매트리스.
          (예전 크림·베이지 매트리스는 화면보다 밝아 눈에 튀었다 — 2026-11-21 지적) */
-      var BEDM = { hdr: shade('#262C36', lit), matt: shade('#333B48', lit), matt2: shade('#252B35', lit),
-                   pill: shade('#48525F', lit), pill2: shade('#3A4350', lit), blank: shade('#373F4D', lit),
-                   frame: shade('#171B22', lit), frame2: shade('#10151B', lit), shadow: 'rgba(0,0,0,0.55)' };
+      var BEDM = { hdr: shade('#242A34', lit), matt: shade('#2A303C', lit), matt2: shade('#20252E', lit),
+                   pill: shade('#3A4350', lit), pill2: shade('#2C333D', lit), blank: shade('#2F3743', lit),
+                   frame: shade('#15191F', lit), frame2: shade('#0E1218', lit), shadow: 'rgba(0,0,0,0.55)' };
       var G = {};
       function put(t, part, poly) { var k = t + '|' + part; (G[k] || (G[k] = [])).push(poly); }
       var firstSeatX = null;
@@ -4346,7 +4346,7 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
             if (ph[2] > NEAR && pf[2] > NEAR) {
               /* 머리 쪽이 화면 빛을 받아 한 단 밝고 발치로 갈수록 가라앉는다 */
               var gb = ctx.createLinearGradient(sx(ph), sy(ph), sx(pf), sy(pf));
-              gb.addColorStop(0, shade('#3A4250', lit)); gb.addColorStop(0.5, mbm); gb.addColorStop(1, shade('#2B323D', lit));
+              gb.addColorStop(0, shade('#333A47', lit)); gb.addColorStop(0.5, mbm); gb.addColorStop(1, shade('#252B35', lit));
               style = gb;
             } else style = mbm;
           } else if (partName === 'cush') {
