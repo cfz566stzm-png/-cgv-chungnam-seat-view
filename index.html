@@ -2093,6 +2093,11 @@ body .reportmodal .rf input:focus,body .reportmodal .rf textarea:focus,body .rep
 .nicklock{margin:8px 2px 0;font-size:11.5px;font-weight:700;color:var(--mute);line-height:1.5;word-break:keep-all}
 .chip.sm[disabled],button[disabled].chip{opacity:.55;cursor:default}
 
+/* 로그인 상태의 닉네임 칸은 눌러도 아무 일도 하지 않는다(2026-11-21 사용자 요청) —
+   누를 수 있는 것처럼 보이지 않게 커서·눌림 피드백을 없앤다. */
+#authTopBtn[data-auth="in"]{border-color:var(--green-soft);background:var(--green-l);color:var(--green-dd);cursor:default}
+#authTopBtn[data-auth="in"]:hover,#authTopBtn[data-auth="in"]:active{background:var(--green-l);border-color:var(--green-soft)}
+
 /* ===== 화면 테마 (다크·화이트·기기 설정) + 설정 칸 ===== */
 /* =====================================================================
    2026-11-21 · 화면 테마(다크 · 화이트 · 기기 설정) + 설정 칸
