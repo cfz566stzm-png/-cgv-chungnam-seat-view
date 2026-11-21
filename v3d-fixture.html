@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><title>3D fixture (QA)</title>
+<style>html,body{margin:0;background:#050607;overflow:hidden}#cv{display:block;width:1080px;height:630px}</style>
+</head><body>
+<canvas id="cv" width="1080" height="630"></canvas>
+<script src="viewer3d-qa.js"></script>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search);
+  fetch('index.html').then(function(r){return r.text();}).then(function(txt){
+    var m=txt.indexOf('window.__DATA__ = ');
+    var i=m+'window.__DATA__ = '.length;
+    var j=txt.indexOf('};</script>', i)+1;
+    var DATA=JSON.parse(txt.slice(i,j));
+    var t=DATA.theaters.filter(function(x){return x.id===q.get('t');})[0];
+    var h=t.halls.filter(function(x){return x.id===q.get('h');})[0];
+    var seatKey=q.get('s');
+    var rowLab=seatKey.replace(/[0-9]+$/,'');
+    var rowIdx=-1; h.rows.forEach(function(r,k){ if(r.l===rowLab) rowIdx=k; });
+    var num=seatKey.slice(rowLab.length), cellIdx=-1, typ='n';
+    (h.rows[rowIdx].c||[]).forEach(function(c,ci){ if(c&&c!=='.'&&/^\d+[npsrcbxvw]$/.test(c)&&c.slice(0,-1)===num){cellIdx=ci;typ=c.slice(-1);} });
+    var pitch=h.params.pitch, centerX=(h.params.minx+h.params.maxx)/2;
+    var seat={x:cellIdx,y:rowIdx,key:seatKey,t:typ,ox:(cellIdx-centerX)*pitch};
+    var p={}; for(var k in h.params) p[k]=h.params[k];
+    if(!(p.eye>0.5)) p.eye=1.05;
+    var v=Viewer3D.create(document.getElementById('cv'), {p:p,seat:seat,rows:h.rows,tags:h.tags||[],aspect:h.params.aspect,hallKey:h.id,name:h.name,total:h.total,seatName:h.seatName||''});
+    window.__V__=v;
+    v.reset(true);
+    if(q.get('yaw')!==null) v.yaw=parseFloat(q.get('yaw'))||0;
+    if(q.get('pitch')!==null) v.pitch=parseFloat(q.get('pitch'))||0;
+    v.render();
+    window.__READY__=1;
+  }).catch(function(e){ document.title='ERR '+e; });
+})();
+</script></body></html>

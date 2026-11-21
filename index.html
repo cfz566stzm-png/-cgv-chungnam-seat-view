@@ -3589,9 +3589,14 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
       if (path([toCam(xw, 0, 0), toCam(xw, 0, -rearD), toCam(xw, ceilY, -rearD), toCam(xw, ceilY, 0)])) {
         ctx.fillStyle = g; ctx.fill();
       }
-      /* 패널 이음매 — 세로 2.0 m 중심, 가로는 아주 희미하게 */
-      for (var z = -2.0; z > -rearD; z -= 2.0) {
-        seg(toCam(xw * 0.998, 0.0, z), toCam(xw * 0.998, ceilY, z), 'rgba(168,176,180,0.038)', 1);
+      /* 음향 패널 세로 리브 — 0.55 m 간격의 아주 옅은 세로선이 벽을 조용한 건축면으로 만든다
+         (2026-11-21 «클린 미니멀 3D»: 벽은 깨끗한 다크 패널 + 세로 리브만) */
+      for (var z = -0.55; z > -rearD; z -= 0.55) {
+        seg(toCam(xw * 0.998, 0.0, z), toCam(xw * 0.998, ceilY, z), 'rgba(158,172,186,0.022)', 1);
+      }
+      /* 패널 이음매 — 세로 2.0 m마다 한 줄만 살짝 진하게 */
+      for (var z2 = -2.0; z2 > -rearD; z2 -= 2.0) {
+        seg(toCam(xw * 0.998, 0.0, z2), toCam(xw * 0.998, ceilY, z2), 'rgba(168,180,194,0.040)', 1);
       }
       [2.55].forEach(function (yy) {
         if (yy < ceilY) seg(toCam(xw * 0.998, yy, 0), toCam(xw * 0.998, yy, -rearD), 'rgba(168,176,180,0.026)', 1);
@@ -3609,9 +3614,9 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
     /* ---- 앞벽 (스크린 둘레) ---- */
     face([toCam(-wallX, 0, 0), toCam(wallX, 0, 0), toCam(wallX, ceilY, 0), toCam(-wallX, ceilY, 0)], '#0B0D0F');
     /* 앞벽도 세로 패널 이음매 — 스크린 뒤(검은 마스킹)는 매끈하게 둔다 */
-    for (var wx = -wallX + 2.0; wx < wallX - 0.8; wx += 2.0) {
+    for (var wx = -wallX + 0.55; wx < wallX - 0.5; wx += 0.55) {
       if (Math.abs(wx) < scrW / 2 + 0.5) continue;
-      seg(toCam(wx, 0, 0.01), toCam(wx, ceilY, 0.01), 'rgba(168,176,180,0.05)', 1);
+      seg(toCam(wx, 0, 0.01), toCam(wx, ceilY, 0.01), 'rgba(168,180,194,0.026)', 1);
     }
 
     /* ---- 스크린 마스크(검은 면) — 한 장의 다각형으로 그려 조각 경계선이 생기지 않게 ---- */
@@ -4117,6 +4122,45 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
     order.sort(function (a, b) { return b.depth - a.depth; });
 
 
+    /* ---- 둥근 판 만들기 — 2026-11-21 «클린 미니멀 3D»
+       각진 사각형을 그대로 투영하면 종이 상자처럼 보인다. 모서리를 원호로 깎은 점들을
+       투영하면 실루엣이 부드러워져 푹신한 의자로 읽힌다(점 수만 늘고 fill 횟수는 그대로).
+       panelPts: 수직면(x-y) — 아래 z0, 위 z1 (등받이를 젖히면 위가 뒤로 눕는다)
+       slabPts : 수평면(x-z) — 높이 y 고정 (좌판·팔걸이·침대 매트리스) */
+    function panelPts(x0, x1, y0, y1, z0, z1, rTop, rBot, segs) {
+      var pts = [], dxp = Math.abs(x1 - x0), dyp = Math.abs(y1 - y0);
+      rTop = Math.max(0.001, Math.min(rTop, dxp / 2, dyp / 2));
+      rBot = Math.max(0.001, Math.min(rBot == null ? rTop : rBot, dxp / 2, dyp / 2));
+      segs = segs || 3;
+      var yLo = Math.min(y0, y1), yHi = Math.max(y0, y1);
+      var zLo = y0 <= y1 ? z0 : z1, zHi = y0 <= y1 ? z1 : z0;
+      function P(x, y) { pts.push(toCam(x, y, zLo + (zHi - zLo) * ((y - yLo) / ((yHi - yLo) || 1)))); }
+      function A(cx2, cy2, a0, a1, r) {
+        for (var q2 = 1; q2 <= segs; q2++) { var a = a0 + (a1 - a0) * (q2 / segs); P(cx2 + Math.cos(a) * r, cy2 + Math.sin(a) * r); }
+      }
+      A(x0 + rBot, yLo + rBot, Math.PI, Math.PI * 1.5, rBot);
+      A(x1 - rBot, yLo + rBot, Math.PI * 1.5, Math.PI * 2, rBot);
+      A(x1 - rTop, yHi - rTop, 0, Math.PI * 0.5, rTop);
+      A(x0 + rTop, yHi - rTop, Math.PI * 0.5, Math.PI, rTop);
+      return pts;
+    }
+    function slabPts(x0, x1, zA, zB, y, rX, rZ, segs) {
+      var pts = [], dxs = Math.abs(x1 - x0), dzs = Math.abs(zB - zA);
+      rX = Math.max(0.001, Math.min(rX, dxs / 2, dzs / 2));
+      rZ = Math.max(0.001, Math.min(rZ == null ? rX : rZ, dxs / 2, dzs / 2));
+      segs = segs || 3;
+      var zL = Math.min(zA, zB), zH = Math.max(zA, zB);
+      function P(x, z) { pts.push(toCam(x, y, z)); }
+      function A(cx2, cz2, a0, a1) {
+        for (var q2 = 1; q2 <= segs; q2++) { var a = a0 + (a1 - a0) * (q2 / segs); P(cx2 + Math.cos(a) * rX, cz2 + Math.sin(a) * rZ); }
+      }
+      A(x0 + rX, zL + rZ, Math.PI, Math.PI * 1.5);
+      A(x1 - rX, zL + rZ, Math.PI * 1.5, Math.PI * 2);
+      A(x1 - rX, zH - rZ, 0, Math.PI * 0.5);
+      A(x0 + rX, zH - rZ, Math.PI * 0.5, Math.PI);
+      return pts;
+    }
+
     order.forEach(function (R) {
       var i = R.i, dc = R.dc, g = p.rowGap, hz = i * riser;
       /* PRIVATE BOX 안에서는 관 좌석을 그리지 않는다 — 박스 안 가구는 따로 그린다.
@@ -4132,16 +4176,18 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
       var zf = -(dc - g * 0.5), zb = -(dc + g * 0.5);
 
       /* ===== 좌석판 바닥 — 디딤판·단차·통로 =====
-         (2026-11-21 "좌석들이 너무 현실감없어 현실감있게 바꿔줘")
-         바닥을 살짝 밝히고 단차 코·통로에 빛을 얹어 좌석 줄과 층이 읽히게 한다. */
-      var rowLit = clamp(1.14 - Math.abs(s.dCam - dc) / Math.max(6, p.rows * p.rowGap), 0.40, 1);
-      face([toCam(-wallX, hz, zf), toCam(wallX, hz, zf), toCam(wallX, hz, zb), toCam(-wallX, hz, zb)], '#14181E');
+         2026-11-21 «클린 미니멀 3D»(style-2.png): 바닥은 무광 차콜, 단차 코와 통로에는
+         은은한 에메랄드 유도선만 얇게 깐다. 밝은 회색 선은 화면보다 눈에 띄어 걷어냈다. */
+      var rowLit = clamp(1.02 - Math.abs(s.dCam - dc) / Math.max(8, p.rows * p.rowGap * 1.4), 0.42, 1);
+      face([toCam(-wallX, hz, zf), toCam(wallX, hz, zf), toCam(wallX, hz, zb), toCam(-wallX, hz, zb)], '#12161C');
       /* 단차(앞면) */
       if (i > 0) {
         face([toCam(-wallX, (i - 1) * riser, zf), toCam(wallX, (i - 1) * riser, zf),
-              toCam(wallX, hz, zf), toCam(-wallX, hz, zf)], '#0B0E12');
-        /* 단차 코에 걸리는 빛 — 사진에서 계단 끝만 희미하게 밝다 */
-        seg(toCam(-wallX, hz - 0.012, zf), toCam(wallX, hz - 0.012, zf), 'rgba(208,222,234,' + (0.15 * rowLit).toFixed(3) + ')', 1.2);
+              toCam(wallX, hz, zf), toCam(-wallX, hz, zf)], '#0A0E13');
+        /* 단차 코의 에메랄드 유도선 — 폭 넓은 흐림 한 줄 + 얇은 선 한 줄로 은은한 발광 */
+        var emA = (0.075 * rowLit).toFixed(3), emB = (0.30 * rowLit).toFixed(3);
+        seg(toCam(-wallX, hz - 0.014, zf), toCam(wallX, hz - 0.014, zf), 'rgba(16,185,129,' + emA + ')', 4.5);
+        seg(toCam(-wallX, hz - 0.014, zf), toCam(wallX, hz - 0.014, zf), 'rgba(16,185,129,' + emB + ')', 1.1);
       }
       /* 통로 열 바닥 띠 — 좌석 사이 통로가 어두운 바닥에 묻히지 않게 */
       if (aisleCol && aisleCol.length) {
@@ -4150,47 +4196,56 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
           var xa = (ac - s.centerX) * pitch - pitch * 0.34;
           face([toCam(xa, hz + 0.003, zf - 0.02), toCam(xa + pitch * 0.68, hz + 0.003, zf - 0.02),
                 toCam(xa + pitch * 0.68, hz + 0.003, zb + 0.02), toCam(xa, hz + 0.003, zb + 0.02)],
-               'rgba(178,192,206,0.055)');
+               'rgba(16,185,129,0.035)');
+          /* 통로 양옆 얇은 유도선 */
+          seg(toCam(xa, hz + 0.006, zf - 0.02), toCam(xa, hz + 0.006, zb + 0.02), 'rgba(16,185,129,' + (0.16 * rowLit).toFixed(3) + ')', 1);
+          seg(toCam(xa + pitch * 0.68, hz + 0.006, zf - 0.02), toCam(xa + pitch * 0.68, hz + 0.006, zb + 0.02), 'rgba(16,185,129,' + (0.16 * rowLit).toFixed(3) + ')', 1);
         }
       }
 
       var cells = rows[i] ? rows[i].c : null;
       if (!cells) return;
 
-      /* ---- 좌석: 한 덩어리 사각형이 아니라 등받이·머리받침·좌판·팔걸이·발판을 따로 그린다.
-              같은 부품끼리 한 번의 fill로 묶어(행당 6~8회) 60fps를 지킨다. ---- */
-      var zBack = -(dc + 0.18), zFront = -(dc - 0.04);
+      /* ---- 좌석: 등받이·머리받침·좌판·팔걸이를 둥근 판으로 나눠 그린다.
+              같은 부품끼리 한 번의 fill로 묶어(행당 8~12회) 60fps를 지킨다.
+              2026-11-21 «클린 미니멀 3D»(style-2.png): 각진 상자 대신 둥근 어깨의
+              매끈한 다크 슬레이트 의자. 색은 #1A1E26~#262C36 안에서만 움직이고,
+              형태와 위쪽 림라이트로 3D로 읽히게 한다 — 좌석이 화면보다 튀지 않게. ---- */
+      var zBack = -(dc + 0.20), zFront = -(dc - 0.05);
       var bed = !!s.isBed;
       var lit = rowLit;
-      var bBot = hz + (bed ? 0.30 : 0.37);
-      var bTop = hz + (bed ? 0.94 : (s.recliner ? 1.00 : 0.94));
-      var cTop = hz + (bed ? 0.38 : (s.recliner ? 0.46 : 0.44));
-      var cEdge = hz + (s.recliner ? 0.27 : 0.31);
+      var recLean = 0.22 * rec;                     /* 등받이를 젖히면 어깨가 뒤로 눕는다 */
+      var bBot = hz + (bed ? 0.26 : 0.34);
+      var bTop = hz + (bed ? 0.84 : (s.recliner ? 0.99 : 0.92));
+      var cTop = hz + (bed ? 0.34 : (s.recliner ? 0.46 : 0.44));
+      var cEdge = hz + (s.recliner ? 0.26 : 0.30);
       var seatW = pitch * (bed ? 0.90 : (s.recliner ? 0.50 : 0.47));
+      var zTop = zBack - recLean;
+      function zbk(y) { return (bTop - bBot) < 0.001 ? zBack : zBack + (zTop - zBack) * ((y - bBot) / (bTop - bBot)); }
       var MATC = {};
       function mats(t) {
         if (MATC[t]) return MATC[t];
         var c;
         /* [등받이 위, 등받이 아래, 머리받침, 좌판, 좌판 앞면, 팔걸이 윗면, 팔걸이 앞면]
-           등받이는 어둡게, 머리받침·좌판은 한 단 밝게 — 부품 경계가 보여야 좌석으로 읽힌다. */
-        if (t === 'r') c = ['#422B36', '#231620', '#5C3C4B', '#553845', '#2A1A23', '#3F2833', '#1D1218'];      /* 리클라이너 — 버건디 가죽 */
-        else if (t === 's') c = ['#482435', '#24121C', '#66374F', '#5A2E44', '#2C1620', '#432234', '#20101A'];  /* SWEETBOX */
-        else if (t === 'w') c = ['#4E3E24', '#281F12', '#6E5733', '#634D2D', '#2F2414', '#473621', '#241B0E'];  /* WIDEBOX */
-        else if (t === 'c') c = ['#503F27', '#292113', '#6B5A3C', '#5F5136', '#302718', '#483B25', '#251D10'];  /* 카바나 */
-        else if (t === 'b') c = ['#3F3E3A', '#222220', '#5A5852', '#524F4A', '#2A2825', '#3D3B36', '#1E1D1A'];  /* 빈백 */
-        else if (t === 'p') c = ['#26445C', '#142836', '#35607F', '#2E566F', '#192E3D', '#28465F', '#132532'];  /* 장애인석 */
-        else if (t === 'v') c = ['#4F3719', '#291C0C', '#71542A', '#664C26', '#33230F', '#4A3418', '#271A0B'];  /* PRIVATE BOX */
-        else c = ['#2E3540', '#1B2027', '#454F5F', '#3C4552', '#1F252D', '#313945', '#191E25'];              /* 일반석 — 차콜 네이비 */
+           전부 무광 다크 슬레이트 계열 — 관 유형별 차이는 아주 좁은 색온도 차이로만 준다. */
+        if (t === 'r') c = ['#262C36', '#181C23', '#2E353F', '#323945', '#1B2028', '#272D38', '#151A21'];  /* 리클라이너 */
+        else if (t === 's') c = ['#282A33', '#191B22', '#2F323C', '#333642', '#1C1F26', '#292C36', '#161920'];  /* SWEETBOX */
+        else if (t === 'w') c = ['#2A2A2E', '#1A1A1E', '#303138', '#34353C', '#1D1E23', '#2A2A30', '#17171B'];  /* WIDEBOX */
+        else if (t === 'c') c = ['#282A28', '#191B19', '#2F322F', '#333633', '#1C1F1D', '#292C29', '#161917'];  /* 카바나 */
+        else if (t === 'b') c = ['#2A2A29', '#1A1A19', '#313130', '#353533', '#1D1D1C', '#2B2B2A', '#171717'];  /* 빈백 */
+        else if (t === 'p') c = ['#242C36', '#161C23', '#2B3440', '#2F3845', '#191F27', '#252E38', '#141A21'];  /* 장애인석 */
+        else if (t === 'v') c = ['#2A2724', '#1A1815', '#302D29', '#35322D', '#1D1B18', '#2B2825', '#171512'];  /* PRIVATE BOX */
+        else c = ['#242A34', '#171B22', '#2B323D', '#2E3541', '#1A1F27', '#252B35', '#141920'];              /* 일반석 */
         var m = { back: shade(c[0], lit), back2: shade(c[1], lit), pad: shade(c[2], lit),
                   cush: shade(c[3], lit), edge: shade(c[4], lit), arm: shade(c[5], lit), arm2: shade(c[6], lit) };
         MATC[t] = m;
         return m;
       }
-      /* 템퍼 시네마·모션베드 — 침대(매트리스·베개·헤드보드) 소재 */
-      /* 침대는 크림색 매트리스가 흰빛을 받아 어둠 속에서도 형태가 읽혀야 '모션베드'로 보인다 — 최소 밝기를 둔다 */
-      var blit = Math.max(lit, 0.74);
-      var BEDM = { hdr: shade('#5B4A38', blit), matt: shade('#C9B89F', blit), matt2: shade('#9A8974', blit),
-                   pill: shade('#F1E7D6', blit), blank: shade('#A8977F', blit), frame: shade('#221D18', blit) };
+      /* 템퍼 시네마·모션베드 — 다크 슬레이트 프레임 + 무광 슬레이트 매트리스.
+         (예전 크림·베이지 매트리스는 화면보다 밝아 눈에 튀었다 — 2026-11-21 지적) */
+      var BEDM = { hdr: shade('#262C36', lit), matt: shade('#333B48', lit), matt2: shade('#252B35', lit),
+                   pill: shade('#48525F', lit), pill2: shade('#3A4350', lit), blank: shade('#373F4D', lit),
+                   frame: shade('#171B22', lit), frame2: shade('#10151B', lit) };
       var G = {};
       function put(t, part, poly) { var k = t + '|' + part; (G[k] || (G[k] = [])).push(poly); }
       var firstSeatX = null;
@@ -4206,74 +4261,62 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
           /* 머리(등받이) 쪽은 z가 더 음수, 발치 쪽은 스크린 쪽 */
           var bh = pitch * 0.46;
           /* 침대 길이는 줄 간격 안에 들어오게 — 옆 줄 좌석과 겹치면 침대가 아니라 벽처럼 보인다 */
-          var bedLen = Math.max(0.58, Math.min(0.94, (p.rowGap || 1.15) - 0.12));
-          var zbB = zBack - 0.02, zfB = zBack + bedLen;
-          /* 헤드보드 */
-          put('B', 'bhead', [toCam(xc - bh, hz + 0.14, zbB), toCam(xc + bh, hz + 0.14, zbB),
-                             toCam(xc + bh, hz + 0.92, zbB), toCam(xc - bh, hz + 0.92, zbB)]);
-          /* 매트리스 윗면(머리쪽이 살짝 높다) */
-          put('B', 'bmatt', [toCam(xc - bh * 0.96, hz + 0.30, zbB + 0.03), toCam(xc + bh * 0.96, hz + 0.30, zbB + 0.03),
-                             toCam(xc + bh * 0.98, hz + 0.25, zfB), toCam(xc - bh * 0.98, hz + 0.25, zfB)]);
-          /* 발치 앞면 */
-          put('B', 'bfoot', [toCam(xc - bh * 0.98, hz + 0.09, zfB), toCam(xc + bh * 0.98, hz + 0.09, zfB),
-                             toCam(xc + bh * 0.98, hz + 0.25, zfB), toCam(xc - bh * 0.98, hz + 0.25, zfB)]);
-          /* 머리쪽 매트리스 단면 */
-          put('B', 'bhend', [toCam(xc - bh * 0.96, hz + 0.30, zbB + 0.03), toCam(xc + bh * 0.96, hz + 0.30, zbB + 0.03),
-                             toCam(xc + bh * 0.96, hz + 0.33, zbB + 0.03), toCam(xc - bh * 0.96, hz + 0.33, zbB + 0.03)]);
-          /* 이불(발치 절반) — 매트리스와 살짝 다른 톤으로 깊이를 준다 */
-          put('B', 'bblank', [toCam(xc - bh * 0.97, hz + 0.29, zbB + bedLen * 0.47), toCam(xc + bh * 0.97, hz + 0.29, zbB + bedLen * 0.47),
-                              toCam(xc + bh * 0.98, hz + 0.26, zfB - 0.01), toCam(xc - bh * 0.98, hz + 0.26, zfB - 0.01)]);
-          /* 베개 두 개 */
-          put('B', 'bpill', [toCam(xc - bh * 0.82, hz + 0.30, zbB + 0.06), toCam(xc - bh * 0.10, hz + 0.30, zbB + 0.06),
-                             toCam(xc - bh * 0.10, hz + 0.39, zbB + 0.22), toCam(xc - bh * 0.82, hz + 0.39, zbB + 0.22)]);
-          put('B', 'bpill', [toCam(xc + bh * 0.10, hz + 0.30, zbB + 0.06), toCam(xc + bh * 0.82, hz + 0.30, zbB + 0.06),
-                             toCam(xc + bh * 0.82, hz + 0.39, zbB + 0.22), toCam(xc + bh * 0.10, hz + 0.39, zbB + 0.22)]);
-          /* 베드 프레임 */
-          put('B', 'bframe', [toCam(xc - bh * 1.02, hz + 0.07, zbB - 0.02), toCam(xc + bh * 1.02, hz + 0.07, zbB - 0.02),
-                              toCam(xc + bh * 1.02, hz + 0.07, zfB + 0.02), toCam(xc - bh * 1.02, hz + 0.07, zfB + 0.02)]);
+          var bedLen = Math.max(0.62, Math.min(1.00, (p.rowGap || 1.15) - 0.10));
+          var zHead = zBack - 0.02, zFoot = zHead + bedLen;
+          var mHead = hz + 0.46, mTop = hz + 0.40;
+          /* 프레임(둥근 다크 슬레이트 상자) — 바닥에 낮게 깔린다 */
+          put('B', 'bframe', slabPts(xc - bh * 1.02, xc + bh * 1.02, zHead - 0.03, zFoot + 0.03, hz + 0.13, 0.07, 0.07, 3));
+          put('B', 'bframeside', panelPts(xc - bh * 1.02, xc + bh * 1.02, hz + 0.045, hz + 0.13, zFoot + 0.03, zFoot + 0.03, 0.05, 0.05, 3));
+          /* 헤드보드 — 등 뒤쪽의 낮은 둥근 판 */
+          put('B', 'bhead', panelPts(xc - bh * 1.00, xc + bh * 1.00, mHead - 0.03, hz + 0.90, zHead - 0.04, zHead - 0.055, 0.10, 0.05, 3));
+          /* 매트리스 윗면 — 머리쪽이 살짝 높은 둥근 판 */
+          put('B', 'bmatt', slabPts(xc - bh * 0.93, xc + bh * 0.93, zHead + 0.05, zFoot - 0.02, mTop, 0.10, 0.10, 4));
+          /* 매트리스 발치 앞면 */
+          put('B', 'bfoot', panelPts(xc - bh * 0.93, xc + bh * 0.93, hz + 0.16, mTop - 0.015, zFoot - 0.02, zFoot - 0.02, 0.06, 0.05, 3));
+          /* 이불(발치 쪽 절반) — 매트리스와 같은 톤에서 한 단만 다르게 */
+          put('B', 'bblank', slabPts(xc - bh * 0.89, xc + bh * 0.89, zHead + bedLen * 0.44, zFoot - 0.06, mTop + 0.014, 0.09, 0.09, 3));
+          /* 베개 두 개 — 둥근 모서리의 낮은 슬레이트 그레이 쿠션 */
+          put('B', 'bpill', slabPts(xc - bh * 0.80, xc - bh * 0.09, zHead + 0.09, zHead + 0.30, mTop + 0.10, 0.055, 0.055, 3));
+          put('B', 'bpill', slabPts(xc + bh * 0.09, xc + bh * 0.80, zHead + 0.09, zHead + 0.30, mTop + 0.10, 0.055, 0.055, 3));
+          /* 베개 발치 쪽 단면 */
+          put('B', 'bpill2', panelPts(xc - bh * 0.80, xc - bh * 0.10, mTop + 0.012, mTop + 0.095, zHead + 0.30, zHead + 0.30, 0.05, 0.04, 3));
+          put('B', 'bpill2', panelPts(xc + bh * 0.10, xc + bh * 0.80, mTop + 0.012, mTop + 0.095, zHead + 0.30, zHead + 0.30, 0.05, 0.04, 3));
           continue;
         }
 
-        /* 등받이 */
-        var cch = Math.min(0.05, (bTop - bBot) * 0.18);
-        put(tt, 'back', [toCam(xc - hw, bBot, zBack), toCam(xc + hw, bBot, zBack),
-                         toCam(xc + hw, bTop - cch, zBack), toCam(xc + hw - cch, bTop, zBack),
-                         toCam(xc - hw + cch, bTop, zBack), toCam(xc - hw, bTop - cch, zBack)]);
-        /* 머리받침 패드 */
-        put(tt, 'pad', [toCam(xc - hw * 0.84, bTop - 0.21, zBack + 0.016), toCam(xc + hw * 0.84, bTop - 0.21, zBack + 0.016),
-                        toCam(xc + hw * 0.84, bTop - 0.02, zBack + 0.016), toCam(xc - hw * 0.84, bTop - 0.02, zBack + 0.016)]);
-        /* 좌판 윗면 — 뒤쪽이 살짝 높은 오목한 쿠션(위에서 보면 밝은 면이 보인다) */
-        put(tt, 'cush', [toCam(xc - hw * 0.93, cTop + 0.05, zBack + 0.05), toCam(xc + hw * 0.93, cTop + 0.05, zBack + 0.05),
-                         toCam(xc + hw * 0.93, cTop - 0.03, zFront), toCam(xc - hw * 0.93, cTop - 0.03, zFront)]);
-        /* 좌판 앞면(두께) */
-        put(tt, 'edge', [toCam(xc - hw * 0.93, cEdge, zFront), toCam(xc + hw * 0.93, cEdge, zFront),
-                         toCam(xc + hw * 0.93, cTop - 0.03, zFront), toCam(xc - hw * 0.93, cTop - 0.03, zFront)]);
-        /* 팔걸이 — 오른쪽 하나씩, 줄의 맨 왼쪽 좌석에만 왼쪽 하나 더 */
-        var armY = cTop + (s.recliner ? 0.20 : 0.17), aw = 0.075;
-        var ax = [xc + hw * 0.99];
-        if (xc === firstSeatX) ax.push(xc - hw * 0.99);
+        /* 등받이 — 둥근 어깨의 매끈한 패널 (젖히면 어깨가 뒤로 눕는다) */
+        put(tt, 'back', panelPts(xc - hw, xc + hw, bBot, bTop, zBack, zTop, Math.min(0.11, hw * 0.34), 0.045, 4));
+        /* 머리·목 받침 — 등받이보다 한 겹 앞에 얇게 얹는 둥근 패드 */
+        var py0 = bTop - 0.29, py1 = bTop - 0.05;
+        put(tt, 'pad', panelPts(xc - hw * 0.78, xc + hw * 0.78, py0, py1, zbk(py0) + 0.02, zbk(py1) + 0.02, Math.min(0.09, hw * 0.26), 0.03, 3));
+        /* 좌판 윗면 — 뒤쪽이 살짝 높은 오목한 쿠션 */
+        put(tt, 'cush', slabPts(xc - hw * 0.93, xc + hw * 0.93, zBack + 0.13, zFront, cTop + 0.05, 0.10, 0.10, 3));
+        /* 좌판 앞면(둥근 두께) */
+        put(tt, 'edge', panelPts(xc - hw * 0.93, xc + hw * 0.93, cEdge, cTop + 0.03, zFront, zFront, 0.035, 0.035, 3));
+        /* 팔걸이 — 오른쪽 하나씩, 줄의 맨 왼쪽 좌석에만 왼쪽 하나 더. 끝이 둥근 캡슐 형태 */
+        var armY = cTop + (s.recliner ? 0.19 : 0.16), aw = s.recliner ? 0.095 : 0.075;
+        var ax = [xc + hw * 0.98];
+        if (xc === firstSeatX) ax.push(xc - hw * 0.98);
         for (var ai = 0; ai < ax.length; ai++) {
           var axc = ax[ai];
-          put(tt, 'arm', [toCam(axc - aw / 2, armY, zBack + 0.02), toCam(axc + aw / 2, armY, zBack + 0.02),
-                          toCam(axc + aw / 2, armY, zFront - 0.02), toCam(axc - aw / 2, armY, zFront - 0.02)]);
-          put(tt, 'arm2', [toCam(axc - aw / 2, cTop - 0.02, zFront - 0.02), toCam(axc + aw / 2, cTop - 0.02, zFront - 0.02),
-                           toCam(axc + aw / 2, armY, zFront - 0.02), toCam(axc - aw / 2, armY, zFront - 0.02)]);
-          /* 팔걸이 바깥 옆면 — 상자처럼 보이게(가장 어두운 면) */
+          /* 팔걸이 윗면(캡슐) */
+          put(tt, 'arm', slabPts(axc - aw / 2, axc + aw / 2, zBack + 0.12, zFront - 0.03, armY, aw * 0.46, 0.05, 3));
+          /* 팔걸이 앞쪽 끝면(둥글게 감긴 끝) */
+          put(tt, 'arm2', panelPts(axc - aw / 2, axc + aw / 2, cTop - 0.02, armY - 0.012, zFront - 0.03, zFront - 0.03, aw * 0.46, aw * 0.34, 3));
+          /* 팔걸이 바깥 옆면 — 가장 어두운 면 */
           var sideX = axc + (axc > xc ? aw / 2 : -aw / 2);
-          put(tt, 'arm2', [toCam(sideX, cTop - 0.02, zBack + 0.02), toCam(sideX, cTop - 0.02, zFront - 0.02),
-                           toCam(sideX, armY, zFront - 0.02), toCam(sideX, armY, zBack + 0.02)]);
+          put(tt, 'arm2', panelPts(sideX, sideX, cTop - 0.02, armY, zBack + 0.12, zFront - 0.03, 0.012, 0.012, 2));
         }
         /* 리클라이너 — 발판이 앞으로 펼쳐진 모습 */
         if (s.recliner) {
-          put(tt, 'foot', [toCam(xc - hw * 0.9, cTop - 0.06, zFront), toCam(xc + hw * 0.9, cTop - 0.06, zFront),
-                           toCam(xc + hw * 0.9, cTop - 0.14, zFront + 0.36), toCam(xc - hw * 0.9, cTop - 0.14, zFront + 0.36)]);
+          put(tt, 'foot', panelPts(xc - hw * 0.86, xc + hw * 0.86, cTop - 0.17, cTop - 0.03, zFront + 0.36, zFront + 0.03, 0.05, 0.04, 3));
         }
       }
 
       /* 부품을 뒤→앞 순서로 채운다(같은 부품은 한 번의 fill) */
       /* 깊이 정렬이 없는 화가算法이라 '나중에 그린 면'이 위로 올라온다.
-         베드는 프레임(바닥) → 매트리스 → 이불·베개 → 머리판 순서로 그려야 매트리스가 가려지지 않는다. */
-      var PART_ORDER = ['bframe', 'bhead', 'bmatt', 'bblank', 'bpill', 'bhend', 'bfoot',
+         베드는 프레임 → 헤드보드 → 매트리스 → 이불·베개 → 발치면 순서로 그려야 매트리스가 가려지지 않는다. */
+      var PART_ORDER = ['bframe', 'bframeside', 'bhead', 'bmatt', 'bblank', 'bpill', 'bpill2', 'bfoot',
                         'back', 'pad', 'cush', 'foot', 'edge', 'arm', 'arm2'];
       for (var po = 0; po < PART_ORDER.length; po++) {
         var partName = PART_ORDER[po];
@@ -4283,16 +4326,25 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
           var tb = gkey.slice(0, cut);
           var style;
           if (tb === 'B') {
-            var bmk = { bhead: 'hdr', bmatt: 'matt', bblank: 'blank', bpill: 'pill', bhend: 'matt2', bfoot: 'matt2', bframe: 'frame' }[partName];
+            var bmk = { bhead: 'hdr', bmatt: 'matt', bblank: 'blank', bpill: 'pill', bpill2: 'pill2', bhend: 'matt2', bfoot: 'matt2', bframe: 'frame', bframeside: 'frame2' }[partName];
             style = BEDM[bmk] || BEDM.frame;
           } else if (partName === 'back') {
             var mm = mats(tb);
-            var pt = toCam(0, bTop, zBack), pb = toCam(0, bBot, zBack);
+            var pt = toCam(0, bTop, zTop), pb = toCam(0, bBot, zBack);
             if (pt[2] > NEAR && pb[2] > NEAR) {
               var gr = ctx.createLinearGradient(sx(pt), sy(pt), sx(pb), sy(pb));
               gr.addColorStop(0, mm.back); gr.addColorStop(0.55, mm.back2); gr.addColorStop(1, mm.back2);
               style = gr;
             } else style = mm.back;
+          } else if (partName === 'cush') {
+            var mc = mats(tb);
+            /* 좌판은 뒤쪽(등받이 쪽)이 살짝 밝고 앞으로 갈수록 어둡다 */
+            var qb = toCam(0, cTop + 0.05, zBack + 0.13), qf = toCam(0, cTop + 0.05, zFront);
+            if (qb[2] > NEAR && qf[2] > NEAR) {
+              var gc = ctx.createLinearGradient(sx(qb), sy(qb), sx(qf), sy(qf));
+              gc.addColorStop(0, mc.cush); gc.addColorStop(1, shade('#242A33', lit));
+              style = gc;
+            } else style = mc.cush;
           } else {
             style = mats(tb)[partName] || mats(tb).back;
           }
@@ -4300,13 +4352,29 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
         }
       }
 
+      /* 등받이 어깨의 림라이트 — 스크린 빛이 위 모서리에 얇게 걸리는 정도로만 */
+      if (!bed) {
+        ctx.beginPath();
+        var anyRim = false;
+        for (var rr3 = 0; rr3 < cells.length; rr3++) {
+          var cR = cells[rr3];
+          if (!cR || cR === '.' || !/^\d+[npsrcbxvw]$/.test(cR)) continue;
+          var xR = (rr3 - s.centerX) * pitch;
+          var hwR = seatW / 2;
+          var k1 = toCam(xR - hwR * 0.90, bTop - 0.014, zbk(bTop - 0.014)), k2 = toCam(xR + hwR * 0.90, bTop - 0.014, zbk(bTop - 0.014));
+          if (k1[2] < NEAR || k2[2] < NEAR) continue;
+          ctx.moveTo(sx(k1), sy(k1)); ctx.lineTo(sx(k2), sy(k2));
+          anyRim = true;
+        }
+        if (anyRim) { ctx.strokeStyle = 'rgba(148,168,198,' + (0.11 * lit).toFixed(3) + ')'; ctx.lineWidth = Math.max(1, W / 1600); ctx.stroke(); }
+      }
       /* 좌석 사이 이음매 — 한 줄이 한 덩어리로 뭉개지지 않고 좌석 하나하나 읽히게 */
       for (var sm = 0; sm < cells.length; sm++) {
         var cm = cells[sm];
         if (!cm || cm === '.' || !/^\d+[npsrcbxvw]$/.test(cm)) continue;
         var xm = (sm - s.centerX) * pitch + seatW / 2;
-        seg(toCam(xm, bed ? hz + 0.30 : bBot, zBack + 0.004), toCam(xm, bed ? hz + 0.26 : bTop, zBack + 0.004),
-            'rgba(0,0,0,0.55)', 1.4);
+        seg(toCam(xm, bed ? hz + 0.28 : bBot + 0.02, zBack + 0.004), toCam(xm, bed ? hz + 0.24 : bTop - 0.05, zBack + 0.004),
+            'rgba(0,0,0,0.38)', 1.2);
       }
       /* 등받이 가운데 세로 이음매 — 한 덩어리 판이 아니라 푹신한 등판으로 읽히게 */
       if (!bed) {
@@ -4316,12 +4384,12 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
           var cell3 = cells[cc2];
           if (!cell3 || cell3 === '.' || !/^\d+[npsrcbxvw]$/.test(cell3)) continue;
           var xcr = (cc2 - s.centerX) * pitch;
-          var k1 = toCam(xcr, bBot + 0.02, zBack + 0.002), k2 = toCam(xcr, bTop - 0.06, zBack + 0.002);
-          if (k1[2] < NEAR || k2[2] < NEAR) continue;
-          ctx.moveTo(sx(k1), sy(k1)); ctx.lineTo(sx(k2), sy(k2));
+          var k1c = toCam(xcr, bBot + 0.03, zBack + 0.003), k2c = toCam(xcr, bTop - 0.07, zbk(bTop - 0.07) + 0.003);
+          if (k1c[2] < NEAR || k2c[2] < NEAR) continue;
+          ctx.moveTo(sx(k1c), sy(k1c)); ctx.lineTo(sx(k2c), sy(k2c));
           anyCrease = true;
         }
-        if (anyCrease) { ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1.2; ctx.stroke(); }
+        if (anyCrease) { ctx.strokeStyle = 'rgba(255,255,255,0.032)'; ctx.lineWidth = 1.1; ctx.stroke(); }
       }
       /* 좌판 앞 모서리의 얇은 하이라이트 — 빛을 받는 면과 그림자 면을 나눈다 */
       if (!bed) {
@@ -4331,12 +4399,12 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
           var cell2 = cells[ce];
           if (!cell2 || cell2 === '.' || !/^\d+[npsrcbxvw]$/.test(cell2)) continue;
           var xe = (ce - s.centerX) * pitch, hwe = seatW / 2;
-          var e1 = toCam(xe - hwe * 0.93, cTop - 0.02, zFront), e2 = toCam(xe + hwe * 0.93, cTop - 0.02, zFront);
+          var e1 = toCam(xe - hwe * 0.90, cTop + 0.028, zFront), e2 = toCam(xe + hwe * 0.90, cTop + 0.028, zFront);
           if (e1[2] < NEAR || e2[2] < NEAR) continue;
           ctx.moveTo(sx(e1), sy(e1)); ctx.lineTo(sx(e2), sy(e2));
           anyEdge = true;
         }
-        if (anyEdge) { ctx.strokeStyle = 'rgba(206,220,236,' + (0.22 * lit).toFixed(3) + ')'; ctx.lineWidth = 1.1; ctx.stroke(); }
+        if (anyEdge) { ctx.strokeStyle = 'rgba(196,212,232,' + (0.13 * lit).toFixed(3) + ')'; ctx.lineWidth = 1; ctx.stroke(); }
       }
 
       /* 통로 손잡이 — 좌우 끝 크롬 난간 (사진의 계단 손잡이) */
@@ -4344,14 +4412,19 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
         var hx = sgn * (s.bankHalf + 0.55);
         if (hx > wallX - 0.2 || hx < -wallX + 0.2) return;
         var topY = hz + 0.92;
-        seg(toCam(hx, topY, zf + 0.1), toCam(hx, topY, zb - 0.1), 'rgba(190,200,206,0.15)', 1.1);
-        seg(toCam(hx, hz, -(dc - 0.02)), toCam(hx, topY, -(dc - 0.02)), 'rgba(170,180,186,0.12)', 1);
-        /* 계단 유도등(LED) */
+        seg(toCam(hx, topY, zf + 0.1), toCam(hx, topY, zb - 0.1), 'rgba(190,200,206,0.13)', 1.1);
+        seg(toCam(hx, hz, -(dc - 0.02)), toCam(hx, topY, -(dc - 0.02)), 'rgba(170,180,186,0.10)', 1);
+        /* 계단 유도등(에메랄드 LED) */
         var lc = toCam(hx - sgn * 0.12, hz + 0.1, -(dc + 0.2));
         if (lc[2] < NEAR + 0.2) return;
-        var rr2 = Math.max(0.7, f * 0.03 / lc[2]);
-        ctx.fillStyle = 'rgba(255,186,110,0.42)';
+        var rr2 = Math.max(0.7, f * 0.028 / lc[2]);
+        ctx.fillStyle = 'rgba(16,185,129,0.5)';
         ctx.beginPath(); ctx.arc(sx(lc), sy(lc), rr2, 0, Math.PI * 2); ctx.fill();
+      });
+      /* 옆벽 바닥 유도선 — 통로 계단을 따라 벽 밑으로 이어지는 얇은 에메랄드 선 */
+      [-1, 1].forEach(function (sgn) {
+        var wx2 = sgn * (wallX - 0.05);
+        seg(toCam(wx2, hz + 0.012, zf), toCam(wx2, hz + 0.012, zb), 'rgba(16,185,129,' + (0.20 * rowLit).toFixed(3) + ')', 1.1);
       });
     });
 
