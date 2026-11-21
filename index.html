@@ -6021,7 +6021,13 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const cols = h._cols || 1;
     const lab = isDesk() ? 26 : 24;
     const gap = MAP_GAP();
-    const avail = Math.max(240, (sc ? sc.clientWidth : 0) || 340) - lab - 4;
+    /* 출입문 배지가 서는 좌·우 여백 띠도 폭에 넣는다 — 띠가 화면 밖으로 밀려나
+       벽면 출입문 표시가 잘려 보이지 않게(2026-11-21). */
+    const box = document.getElementById('seatmap');
+    const wrap = box && box.querySelector('.smwrap');
+    let pad = 0;
+    if (wrap) { const cs = getComputedStyle(wrap); pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0); }
+    const avail = Math.max(240, (sc ? sc.clientWidth : 0) || 340) - lab - 4 - pad;
     const w = (avail - (cols - 1) * gap) / cols;
     /* 폭에 맞추되 읽고 누를 수 있는 하한(모바일 20px)·상한(30px)을 지킨다.
        좌석은 정사각형이라 크기를 키워도 간격·배치 비율은 그대로다. */
@@ -6110,15 +6116,53 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   /* ---------- 출입문(doors) — CGV 미니맵에서 뽑은 (col,row) 위치에 배지로 그린다 ---------- */
   const DOOR_SVG = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.6 1.3h6.2a.5.5 0 0 1 .5.5v8.4a.5.5 0 0 1-.5.5H2.6a.5.5 0 0 1-.5-.5V1.8a.5.5 0 0 1 .5-.5Z" fill="none" stroke="currentColor" stroke-width="1.15"/><circle cx="7.5" cy="6" r=".85" fill="currentColor"/></svg>';
   function hallDoors(h) { return (h && h.doors && h.doors.length) ? h.doors : null; }
-  /* 상/하(행 기준) → 좌/우(열 기준) → 행 사이 순으로 본다. 수집 격자 밖 좌표는 렌더에서만 붙잡는다. */
-  function doorSide(d, ncols, nrows) {
-    if (d.row < 0) return 'top';
-    if (d.row >= nrows - 1) return 'bottom';
-    /* 첫 열(col 0)·끝 열에 놓인 문은 벽면의 좌·우 출입문이다(2026-11-20 제보: 동수원 SCREENX관).
-       예전에는 '행 사이'로 보고 아이콘만 그려 한글 '출입문' 표시가 사라졌다. */
-    if (d.col <= 0) return 'left';
-    if (d.col >= ncols - 1) return 'right';
-    return 'inner';
+  /* ---------- 출입문 배지가 붙을 벽 정하기 ----------
+     CGV 미니맵 좌표는 좌석표 '칸' 단위(col=열, row=행)라 문이 격자 안쪽(가로 통로가 지나는 자리)이나
+     반 칸 어긋난 곳에 찍히기도 한다. 그래서 좌석이 실제로 있는 격자(첫·끝 열/행)까지의 거리를 재서
+     가장 가까운 벽(위·아래·왼·오른)으로 보낸다. 배지는 어느 경우에도 좌석 격자 바깥 여백 띠에만 그린다 —
+     좌석 번호·행 알파벳·PRIVATE BOX 띠 같은 글자 위에 얹히지 않는다(2026-11-21 지시: '글자 안겹치게'). */
+  function doorPlan(h) {
+    const ds = hallDoors(h);
+    if (!ds) return [];
+    const rows = h.rows || [];
+    const cols = h._cols || Math.max(1, ...rows.map((r) => (r.c || []).length));
+    const nr = Math.max(1, rows.length);
+    const aisle = [];
+    for (let c = 0; c < cols; c++) aisle[c] = rows.every((r) => (r.c[c] || '.') === '.');
+    const wOf = (c) => (c < 0 || c >= cols || aisle[c] ? 0.7 : 1);   /* hallSeats()와 같은 통로 열 가중치 */
+    const wSum = (c) => { let s = 0; for (let i = 0; i < c; i++) s += wOf(i); return s; };
+    let gmin = -1, gmax = -1;
+    rows.forEach((r) => {
+      for (let i = 0; i < (r.c || []).length; i++) {
+        if (r.c[i] === '.') continue;
+        if (gmin < 0 || i < gmin) gmin = i;
+        if (i > gmax) gmax = i;
+      }
+    });
+    if (gmin < 0) { gmin = 0; gmax = cols - 1; }
+    /* 문의 가로 위치(칸 단위) — 정수 열은 그 열의 가운데, .5 는 두 열 사이 */
+    const X = (v) => {
+      const q = clamp(v, 0, cols - 1);
+      const i = Math.floor(q), t = q - i;
+      const a = wSum(i) + wOf(i) / 2;
+      const b = i + 1 < cols ? wSum(i + 1) + wOf(i + 1) / 2 : a + wOf(i);
+      return a + (b - a) * t;
+    };
+    const gl = wSum(gmin), gr = wSum(gmax) + wOf(gmax);
+    return ds.map((d) => {
+      const dist = {
+        top: d.row + 0.5, bottom: (nr - 0.5) - d.row,
+        left: X(d.col) - gl, right: gr - X(d.col),
+      };
+      let side = 'top';
+      ['bottom', 'left', 'right'].forEach((k) => { if (dist[k] < dist[side]) side = k; });
+      return { side, col: d.col, row: d.row };
+    });
+  }
+  function doorSides(h) {
+    const s = {};
+    doorPlan(h).forEach((p) => { s[p.side] = 1; });
+    return s;
   }
   function layoutDoors(h) {
     const box = document.getElementById('seatmap');
@@ -6139,7 +6183,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     let acc = 0;
     for (let c = 0; c < ncols; c++) { xoff[c] = acc; acc += tracks[c] + gapx; }
     const left0 = rc.offsetLeft;                                  /* 행 라벨 다음 = 좌석 격자 시작 */
-    const gridRight = left0 + xoff[ncols - 1] + tracks[ncols - 1];
     const yc = rowEls.map((el) => el.offsetTop + el.offsetHeight / 2);
     const rowH = rowEls[0].offsetHeight || tracks[0];
     const pitch = rowEls.length > 1 ? (yc[yc.length - 1] - yc[0]) / (rowEls.length - 1) : rowH + gapx;
@@ -6158,52 +6201,57 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const i = Math.floor(v), t = v - i;
       return yc[i] + (yc[i + 1] - yc[i]) * t;
     };
-    const nrows = Math.max(1, h.doorRows || rowEls.length);
-    const totalW = wrap.clientWidth;
+    const plan = doorPlan(h);
+    const els = Array.prototype.slice.call(layer.children);
+    /* 모양(가로 배지/세로 배지)이 먼저 정해져야 크기를 잴 수 있다 */
+    els.forEach((el, i) => { el.setAttribute('data-side', (plan[i] || {}).side || 'bottom'); });
+    const W = wrap.clientWidth, Hw = wrap.clientHeight;
+    const wcs = getComputedStyle(wrap);
+    const padT = parseFloat(wcs.paddingTop) || 0, padR = parseFloat(wcs.paddingRight) || 0;
+    const padB = parseFloat(wcs.paddingBottom) || 0, padL = parseFloat(wcs.paddingLeft) || 0;
     const placed = [];
-    for (let i = 0; i < layer.children.length; i++) {
-      const el = layer.children[i];
-      const d = (h.doors || [])[+el.dataset.di];
-      if (!d) continue;
-      const side = el.dataset.side || doorSide(d, ncols, nrows);
-      let x = 0, y = 0;
-      const half = (el.offsetWidth || 34) / 2 + 1;
-      if (side === 'top') {
-        x = clamp(colX(d.col), half, Math.max(half, totalW - half)); y = Math.max(12, yc[0] - rowH / 2 - 12);
-      } else if (side === 'bottom') {
-        x = clamp(colX(d.col), half, Math.max(half, totalW - half)); y = yc[rowEls.length - 1] + rowH / 2 + 12;
-      } else if (side === 'left') {
-        x = 12; y = clamp(rowY(d.row), yc[0], yc[rowEls.length - 1]);
-      } else if (side === 'right') {
-        x = Math.max(12, totalW - 12); y = clamp(rowY(d.row), yc[0], yc[rowEls.length - 1]);
+    for (let i = 0; i < els.length; i++) {
+      const el = els[i];
+      const p = plan[i];
+      if (!p) continue;
+      const side = p.side;
+      const hw = (el.offsetWidth || 34) / 2, hh = (el.offsetHeight || 16) / 2;
+      /* 띠는 좌석판 바깥 여백 — 문이 있던 자리(열/행)와 같은 방향으로만 미끄러져 그 띠 안에 선다 */
+      const horiz = (side === 'top' || side === 'bottom');
+      let along, band;
+      if (horiz) {
+        along = clamp(colX(p.col), hw + 2, Math.max(hw + 2, W - hw - 2));
+        band = side === 'top' ? (padT ? padT / 2 : hh + 2) : Hw - (padB ? padB / 2 : hh + 2);
       } else {
-        x = colX(d.col); y = clamp(rowY(d.row), yc[0], yc[rowEls.length - 1]);
+        along = clamp(rowY(p.row), hh + 2, Math.max(hh + 2, Hw - hh - 2));
+        band = side === 'left' ? (padL ? padL / 2 : hw + 2) : W - (padR ? padR / 2 : hw + 2);
       }
-      /* 좌·우 배지도 회전하지 않고 세로로 쓴다(2026-11-20 제보: 글자가 배경 밖으로 넘쳤다).
-         그래서 배지의 상자 크기가 그대로 화면 크기다 — 좌석판 밖으로 나가지 않게 붙잡는다 */
-      const halfW = (el.offsetWidth || 34) / 2 + 1;
-      const halfH = (el.offsetHeight || 16) / 2 + 1;
-      x = clamp(x, halfW, Math.max(halfW, totalW - halfW));
-      y = clamp(y, halfH, Math.max(halfH, wrap.clientHeight - halfH));
-      /* 같은 쪽·같은 자리에 겹치는 문(예: 피카디리1958 2관 오른쪽 2개)은 벽을 따라 나란히 비켜 놓는다 */
-      for (let k = 0; k < placed.length; k++) {
-        const q = placed[k];
-        if (q.side !== side || Math.abs(q.x - x) > 18 || Math.abs(q.y - y) > 14) continue;
-        if (side === 'left' || side === 'right') y = clamp(y + 20, yc[0], yc[rowEls.length - 1]);
-        else x = clamp(x + 20, half, Math.max(half, totalW - half));
+      /* 같은 띠에 문이 여럿이면(피카디리1958 2관·인천 3관 등) 배지끼리 겹치지 않게 띠를 따라 비켜 놓는다.
+         띠는 좌석·글자가 없는 여백이라 어느 쪽으로 미끄러져도 안전하다. */
+      const step = (horiz ? el.offsetWidth : el.offsetHeight || 20) + 4;
+      let x = horiz ? along : band, y = horiz ? band : along, got = null;
+      for (let k = 0; k < 12 && !got; k++) {
+        const off = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6][k] * step;
+        const cx = horiz ? along + off : band;
+        const cy = horiz ? band : along + off;
+        if (cx - hw < -0.5 || cx + hw > W + 0.5 || cy - hh < -0.5 || cy + hh > Hw + 0.5) continue;
+        const r = { l: cx - hw, t: cy - hh, r: cx + hw, b: cy + hh };
+        const hit = placed.some((q) => !(r.r <= q.l + 2 || q.r <= r.l + 2 || r.b <= q.t + 2 || q.b <= r.t + 2));
+        if (!hit) got = { cx, cy, r };
       }
-      placed.push({ x, y, side });
-      el.style.left = Math.round(x * 2) / 2 + 'px';
-      el.style.top = Math.round(y * 2) / 2 + 'px';
+      if (!got) {
+        got = { cx: clamp(horiz ? along : band, hw, Math.max(hw, W - hw)), cy: clamp(horiz ? band : along, hh, Math.max(hh, Hw - hh)) };
+        got.r = { l: got.cx - hw, t: got.cy - hh, r: got.cx + hw, b: got.cy + hh };
+      }
+      placed.push(got.r);
+      el.style.left = Math.round(got.cx * 2) / 2 + 'px';
+      el.style.top = Math.round(got.cy * 2) / 2 + 'px';
     }
   }
-  function doorLayerHtml(h, ncols, nrows) {
-    const ds = hallDoors(h);
-    if (!ds) return '';
-    return `<div class="door-layer">${ds.map((d, i) => {
-      const side = doorSide(d, ncols, nrows);
-      return `<span class="door" data-side="${side}" data-di="${i}" role="img" aria-label="출입문" title="출입문">${DOOR_SVG}<i>출입문</i></span>`;
-    }).join('')}</div>`;
+  function doorLayerHtml(h) {
+    const plan = doorPlan(h);
+    if (!plan.length) return '';
+    return `<div class="door-layer">${plan.map((p, i) => `<span class="door" data-side="${p.side}" data-di="${i}" role="img" aria-label="출입문" title="출입문">${DOOR_SVG}<i>출입문</i></span>`).join('')}</div>`;
   }
   function paintSeatMap() {
     const h = findHall(state.theaterId, state.hallId);
@@ -6276,14 +6324,12 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
       const pbbox = rooms.map((r) => `<div class="pbbox" style="left:${padW(0, r[0])};right:${padW(r[1], cols)}"></div>`).join('');
       return `${band}<div class="srow${row.gapBefore ? ' gap-before' : ''}${isBoxRow ? ' boxrow' : ''}${pbbox ? ' tight' : ''}">${lab}<div class="rcells" style="grid-template-columns:${tpl}">${pbbox}${cells}</div></div>`;
     }).join('');
-    /* 출입문이 있는 관은 좌석판을 감싸 상·하·좌·우 여백에 배지를 놓는다 */
+    /* 출입문이 있는 관은 좌석판을 여백 띠로 감싸고, 배지는 그 띠 안에만 놓는다(좌석·글자 위 금지) */
     if (hallDoors(h)) {
-      const nrows = Math.max(1, h.doorRows || h.rows.length);
-      const sides = {};
-      h.doors.forEach((d) => { sides[doorSide(d, cols, nrows)] = 1; });
-      const padT = sides.top ? 24 : 0, padB = sides.bottom ? 26 : 0;
-      const padL = sides.left ? 26 : 0, padR = sides.right ? 26 : 0;
-      box.innerHTML = `<div class="smwrap" style="padding:${padT}px ${padR}px ${padB}px ${padL}px">${rowsHtml}${doorLayerHtml(h, cols, nrows)}</div>`;
+      const sides = doorSides(h);
+      const padT = sides.top ? 30 : 0, padB = sides.bottom ? 34 : 0;
+      const padL = sides.left ? 30 : 0, padR = sides.right ? 30 : 0;
+      box.innerHTML = `<div class="smwrap" style="padding:${padT}px ${padR}px ${padB}px ${padL}px">${rowsHtml}${doorLayerHtml(h)}</div>`;
     } else {
       box.innerHTML = rowsHtml;   /* 열 번호 머리말 줄은 두지 않는다(2026-11-19 사용자 요청) */
     }
@@ -6323,6 +6369,25 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
               if (dd < bestD) { bestD = dd; best = cand; }
             }
             sc.scrollLeft = best;
+            showWallDoors();
+          };
+          /* 좌·우 벽 출입문 배지가 처음 화면 밖으로 밀려나지 않게, 필요한 만큼만(최대 60px) 옆으로 민다.
+             좌석판이 화면보다 넓은 관(24~26열)에서 벽 배지가 아예 안 보이던 문제(2026-11-21). */
+          const showWallDoors = () => {
+            const vr = sc.getBoundingClientRect();
+            let bestDelta = 0;
+            sc.querySelectorAll('#seatmap .door').forEach((d) => {
+              if (d.dataset.side !== 'left' && d.dataset.side !== 'right') return;
+              const r = d.getBoundingClientRect();
+              let delta = 0;
+              if (r.left < vr.left - 0.5) delta = r.left - vr.left - 1;
+              else if (r.right > vr.right + 0.5) delta = r.right - vr.right + 1;
+              if (delta && Math.abs(delta) <= 60 && (!bestDelta || Math.abs(delta) < Math.abs(bestDelta))) bestDelta = delta;
+            });
+            if (bestDelta) {
+              const max = sc.scrollWidth - sc.clientWidth;
+              sc.scrollLeft = clamp(sc.scrollLeft + bestDelta, 0, Math.max(0, max));
+            }
           };
           centerX();
           requestAnimationFrame(centerX);
