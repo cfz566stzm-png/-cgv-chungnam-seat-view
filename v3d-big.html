@@ -10767,24 +10767,27 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
 
 </script>
 
-<script>/* QA 전용(배포 후 삭제): 3D 캔버스를 1120px로 키워 크게 본다 */
+<script>/* QA 전용(검증 후 삭제): 3D 캔버스를 1120x630 으로 키운다. 패널이 다시 그려져도 계속 적용. */
 (function () {
-  var yaw = new URLSearchParams(location.search).get('yaw');
-  var pitch = new URLSearchParams(location.search).get('pitch');
-  var t = setInterval(function () {
-    var cv = document.querySelector('#seatPanel .v3d-canvas .x, #seatPanel .v3d-canvas');
+  var q = new URLSearchParams(location.search);
+  var yaw = q.get('yaw'), pitch = q.get('pitch');
+  setInterval(function () {
+    var cv = document.querySelector('#seatPanel .v3d-canvas');
     if (!cv) return;
-    var v = window.Viewer3D && Viewer3D.findFor(cv.parentNode);
-    if (!v) return;
-    clearInterval(t);
     var w = cv.parentNode;
-    w.style.width = '1120px'; w.style.maxWidth = 'none'; w.style.height = '630px';
+    if (w && w.className && w.className.indexOf('v3d') >= 0) { w.style.width = '1120px'; w.style.maxWidth = 'none'; w.style.height = '630px'; }
     cv.style.width = '1120px'; cv.style.height = '630px';
-    if (yaw !== null) v.yaw = parseFloat(yaw) || 0;
-    if (pitch !== null) v.pitch = parseFloat(pitch) || 0;
-    v.resize(); v.render();
+    var v = window.Viewer3D && Viewer3D.findFor(w);
+    if (v) {
+      if (v.__qaApplied !== 1 || v.cv.width !== 1120) {
+        if (yaw !== null) v.yaw = parseFloat(yaw) || 0;
+        if (pitch !== null) v.pitch = parseFloat(pitch) || 0;
+        v.resize(); v.render();
+        v.__qaApplied = 1;
+      }
+    }
     window.__QA_BIG__ = 1;
-  }, 150);
+  }, 250);
 })();
 </script>
 </body>
