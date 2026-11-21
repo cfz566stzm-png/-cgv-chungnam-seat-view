@@ -447,8 +447,6 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
   background:var(--green);border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.2);
 }
 .seat.hascam{box-shadow:0 0 0 1.5px rgba(0,168,98,.55) inset}
-/* 블로그 원문 링크만 있는 좌석 — 사진은 없음 */
-.seat.haslink{box-shadow:0 0 0 1px rgba(107,118,132,.4) inset}
 .seat.dim{opacity:.18}
 .seat.dim:hover{opacity:.4}
 .photochip{background:var(--green-l);border-color:var(--green-soft);color:var(--green-d)}
@@ -527,16 +525,6 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .back svg{pointer-events:none;flex:0 0 auto}
 .back.mini{min-height:36px;font-size:12.5px;padding:6px 12px}
 
-/* 11) 원문 링크 카드 (외부 사진 재게시 대신) */
-.extphoto{border:1px solid var(--line);border-radius:18px;background:#FAFBFC;padding:16px}
-.extphoto-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.extphoto-top b{font-size:14px;font-weight:850}
-.extphoto-top span{font-size:11.5px;font-weight:800;color:var(--green-d);background:var(--green-l);padding:3px 8px;border-radius:7px}
-.extphoto p{font-size:12.5px;color:var(--sub);font-weight:600;line-height:1.6;margin:10px 0 12px}
-.extphoto-foot{font-size:11px;color:var(--mute);font-weight:600;margin-top:10px;line-height:1.5}
-.gal-noimg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:4/3;background:linear-gradient(140deg,#E8F6EF,#F7FBF9);color:var(--green-d);font-size:22px}
-.gal-noimg span{font-size:11px;font-weight:800}
-
 /* 12) 닉네임 모달 */
 .modal{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center}
 .modal-scrim{position:absolute;inset:0;background:rgba(25,31,40,.42)}
@@ -588,7 +576,6 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .sh-t b{font-size:21px;font-weight:850;letter-spacing:-.04em;line-height:1.15}
 .sh-t span{font-size:12.5px;font-weight:700;color:var(--mute)}
 .sh-cam{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--green-d);background:var(--green-l);padding:4px 8px;border-radius:8px}
-.sh-cam.link{color:#4E5968;background:#F2F4F6}
 .sheet-x{flex:0 0 auto;width:44px;height:44px;min-width:44px;border-radius:14px;display:grid;place-items:center;background:#F2F4F6;color:#4E5968;margin-left:4px;touch-action:manipulation}
 .sheet-x:active{background:#E5E8EB}
 .sheet-x svg{pointer-events:none}
@@ -1351,7 +1338,7 @@ input,select,textarea,
 }
 
 /* --- (2) 보조 글씨 바닥선: 10~11px 설명 글씨를 12px 이상으로 --- */
-.gal-cap .t,.review .movie,.review .ticketbadge,.gal-noimg span,.sh-cam,
+.gal-cap .t,.review .movie,.review .ticketbadge,.sh-cam,
 .v3d-zoom button,.v3d-reset,.v3d-hint,.feel-tag,.calcn-g span,.shotup i,
 .mvsug button i,.v3d-type,.ana-head span,.ana-foot span,.ana-src div,
 .cmpbar-list b,.cmp-top span,.ts-tx i,.toc-row>span,.imaxnote .imax-sys,.sysmini,
@@ -1362,7 +1349,7 @@ input,select,textarea,
 .screenbar span,.topseat b,.metric b i,.canvas-head span,.review .rts span,
 .helpful,.helpbtn,.fixbtn,.regline,.seatfun span,.rego,.fixsel,.fixdetail{
   font-size:12px}
-.pv-bar span,.extphoto-foot,.ana-note,.ana-src>b,.dsec-head span,.ugc-note,
+.pv-bar span,.ana-note,.ana-src>b,.dsec-head span,.ugc-note,
 .v3d-fallback span,.mask-note,.cmp-line,.cmp-foot,.cmp-cap span,
 .v3d-recval,.big-inner .v3d-fov,.v3d-zoomnote,.regline .rdate,.regline .rtag{
   font-size:12.5px}
@@ -2240,7 +2227,6 @@ html[data-theme="dark"] .profile-card,
 html[data-theme="dark"] .review,
 html[data-theme="dark"] .pcred,
 html[data-theme="dark"] .emptyphoto,
-html[data-theme="dark"] .extphoto,
 html[data-theme="dark"] .calcn,
 html[data-theme="dark"] .ana-src,
 html[data-theme="dark"] .ugc-more,
@@ -2423,7 +2409,6 @@ html[data-theme="dark"] .mvsug button:hover,
 html[data-theme="dark"] .mvsug button:focus{background:#232A24}
 html[data-theme="dark"] .mvsug-head{background:#16211B;color:var(--green-d);border-bottom-color:var(--line-2)}
 html[data-theme="dark"] .mvdrop{background:#22262F;color:var(--ink-2)}
-html[data-theme="dark"] .gal-noimg{background:linear-gradient(140deg,#16211B,#12171A);color:var(--green-dd)}
 
 /* --- 3D 조작 바 (캔버스 밖에 놓인 것만 / 크게 보기는 원래 어두운 그대로) --- */
 html[data-theme="dark"] .v3d-bar{border-color:var(--line);box-shadow:none}
