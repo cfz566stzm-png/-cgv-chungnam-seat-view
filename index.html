@@ -1195,8 +1195,6 @@ body{font-size:16px}
 .dstat-grid b{display:block;font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .dstat-grid span{display:block;font-size:11px;font-weight:700;color:#6B7684;margin-top:2px}
 .dstat-sub{display:block;font-style:normal;font-size:10.5px;font-weight:700;color:#9AA4AF;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dstat-bar{height:7px;border-radius:99px;background:#EEF1F0;margin-top:12px;overflow:hidden}
-.dstat-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#00A862,#34D399)}
 @media (max-width:520px){ .dstat-grid{grid-template-columns:repeat(2,1fr)} }
 .stat-sub{font-size:12px;color:#6B7684;font-weight:700;margin-top:2px}
 
@@ -2408,7 +2406,6 @@ html[data-theme="dark"] .srow.boxrow.tight .rcells>.pbbox{background:rgba(255,22
 html[data-theme="dark"] .srow.boxrow .rlab{color:#F0C978}
 html[data-theme="dark"] .pbnote{color:#F0C978}
 html[data-theme="dark"] .occmini,
-html[data-theme="dark"] .dstat-bar,
 html[data-theme="dark"] .toc-bar{background:#242932}
 
 /* --- 지점 탭·필터 힌트 --- */
@@ -4988,19 +4985,23 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   function hallReady(h) { return !!(h && h.status === 'ok' && h.rows && h.rows.length && !h._fail); }
   function dataStatus() {
     const ths = DATA.theaters || [];
-    let halls = 0, ready = 0, typeKnown = 0, photoHalls = 0, photoSeats = 0, photoShots = 0, seats = 0, readySeats = 0;
-    ths.forEach((t) => (t.halls || []).forEach((h) => {
-      halls += 1;
-      seats += (h.total || 0);
-      if (hallReady(h)) { ready += 1; readySeats += (h.total || 0); }
-      if (h.seatTypes && Object.keys(h.seatTypes).length) typeKnown += 1;
-      const pc = hallPhotoCount(h.id);
-      if (pc.seats) { photoHalls += 1; photoSeats += pc.seats; photoShots += pc.shots; }
-    }));
+    let halls = 0, ready = 0, readyTheaters = 0, typeKnown = 0, photoHalls = 0, photoSeats = 0, photoShots = 0, seats = 0, readySeats = 0;
+    ths.forEach((t) => {
+      let anyReady = false;
+      (t.halls || []).forEach((h) => {
+        halls += 1;
+        seats += (h.total || 0);
+        if (hallReady(h)) { ready += 1; readySeats += (h.total || 0); anyReady = true; }
+        if (h.seatTypes && Object.keys(h.seatTypes).length) typeKnown += 1;
+        const pc = hallPhotoCount(h.id);
+        if (pc.seats) { photoHalls += 1; photoSeats += pc.seats; photoShots += pc.shots; }
+      });
+      if (anyReady) readyTheaters += 1;
+    });
     const builtAt = (DATA.meta && DATA.meta.builtAt) || '';
     const days = builtAt ? Math.floor((Date.now() - new Date(builtAt + 'T09:00:00+09:00').getTime()) / 864e5) : null;
     return {
-      theaters: ths.length, halls, ready, typeKnown, photoHalls, photoSeats, photoShots, seats, readySeats,
+      theaters: ths.length, halls, ready, readyTheaters, typeKnown, photoHalls, photoSeats, photoShots, seats, readySeats,
       builtAt, days, stale: (days != null && days > 30)
     };
   }
@@ -5572,10 +5573,15 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     } catch (e) {}
   }
   function dstatPaint() {
-    const p = document.getElementById('dstatPhotos');
-    if (p) p.textContent = DSTAT.photos == null ? '—' : String(DSTAT.photos);
-    const r = document.getElementById('dstatReviews');
-    if (r) r.textContent = DSTAT.reviews == null ? (DSTAT.err ? '서버 연결 실패' : '불러오는 중…') : ('후기 ' + DSTAT.reviews + '건');
+    /* 데이터 현황 둘째 상자 — 서버 후기 수를 받으면 '등록 좌석 후기 N건'으로 바꾸고,
+       받기 전(또는 서버 실패)에는 처음부터 보이는 좌석 수를 그대로 둔다(없는 숫자를 만들지 않는다). */
+    const n = document.getElementById('dstatNum2');
+    const lb = document.getElementById('dstatLb2');
+    const sub = document.getElementById('dstatSub2');
+    if (!n || DSTAT.reviews == null) return;
+    n.textContent = DSTAT.reviews.toLocaleString() + '건';
+    if (lb) lb.textContent = '등록 좌석 후기';
+    if (sub) sub.textContent = DSTAT.photos ? '이용자가 남긴 후기 · 사진 ' + DSTAT.photos + '컷' : '이용자가 남긴 후기';
   }
   function dstatLoad(force) {
     if (DSTAT.busy) return Promise.resolve(false);
@@ -6850,7 +6856,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const m = DATA.meta;
     const st = dataStatus();
     const list = homeList();
-    const pctReady = st.halls ? Math.round((st.ready / st.halls) * 100) : 0;
     return `
     <section class="hero">
       <h1>명당을 찾기보다<br>나에게 맞는 자리를 찾으세요</h1>
@@ -6866,10 +6871,9 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         <span>${esc(String(st.builtAt).replace(/-/g, '.'))} 기준${st.stale ? ' · 업데이트 필요' : ''}</span>
       </div>
       <div class="dstat-grid">
-        <div><b class="num">${st.ready}/${st.halls}</b><span>좌석표가 있는 관</span><i class="dstat-sub">${st.halls.toLocaleString()}관 중 ${st.ready.toLocaleString()}관</i></div>
-        <div><b class="num" id="dstatPhotos">—</b><span>등록한 사진</span><i class="dstat-sub" id="dstatReviews">불러오는 중…</i></div>
+        <div><b class="num">${st.readyTheaters.toLocaleString()}지점 · ${st.ready.toLocaleString()}관</b><span>전국 지원 상영관</span><i class="dstat-sub">좌석표·3D 시야 제공</i></div>
+        <div><b class="num" id="dstatNum2">${st.readySeats.toLocaleString()}</b><span id="dstatLb2">3D 시야로 보는 좌석</span><i class="dstat-sub" id="dstatSub2">좌석표 기준</i></div>
       </div>
-      <div class="dstat-bar"><i style="width:${pctReady}%"></i></div>
     </section>
 
     <div class="section-title"><h2>지점 둘러보기</h2><span class="cap">전국 CGV ${st.theaters}곳</span></div>
