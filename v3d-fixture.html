@@ -10,7 +10,7 @@
   fetch('index.html').then(function(r){return r.text();}).then(function(txt){
     var m=txt.indexOf('window.__DATA__ = ');
     var i=m+'window.__DATA__ = '.length;
-    var j=txt.indexOf('};</script>', i)+1;
+    var j=txt.indexOf('};<'+'/script>', i)+1;
     var DATA=JSON.parse(txt.slice(i,j));
     var t=DATA.theaters.filter(function(x){return x.id===q.get('t');})[0];
     var h=t.halls.filter(function(x){return x.id===q.get('h');})[0];
