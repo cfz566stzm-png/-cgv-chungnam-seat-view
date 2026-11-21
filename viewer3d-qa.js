@@ -1002,9 +1002,9 @@
       if (path([toCam(xw, 0, 0), toCam(xw, 0, -rearD), toCam(xw, ceilY, -rearD), toCam(xw, ceilY, 0)])) {
         ctx.fillStyle = g; ctx.fill();
       }
-      /* 음향 패널 세로 리브 — 0.55 m 간격의 아주 옅은 세로선이 벽을 조용한 건축면으로 만든다
+      /* 음향 패널 세로 리브 — 0.8 m 간격의 아주 옅은 세로선이 벽을 조용한 건축면으로 만든다
          (2026-11-21 «클린 미니멀 3D»: 벽은 깨끗한 다크 패널 + 세로 리브만) */
-      for (var z = -0.55; z > -rearD; z -= 0.55) {
+      for (var z = -0.8; z > -rearD; z -= 0.8) {
         seg(toCam(xw * 0.998, 0.0, z), toCam(xw * 0.998, ceilY, z), 'rgba(158,172,186,0.022)', 1);
       }
       /* 패널 이음매 — 세로 2.0 m마다 한 줄만 살짝 진하게 */
@@ -1027,7 +1027,7 @@
     /* ---- 앞벽 (스크린 둘레) ---- */
     face([toCam(-wallX, 0, 0), toCam(wallX, 0, 0), toCam(wallX, ceilY, 0), toCam(-wallX, ceilY, 0)], '#0B0D0F');
     /* 앞벽도 세로 패널 이음매 — 스크린 뒤(검은 마스킹)는 매끈하게 둔다 */
-    for (var wx = -wallX + 0.55; wx < wallX - 0.5; wx += 0.55) {
+    for (var wx = -wallX + 0.8; wx < wallX - 0.5; wx += 0.8) {
       if (Math.abs(wx) < scrW / 2 + 0.5) continue;
       seg(toCam(wx, 0, 0.01), toCam(wx, ceilY, 0.01), 'rgba(168,180,194,0.026)', 1);
     }
@@ -1549,6 +1549,8 @@
       var zLo = y0 <= y1 ? z0 : z1, zHi = y0 <= y1 ? z1 : z0;
       function P(x, y) { pts.push(toCam(x, y, zLo + (zHi - zLo) * ((y - yLo) / ((yHi - yLo) || 1)))); }
       function A(cx2, cy2, a0, a1, r) {
+        /* 반지름이 거의 0인 모서리는 점 하나로 끝낸다(모바일 프레임 비용 절약) */
+        if (r < 0.006) { P(cx2, cy2); return; }
         for (var q2 = 1; q2 <= segs; q2++) { var a = a0 + (a1 - a0) * (q2 / segs); P(cx2 + Math.cos(a) * r, cy2 + Math.sin(a) * r); }
       }
       A(x0 + rBot, yLo + rBot, Math.PI, Math.PI * 1.5, rBot);
@@ -1565,6 +1567,7 @@
       var zL = Math.min(zA, zB), zH = Math.max(zA, zB);
       function P(x, z) { pts.push(toCam(x, y, z)); }
       function A(cx2, cz2, a0, a1) {
+        if (rX < 0.006) { P(cx2, cz2); return; }
         for (var q2 = 1; q2 <= segs; q2++) { var a = a0 + (a1 - a0) * (q2 / segs); P(cx2 + Math.cos(a) * rX, cz2 + Math.sin(a) * rZ); }
       }
       A(x0 + rX, zL + rZ, Math.PI, Math.PI * 1.5);
@@ -1700,14 +1703,14 @@
         }
 
         /* 등받이 — 둥근 어깨의 매끈한 패널 (젖히면 어깨가 뒤로 눕는다) */
-        put(tt, 'back', panelPts(xc - hw, xc + hw, bBot, bTop, zBack, zTop, Math.min(0.11, hw * 0.34), 0.045, 4));
+        put(tt, 'back', panelPts(xc - hw, xc + hw, bBot, bTop, zBack, zTop, Math.min(0.11, hw * 0.34), 0.0, 3));
         /* 머리·목 받침 — 등받이보다 한 겹 앞에 얇게 얹는 둥근 패드 */
         var py0 = bTop - 0.29, py1 = bTop - 0.05;
-        put(tt, 'pad', panelPts(xc - hw * 0.78, xc + hw * 0.78, py0, py1, zbk(py0) + 0.02, zbk(py1) + 0.02, Math.min(0.09, hw * 0.26), 0.03, 3));
+        put(tt, 'pad', panelPts(xc - hw * 0.78, xc + hw * 0.78, py0, py1, zbk(py0) + 0.02, zbk(py1) + 0.02, Math.min(0.09, hw * 0.26), 0.0, 3));
         /* 좌판 윗면 — 뒤쪽이 살짝 높은 오목한 쿠션 */
-        put(tt, 'cush', slabPts(xc - hw * 0.93, xc + hw * 0.93, zBack + 0.13, zFront, cTop + 0.05, 0.10, 0.10, 3));
+        put(tt, 'cush', slabPts(xc - hw * 0.93, xc + hw * 0.93, zBack + 0.13, zFront, cTop + 0.05, 0.10, 0.10, 2));
         /* 좌판 앞면(둥근 두께) */
-        put(tt, 'edge', panelPts(xc - hw * 0.93, xc + hw * 0.93, cEdge, cTop + 0.03, zFront, zFront, 0.035, 0.035, 3));
+        put(tt, 'edge', panelPts(xc - hw * 0.93, xc + hw * 0.93, cEdge, cTop + 0.03, zFront, zFront, 0.035, 0.035, 2));
         /* 팔걸이 — 오른쪽 하나씩, 줄의 맨 왼쪽 좌석에만 왼쪽 하나 더. 끝이 둥근 캡슐 형태 */
         var armY = cTop + (s.recliner ? 0.19 : 0.16), aw = s.recliner ? 0.095 : 0.075;
         var ax = [xc + hw * 0.98];
