@@ -4182,8 +4182,10 @@ html[data-theme="dark"] .nicklock{color:var(--mute)}
         return m;
       }
       /* 템퍼 시네마·모션베드 — 침대(매트리스·베개·헤드보드) 소재 */
-      var BEDM = { hdr: shade('#5B4A38', lit), matt: shade('#BFAE96', lit), matt2: shade('#8E7E6B', lit),
-                   pill: shade('#EDE3D2', lit), blank: shade('#9C8B75', lit), frame: shade('#221D18', lit) };
+      /* 침대는 크림색 매트리스가 흰빛을 받아 어둠 속에서도 형태가 읽혀야 '모션베드'로 보인다 — 최소 밝기를 둔다 */
+      var blit = Math.max(lit, 0.74);
+      var BEDM = { hdr: shade('#5B4A38', blit), matt: shade('#C9B89F', blit), matt2: shade('#9A8974', blit),
+                   pill: shade('#F1E7D6', blit), blank: shade('#A8977F', blit), frame: shade('#221D18', blit) };
       var G = {};
       function put(t, part, poly) { var k = t + '|' + part; (G[k] || (G[k] = [])).push(poly); }
       var firstSeatX = null;
