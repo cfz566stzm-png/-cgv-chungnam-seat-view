@@ -569,7 +569,7 @@ select.moviesel{width:100%;height:44px;border-radius:12px;border:1px solid var(-
 .sheet{display:flex;flex-direction:column;padding:0;overflow:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .sheet-head{position:relative;top:auto;flex:0 0 auto;z-index:12;background:#fff;margin:0;padding:10px 16px 8px;border-bottom:1px solid var(--line-2)}
 .sheet-head:empty{display:none;border:0;padding:0}
-#sheetBody{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding:0 16px calc(22px + env(safe-area-inset-bottom));touch-action:pan-y}
+#sheetBody{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding:14px 16px calc(22px + env(safe-area-inset-bottom));touch-action:pan-y}
 .shgrab{width:40px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 8px}
 .shrow{display:flex;align-items:center;gap:8px}
 .sh-t{flex:1;min-width:0;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
@@ -1125,8 +1125,8 @@ body{font-size:16px}
 .sflag.w{background:#FFF4E5;color:#B45309}
 .sflag.c{background:#FFFBEB;color:#B45309}
 .sflag.b{background:#F4F2EE;color:#5C6672}
-.favbtn{display:inline-flex;align-items:center;justify-content:center;height:30px;padding:0 11px;border-radius:999px;
-  border:1px solid var(--line);background:#fff;font-size:12px;font-weight:850;color:#4E5968;white-space:nowrap;
+.favbtn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border-radius:999px;
+  border:1px solid var(--line);background:#fff;font-size:12.5px;font-weight:850;color:#4E5968;white-space:nowrap;
   touch-action:manipulation;margin-left:auto}
 .favbtn[aria-pressed="true"]{background:#FEF3C7;border-color:#FCD34D;color:#8A4B08}
 .favbtn.sm{height:34px;min-width:44px;margin-left:0;padding:0 9px;font-size:14px}
@@ -1479,6 +1479,15 @@ input,select,textarea,
 .v3d-bar .v3d-big{background:#fff;color:#333D4B}
 .v3d-bar .v3d-recval{flex:1 1 100%;text-align:left;font-size:12px;font-weight:800;color:#6B7684;
   padding:2px 2px 0;font-variant-numeric:tabular-nums}
+/* 모바일(<960px): 3D 조작 버튼 사이 간격과 터치 영역을 조금 더 여유 있게 (2026-11-22 사용자 요청) */
+@media (max-width:959px){
+  .v3d-bar{gap:10px;row-gap:10px;padding:10px;border-radius:16px}
+  .v3d-bar>button,.v3d-bar .v3d-recline,.v3d-bar .v3d-recline-step{height:42px;padding:0 14px;border-radius:12px;font-size:13px}
+  .v3d-bar .v3d-mute{width:42px}
+  .v3d-bar .v3d-recline-step{min-width:46px;padding:0 10px}
+  .v3d-bar .v3d-zoom{gap:4px;padding:4px;border-radius:13px}
+  .v3d-bar .v3d-zoom button{height:34px;padding:0 12px;border-radius:10px}
+}
 
 /* 풀스크린: 조작 바는 캔버스 아래쪽에 겹쳐 띄우고, 배지 줄은 그 위로 */
 .big-inner{position:relative}
@@ -2988,15 +2997,15 @@ html[data-theme="dark"] .gscore>div{background:#14171C}
         vprobe.bad = 0; vprobe.broken = false; vprobe.at = 0;
         if (activeViewer && activeViewer.video === vd) {
           activeViewer._vidButton(true);
-          activeViewer._setHouse(0, 650);      /* 상영 시작 — 관 조명 서서히 꺼짐 */
+          activeViewer._setHouse(0, 1700);     /* 상영 시작 — 관 조명 천천히 꺼짐 */
           if (!activeViewer.raf) activeViewer._loop();
         }
       });
       vd.addEventListener('pause', function () {
-        if (activeViewer && activeViewer.video === vd) activeViewer._setHouse(1, 700);
+        if (activeViewer && activeViewer.video === vd) activeViewer._setHouse(1, 1500);
       });
       vd.addEventListener('ended', function () {
-        if (activeViewer && activeViewer.video === vd) activeViewer._setHouse(1, 700);
+        if (activeViewer && activeViewer.video === vd) activeViewer._setHouse(1, 1500);
       });
       vd.addEventListener('seeked', function () { vprobe.bad = 0; vprobe.broken = false; });
       sharedVideo = vd;
@@ -3138,7 +3147,7 @@ html[data-theme="dark"] .gscore>div{background:#14171C}
   Viewer.prototype._setHouse = function (to, dur) {
     var from = (this._house == null ? 1 : this._house);
     if (Math.abs(from - to) < 0.001) { this._house = to; this._houseTween = null; return; }
-    this._houseTween = { t0: performance.now(), dur: dur || 650, from: from, to: to };
+    this._houseTween = { t0: performance.now(), dur: dur || 1700, from: from, to: to };
     if (!this.raf) this._loop();
   };
 
@@ -3163,16 +3172,16 @@ html[data-theme="dark"] .gscore>div{background:#14171C}
       try { v.preload = 'auto'; } catch (e) {}
       var pr = v.play();
       this._vidButton(true);
-      this._setHouse(0, 650);        /* 영상이 시작되면 관 조명이 서서히 꺼진다 */
+      this._setHouse(0, 1700);       /* 영상이 시작되면 관 조명이 천천히 꺼진다 (2026-11-22: 1.7초) */
       this._loop();
       if (pr && pr.then) {
         pr.then(function () { self._vidButton(true); self._loop(); })
-          .catch(function () { self._vidButton(false); self.render(); });
+          .catch(function () { self._vidButton(false); self._setHouse(1, 1500); self.render(); });
       }
     } else {
       try { v.pause(); } catch (e) {}
       this._vidButton(false);
-      this._setHouse(1, 700);        /* 정지하면 예비 조명이 다시 은은하게 */
+      this._setHouse(1, 1500);       /* 정지하면 예비 조명이 다시 은은하게 (1.5초) */
       this.render();
     }
   };
@@ -3301,7 +3310,8 @@ html[data-theme="dark"] .gscore>div{background:#14171C}
     if (self._houseTween) {
       var hk = (performance.now() - self._houseTween.t0) / self._houseTween.dur;
       if (hk > 1) hk = 1;
-      var he = 1 - Math.pow(1 - hk, 3);
+      /* smoothstep — 처음엔 살짝, 가운데에서 고르게, 끝에서 부드럽게 멎는다(영화관 조광기 느낌) */
+      var he = hk * hk * (3 - 2 * hk);
       self._house = self._houseTween.from + (self._houseTween.to - self._houseTween.from) * he;
       moved = true;
       if (hk === 1) { self._house = self._houseTween.to; self._houseTween = null; }
@@ -3541,7 +3551,7 @@ html[data-theme="dark"] .gscore>div{background:#14171C}
        · 영상이 준비되지 않았을 때도(vplay=false) 조명은 켜진 상태 = 정지 화면은 예고편 전 분위기 */
     var houseFrac = (self._house == null ? 1 : self._house);
     var roomDim = 0.56 + 0.44 * houseFrac;
-    var lampA = houseFrac * houseFrac;              /* 끌 때는 더 빨리 사라지게 */
+    var lampA = houseFrac;                          /* 밝기가 시간에 고르게 줄고 는다(페이드가 눈에 보이게) */
     var glowUp = 1 + 0.45 * (1 - houseFrac);        /* 상영 중에는 화면 빛 번짐을 조금 더 */
     var still = movieFrame(o.aspect || s.p.aspect);
     var img = vplay ? this.video : still;
@@ -8070,7 +8080,6 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
         </div>
         ${(() => { const a = photosFor(h ? h.id : '', seat.key); const im = imgCount(a);
           return im ? `<span class="sh-cam">📷 ${im}</span>` : ''; })()}
-        <button class="favbtn sm ${fav ? 'on' : ''}" data-fav="1" aria-pressed="${fav}" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
         <button class="sheet-x" id="sheetClose" aria-label="닫기">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#4E5968" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
