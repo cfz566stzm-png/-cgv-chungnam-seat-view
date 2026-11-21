@@ -8279,6 +8279,16 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
     const h = findHall(state.theaterId, state.hallId);
     if (!h) return;
     const seat = state.seatKey && h._byKey ? h._byKey[state.seatKey] : null;
+    /* 후기 작성 중이던 입력(별점·태그·티켓·사진)은 **그 좌석 안에서만** 이어진다.
+       다른 관·다른 좌석으로 옮기면(아래 HTML을 만들기 전에) 초기화한다 — A관 좌석에서 누른 별점이
+       B관 좌석에도 그대로 남아 있던 문제(2026-11-21 사용자 제보 "다른 관 들어가서 좌석평점 새로
+       누르려했는데 처음에 눌렀던 점수가 다른 관에도 똑같이 표기"). 그 자리에 내가 쓴 후기가 있으면
+       bindUgc 가 그 후기의 별점·태그·사진을 다시 채운다. */
+    const dkey = (state.theaterId || '') + '/' + (state.hallId || '') + '/' + (state.seatKey || '');
+    if (draftFor !== dkey) {
+      draftFor = dkey;
+      draft = { rating: 0, tags: [], ticket: null, shots: [], shotFiles: [] };
+    }
     const body = seat ? seatBodyHtml(seat) : emptySeatHtml(h);
     const onSheet = useSheet();
     const panel = $('#seatPanel');
@@ -8665,6 +8675,8 @@ window.__MOVIES__ = ["임영웅│아임 히어로 더 스타디움 2","폭설",
   }
 
   let draft = { rating: 0, tags: [], ticket: null, shots: [], shotFiles: [] };
+  /* draft 가 어느 좌석(지점|관|좌석)의 입력인지 — 좌석이 바뀌면 paintSeatPanel 이 비운다 */
+  let draftFor = '';
 
   function compressImage(file, maxW, q) {
     return new Promise((resolve) => {
